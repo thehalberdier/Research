@@ -4,5 +4,11 @@ Notes, writeups, and summaries for personal research projects.
 
 ## Contents
 
-- `hdd_tco_summary.md`: Summary notes on HDD total cost of ownership.
+- Quarto site source: `index.qmd`, `_quarto.yml`
+- `hdd_tco_summary.qmd`: HDD total cost of ownership summary
 
+## Render
+
+```sh
+quarto render
+```

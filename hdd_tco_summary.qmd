@@ -1,5 +1,10 @@
-# HDD comparison and 5-year TCO (24-bay storage servers, 5 PB requirement)
+---
+title: "HDD comparison and 5-year TCO"
+subtitle: "24-bay storage servers, 5 PB requirement"
+---
+
 ## Context
+
 - Compare three enterprise nearline HDDs for a storage cluster.
 - Requirement: **5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead**.
 - Storage servers: **24 bays/server**, **₹8–9L capex per server**.
@@ -8,23 +13,27 @@
 - Electricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption.
 
 ## DC-grade assessment (short)
+
 - All three are **data-center/enterprise nearline** SKUs on-paper: 24×7 duty class, 5-year warranty, MTBF/AFR class typical of DC drives.
 - Differences are mainly **capacity per drive** (18TB vs 24TB) and minor interface/power/feature details.
 
 ## Inputs used
+
 - Time horizon: 5 years (hours = 43,800)
 - Server base idle (excluding disks): **400W/server** (assumption; see sensitivity)
 - Drive idle watts (from datasheets):
-  - Seagate Exos X24 ST24000NM007H: 6.5W idle; https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf
-  - WD Ultrastar DC HC590 24TB (SKU 0F59373): 5.9W idle; https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf
-  - Seagate Exos X20 ST18000NM000D: 5.8W idle; https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf
+  - Seagate Exos X24 ST24000NM007H: 6.5W idle; <https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf>
+  - WD Ultrastar DC HC590 24TB (SKU 0F59373): 5.9W idle; <https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf>
+  - Seagate Exos X20 ST18000NM000D: 5.8W idle; <https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf>
 
 ## Drive counts and server counts to reach ≥5,000 TB
+
 - Formulae:
   - `drives = ceil(5000 / TB_per_drive)`
   - `servers = ceil(drives / 24)`
 
 ## 5-year cost model
+
 - Electricity:
   - `kWh = (Watts/1000) * hours`
   - `power_cost = kWh * ₹17`
@@ -32,6 +41,7 @@
   - `TCO = drive_capex + server_capex + drive_power_cost + server_power_cost`
 
 ## Results (5 PB raw)
+
 | Drive | TB/drive | Drives | Servers (24-bay) | Drive CAPEX | Server CAPEX | 5y drive power | 5y server power (@400W) | 5y TCO | ₹/TB (drive-only) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Seagate Exos X24 ST24000NM007H | 24 | 209 | 9 | 97.19L | 72.00L–81.00L | 10.12L | 26.81L | 206.11L–215.11L | 1937.5 |
@@ -39,22 +49,27 @@
 | Seagate Exos X20 ST18000NM000D | 18 | 278 | 12 | 80.62L | 96.00L–108.00L | 12.01L | 35.74L | 224.37L–236.37L | 1611.11 |
 
 ## Findings
+
 - **Architecture dominates**: with ₹8–9L per 24-bay server, the 18TB option requires **12 servers** vs **9 servers** for 24TB drives.
 - That extra server capex (and base power) outweighs the 18TB drive’s lower ₹/TB.
 - **Best 5-year value (your constraints):** **WD Ultrastar DC HC590 24TB**.
 - The two 24TB options are close; HC590 wins slightly on your pricing and lower drive idle watts.
 
 ## Sensitivity (server idle power)
+
 - Extra electricity per **+100W per server** over 5 years: **₹74,460** (~0.74L).
 - For **9 servers**: +100W/server adds **₹670,140** (~6.70L).
 - For **12 servers**: +100W/server adds **₹893,520** (~8.94L).
 - If your servers idle significantly above 400W, the penalty for needing more servers increases, which further favors 24TB drives.
 
 ## What this TCO excludes (important)
+
 - Cooling overhead (PUE), rack space cost, networking/HBA costs, spares inventory, and operational labor.
 - If you provide measured **wall power per storage server (idle) with disks installed** and any PUE target, the power part can be tightened.
 
 ## Datasheet links
-- Seagate Exos X24 ST24000NM007H: https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf
-- WD Ultrastar DC HC590 24TB (SKU 0F59373): https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf
-- Seagate Exos X20 ST18000NM000D: https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf
+
+- Seagate Exos X24 ST24000NM007H: <https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf>
+- WD Ultrastar DC HC590 24TB (SKU 0F59373): <https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf>
+- Seagate Exos X20 ST18000NM000D: <https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf>
+

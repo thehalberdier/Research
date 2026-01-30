@@ -1,0 +1,10 @@
+---
+title: "Research"
+---
+
+Notes, writeups, and summaries for personal research projects.
+
+## Documents
+
+- [HDD comparison and 5-year TCO](hdd_tco_summary.qmd)
+

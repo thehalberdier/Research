@@ -1,0 +1,18 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Research"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: hdd_tco_summary.qmd
+        text: HDD TCO
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-fold: true
