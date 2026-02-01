@@ -12,6 +12,10 @@ website:
         text: Home
       - href: hdd_tco_summary.qmd
         text: HDD TCO
+      - href: ampereone_m_vs_amd_epyc.qmd
+        text: Ampere vs AMD
+      - href: arista_switch_health_report.qmd
+        text: Arista Health
 
 format:
   html:

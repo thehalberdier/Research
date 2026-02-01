@@ -7,4 +7,5 @@ Notes, writeups, and summaries for personal research projects.
 ## Documents
 
 - [HDD comparison and 5-year TCO](hdd_tco_summary.qmd)
-
+- [AmpereOne M vs AMD EPYC 9554/9654](ampereone_m_vs_amd_epyc.qmd)
+- [Arista switch health report (DCS-7060CX-32S-R)](arista_switch_health_report.qmd)

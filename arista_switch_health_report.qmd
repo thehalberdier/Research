@@ -1,0 +1,62 @@
+---
+title: "Arista Switch Health Report (DCS-7060CX-32S-R)"
+date: 2026-01-31
+---
+
+This page summarizes findings from the health report file `healthreport_Arista.txt`.
+
+## Snapshot
+
+- Report timestamp: Sat Jan 31 09:41:47 UTC 2026
+- Model: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)
+- EOS: 4.26.6M
+- Uptime at capture: ~20 minutes
+
+## Overall status
+
+Cooling, temperatures, and flash look healthy. The report shows **PSU2 offline**, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy).
+
+## Key findings
+
+| Area | Status | Notes |
+|---|---|---|
+| Cooling | Pass | Fans OK and stable; ambient 25°C |
+| Temperature | Pass | All sensors below alert/critical thresholds |
+| Power supplies | Expected (lab setup) | PSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected |
+| Modules/ASIC status | Script false-fail | `show module` is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself |
+| Interfaces | N/A (bench state) | All ports show `notconnect` / `Not Present` (no optics/cables); `Ma1` also down |
+| Flash | Pass | `/mnt/flash` 63% used; writable |
+
+## Details
+
+### Power (expected in this test setup)
+
+`show environment power` indicates:
+
+- PSU 1: Ok, drawing input current and supplying ~125.5W
+- PSU 2: **Power Loss Offline**, 0.0W (expected when not connected)
+
+This is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.
+
+### “Modules are not reporting Active” (likely not real)
+
+The report section “MODULE & ASIC STATUS” runs `show module`, but the output returns:
+
+- “Unavailable command (not supported on this hardware platform)”
+
+So treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue.
+
+## Recommended next checks
+
+To restore redundancy, connect PSU2 to AC and confirm it transitions to `Ok`. If it still shows offline:
+
+1. Reseat PSU2 and verify it’s the correct model for the chassis.
+2. Swap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).
+3. Re-run these commands and look for state changes:
+
+```
+show environment power
+show logging | include PSU|Power|pwr|power-supply
+show system environment cooling
+show system environment temperature
+```
