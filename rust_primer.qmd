@@ -1356,7 +1356,427 @@ unsafe {
 
 ---
 
-## 23. What to Learn Next
+## 23. The Newtype Pattern
+
+Newtypes are single-field tuple structs that wrap another type. They provide type safety with zero runtime cost.
+
+### Basic Newtype
+
+```rust
+// Without newtypes: easy to mix up arguments
+fn create_server(rack_id: String, host_id: String, port: u32) { ... }
+
+create_server(host_id, rack_id, port);  // Oops! Swapped arguments, compiles fine
+
+// With newtypes: compile-time safety
+pub struct RackId(pub String);
+pub struct HostId(pub String);
+pub struct Port(pub u32);
+
+fn create_server(rack: RackId, host: HostId, port: Port) { ... }
+
+create_server(host_id, rack_id, port);  // COMPILE ERROR: expected RackId, found HostId
+```
+
+### Implementing Common Traits
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct UserId(pub String);
+
+impl UserId {
+    pub fn new(id: impl Into<String>) -> Self {
+        UserId(id.into())
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl std::fmt::Display for UserId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+// Allow easy conversion from string types
+impl<S: Into<String>> From<S> for UserId {
+    fn from(s: S) -> Self {
+        UserId(s.into())
+    }
+}
+```
+
+### Measurement Types
+
+Newtypes shine for units of measurement:
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Meters(pub u32);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Feet(pub u32);
+
+// Can't accidentally add meters to feet
+impl std::ops::Add for Meters {
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        Meters(self.0 + other.0)
+    }
+}
+
+// Implement Sum for iterator collection
+impl std::iter::Sum for Meters {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        Meters(iter.map(|m| m.0).sum())
+    }
+}
+
+// Now you can do:
+let distances = vec![Meters(10), Meters(20), Meters(30)];
+let total: Meters = distances.into_iter().sum();  // Meters(60)
+```
+
+### Deref for Transparent Access
+
+Use `Deref` sparingly — it provides transparent access to the inner type:
+
+```rust
+use std::ops::Deref;
+
+pub struct Email(String);
+
+impl Deref for Email {
+    type Target = str;
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+
+let email = Email("user@example.com".into());
+println!("Length: {}", email.len());  // Can call str methods directly
+```
+
+**Warning**: `Deref` weakens type safety. Use it when the newtype is truly just a wrapper with the same semantics, not when you want distinct behavior.
+
+---
+
+## 24. PhantomData and Marker Traits
+
+These are advanced type-level programming tools for encoding constraints without runtime cost.
+
+### PhantomData
+
+`PhantomData<T>` tells the compiler "this type logically contains a `T`" without actually storing one. Used when types need to track type information at compile time.
+
+```rust
+use std::marker::PhantomData;
+
+// A typed ID that tracks what entity it refers to
+pub struct Id<T> {
+    value: u64,
+    _phantom: PhantomData<T>,  // zero-sized, no runtime cost
+}
+
+struct User;
+struct Order;
+
+impl<T> Id<T> {
+    fn new(value: u64) -> Self {
+        Id { value, _phantom: PhantomData }
+    }
+}
+
+let user_id: Id<User> = Id::new(42);
+let order_id: Id<Order> = Id::new(42);
+
+// These are different types despite having the same value!
+// fn process_user(id: Id<User>) { ... }
+// process_user(order_id);  // COMPILE ERROR
+```
+
+### Type-Safe Links with PhantomData
+
+```rust
+use std::marker::PhantomData;
+
+pub trait Port: Clone {}
+pub trait Cable: Clone {}
+
+// A link between two ports via a cable, fully type-safe
+pub struct Link<PA: Port, C: Cable, PB: Port> {
+    port_a_id: String,
+    port_b_id: String,
+    _phantom: PhantomData<(PA, C, PB)>,
+}
+
+impl<PA: Port, C: Cable, PB: Port> Link<PA, C, PB> {
+    pub fn new(a: String, b: String) -> Self {
+        Link {
+            port_a_id: a,
+            port_b_id: b,
+            _phantom: PhantomData,
+        }
+    }
+}
+```
+
+### Marker Traits
+
+Empty traits that categorize types without adding behavior:
+
+```rust
+// Marker traits for action targeting
+pub trait ServerHostMarker {}
+pub trait SwitchHostMarker {}
+
+// Only servers implement this
+impl ServerHostMarker for ServerHost {}
+
+// Only switches implement this
+impl SwitchHostMarker for SwitchHost {}
+
+// Action that only works on servers
+pub struct InstallOS<H: ServerHostMarker> {
+    os_image: String,
+    _phantom: PhantomData<H>,
+}
+
+// Universal marker with blanket implementation
+pub trait UniversalHostMarker {}
+impl<H> UniversalHostMarker for H {}  // All types get this
+```
+
+### Common Standard Library Markers
+
+| Marker | Meaning |
+|--------|---------|
+| `Send` | Safe to transfer between threads |
+| `Sync` | Safe to share references between threads |
+| `Sized` | Has known size at compile time (implicit bound) |
+| `Unpin` | Can be safely moved after being pinned |
+| `Copy` | Can be implicitly copied (bitwise) |
+
+---
+
+## 25. Downcasting Trait Objects
+
+When you have a `dyn Trait` and need to get the concrete type back, use the `Any` trait.
+
+### The Pattern
+
+```rust
+use std::any::Any;
+
+pub trait Host: std::fmt::Debug + Send + Sync + Any {
+    fn hostname(&self) -> &str;
+
+    // Required for downcasting
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+}
+
+#[derive(Debug)]
+pub struct ServerHost {
+    pub hostname: String,
+    pub cpu_cores: u32,
+}
+
+impl Host for ServerHost {
+    fn hostname(&self) -> &str {
+        &self.hostname
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+#[derive(Debug)]
+pub struct SwitchHost {
+    pub hostname: String,
+    pub port_count: u32,
+}
+
+impl Host for SwitchHost {
+    fn hostname(&self) -> &str {
+        &self.hostname
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+```
+
+### Using Downcasting
+
+```rust
+fn process_host(host: &dyn Host) {
+    println!("Processing: {}", host.hostname());
+
+    // Try to downcast to ServerHost
+    if let Some(server) = host.as_any().downcast_ref::<ServerHost>() {
+        println!("  Server with {} cores", server.cpu_cores);
+    }
+    // Try to downcast to SwitchHost
+    else if let Some(switch) = host.as_any().downcast_ref::<SwitchHost>() {
+        println!("  Switch with {} ports", switch.port_count);
+    }
+}
+
+fn main() {
+    let hosts: Vec<Box<dyn Host>> = vec![
+        Box::new(ServerHost { hostname: "srv-01".into(), cpu_cores: 64 }),
+        Box::new(SwitchHost { hostname: "sw-01".into(), port_count: 48 }),
+    ];
+
+    for host in &hosts {
+        process_host(host.as_ref());
+    }
+}
+```
+
+### Cloning Trait Objects
+
+Standard `Clone` doesn't work with trait objects. Use the `clone_box` pattern:
+
+```rust
+pub trait Host: std::fmt::Debug {
+    fn clone_box(&self) -> Box<dyn Host>;
+    // ... other methods
+}
+
+impl Clone for Box<dyn Host> {
+    fn clone(&self) -> Self {
+        self.clone_box()
+    }
+}
+
+impl Host for ServerHost {
+    fn clone_box(&self) -> Box<dyn Host> {
+        Box::new(self.clone())
+    }
+}
+```
+
+---
+
+## 26. Cargo Workspaces
+
+For larger projects, organize multiple related crates in a workspace.
+
+### Workspace Structure
+
+```
+my-project/
+├── Cargo.toml              # Workspace root
+├── crates/
+│   ├── my-core/
+│   │   ├── Cargo.toml
+│   │   └── src/lib.rs
+│   ├── my-cli/
+│   │   ├── Cargo.toml
+│   │   └── src/main.rs
+│   └── my-macros/
+│       ├── Cargo.toml
+│       └── src/lib.rs
+└── examples/
+    └── demo/
+        ├── Cargo.toml
+        └── src/main.rs
+```
+
+### Root Cargo.toml
+
+```toml
+[workspace]
+resolver = "2"
+members = [
+    "crates/my-core",
+    "crates/my-cli",
+    "crates/my-macros",
+    "examples/demo",
+]
+
+# Shared dependencies with consistent versions
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+
+# Internal crates as workspace dependencies
+my-core = { path = "crates/my-core" }
+my-macros = { path = "crates/my-macros" }
+```
+
+### Crate Cargo.toml
+
+```toml
+[package]
+name = "my-cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Use workspace versions
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+
+# Internal dependencies
+my-core.workspace = true
+```
+
+### Benefits
+
+- **Shared dependencies**: One version across all crates
+- **Unified builds**: `cargo build` builds everything
+- **Shared target directory**: Faster incremental compilation
+- **Cross-crate testing**: Run all tests with `cargo test --workspace`
+
+### Proc-Macro Crates
+
+Procedural macros must be in their own crate:
+
+```toml
+# crates/my-macros/Cargo.toml
+[package]
+name = "my-macros"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+```
+
+Then re-export from your main crate:
+
+```rust
+// crates/my-core/src/lib.rs
+pub use my_macros::my_derive_macro;
+```
+
+---
+
+## 27. What to Learn Next
 
 Once you're comfortable with the above, these are the next frontiers:
 
