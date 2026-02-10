@@ -226,7 +226,36 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#key-differences-cheat-sheet" id="toc-key-differences-cheat-sheet" class="nav-link" data-scroll-target="#key-differences-cheat-sheet">18. Key Differences Cheat Sheet</a></li>
   <li><a href="#quick-syntax-reference" id="toc-quick-syntax-reference" class="nav-link" data-scroll-target="#quick-syntax-reference">19. Quick Syntax Reference</a></li>
-  <li><a href="#what-to-learn-next" id="toc-what-to-learn-next" class="nav-link" data-scroll-target="#what-to-learn-next">20. What to Learn Next</a></li>
+  <li><a href="#serde-serialization-deserialization" id="toc-serde-serialization-deserialization" class="nav-link" data-scroll-target="#serde-serialization-deserialization">20. Serde: Serialization &amp; Deserialization</a>
+  <ul class="collapse">
+  <li><a href="#basic-setup" id="toc-basic-setup" class="nav-link" data-scroll-target="#basic-setup">Basic Setup</a></li>
+  <li><a href="#derive-macros-the-90-case" id="toc-derive-macros-the-90-case" class="nav-link" data-scroll-target="#derive-macros-the-90-case">Derive Macros: The 90% Case</a></li>
+  <li><a href="#common-serde-attributes" id="toc-common-serde-attributes" class="nav-link" data-scroll-target="#common-serde-attributes">Common Serde Attributes</a></li>
+  <li><a href="#enums-in-serde" id="toc-enums-in-serde" class="nav-link" data-scroll-target="#enums-in-serde">Enums in Serde</a></li>
+  <li><a href="#custom-serialization" id="toc-custom-serialization" class="nav-link" data-scroll-target="#custom-serialization">Custom Serialization</a></li>
+  <li><a href="#reading-config-files" id="toc-reading-config-files" class="nav-link" data-scroll-target="#reading-config-files">Reading Config Files</a></li>
+  </ul></li>
+  <li><a href="#macros" id="toc-macros" class="nav-link" data-scroll-target="#macros">21. Macros</a>
+  <ul class="collapse">
+  <li><a href="#declarative-macros-macro_rules" id="toc-declarative-macros-macro_rules" class="nav-link" data-scroll-target="#declarative-macros-macro_rules">Declarative Macros (<code>macro_rules!</code>)</a></li>
+  <li><a href="#fragment-types-what-you-can-match" id="toc-fragment-types-what-you-can-match" class="nav-link" data-scroll-target="#fragment-types-what-you-can-match">Fragment Types (What You Can Match)</a></li>
+  <li><a href="#repetition" id="toc-repetition" class="nav-link" data-scroll-target="#repetition">Repetition</a></li>
+  <li><a href="#practical-example-a-logging-macro" id="toc-practical-example-a-logging-macro" class="nav-link" data-scroll-target="#practical-example-a-logging-macro">Practical Example: A Logging Macro</a></li>
+  <li><a href="#procedural-macros-brief-overview" id="toc-procedural-macros-brief-overview" class="nav-link" data-scroll-target="#procedural-macros-brief-overview">Procedural Macros (Brief Overview)</a></li>
+  <li><a href="#when-to-use-macros" id="toc-when-to-use-macros" class="nav-link" data-scroll-target="#when-to-use-macros">When to Use Macros</a></li>
+  </ul></li>
+  <li><a href="#unsafe-rust" id="toc-unsafe-rust" class="nav-link" data-scroll-target="#unsafe-rust">22. Unsafe Rust</a>
+  <ul class="collapse">
+  <li><a href="#what-unsafe-allows" id="toc-what-unsafe-allows" class="nav-link" data-scroll-target="#what-unsafe-allows">What Unsafe Allows</a></li>
+  <li><a href="#raw-pointers" id="toc-raw-pointers" class="nav-link" data-scroll-target="#raw-pointers">Raw Pointers</a></li>
+  <li><a href="#unsafe-functions" id="toc-unsafe-functions" class="nav-link" data-scroll-target="#unsafe-functions">Unsafe Functions</a></li>
+  <li><a href="#safe-abstractions-over-unsafe-code" id="toc-safe-abstractions-over-unsafe-code" class="nav-link" data-scroll-target="#safe-abstractions-over-unsafe-code">Safe Abstractions Over Unsafe Code</a></li>
+  <li><a href="#calling-c-functions-ffi" id="toc-calling-c-functions-ffi" class="nav-link" data-scroll-target="#calling-c-functions-ffi">Calling C Functions (FFI)</a></li>
+  <li><a href="#mutable-static-variables" id="toc-mutable-static-variables" class="nav-link" data-scroll-target="#mutable-static-variables">Mutable Static Variables</a></li>
+  <li><a href="#when-to-use-unsafe" id="toc-when-to-use-unsafe" class="nav-link" data-scroll-target="#when-to-use-unsafe">When to Use Unsafe</a></li>
+  <li><a href="#common-unsafe-patterns-to-know" id="toc-common-unsafe-patterns-to-know" class="nav-link" data-scroll-target="#common-unsafe-patterns-to-know">Common Unsafe Patterns to Know</a></li>
+  </ul></li>
+  <li><a href="#what-to-learn-next" id="toc-what-to-learn-next" class="nav-link" data-scroll-target="#what-to-learn-next">23. What to Learn Next</a></li>
   </ul>
 </nav>
     </div>
@@ -265,7 +294,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <blockquote class="blockquote">
-<p><strong>Goal</strong>: Get you to ~80% of Rust, fast. Assumes you know C++/Java, understand types, pointers, and memory. Skips: unsafe, macros-in-depth, async runtime internals, FFI, advanced lifetime gymnastics.</p>
+<p><strong>Goal</strong>: Get you to ~80% of Rust, fast. Assumes you know C++/Java, understand types, pointers, and memory. Skips: async runtime internals, FFI, advanced lifetime gymnastics.</p>
 </blockquote>
 <hr>
 <section id="first-things-first-cargo-project-setup" class="level2">
@@ -1174,16 +1203,491 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb44-28"><a href="#cb44-28" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nums <span class="op">=</span> <span class="st">"1,2,3"</span><span class="op">.</span>split(<span class="ch">','</span>)<span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">&gt;&gt;</span>()<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 </section>
+<section id="serde-serialization-deserialization" class="level2">
+<h2 class="anchored" data-anchor-id="serde-serialization-deserialization">20. Serde: Serialization &amp; Deserialization</h2>
+<p>Serde is Rust’s de facto serialization framework. It’s fast, flexible, and works with JSON, TOML, YAML, MessagePack, and dozens of other formats.</p>
+<section id="basic-setup" class="level3">
+<h3 class="anchored" data-anchor-id="basic-setup">Basic Setup</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode toml code-with-copy"><code class="sourceCode toml"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargo.toml</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="dt">serde</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">"1.0"</span><span class="op">, </span><span class="dt">features</span><span class="op"> =</span> <span class="op">[</span><span class="st">"derive"</span><span class="op">] }</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="dt">serde_json</span> <span class="op">=</span> <span class="st">"1.0"</span>    <span class="co"># for JSON</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="dt">toml</span> <span class="op">=</span> <span class="st">"0.8"</span>          <span class="co"># for TOML</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="derive-macros-the-90-case" class="level3">
+<h3 class="anchored" data-anchor-id="derive-macros-the-90-case">Derive Macros: The 90% Case</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">serde::</span><span class="op">{</span>Deserialize<span class="op">,</span> Serialize<span class="op">};</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ServerConfig <span class="op">{</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    hostname<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    port<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>serde<span class="at">(</span><span class="kw">default</span><span class="at">)]</span>                    <span class="co">// use Default::default() if missing</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    enabled<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>serde<span class="at">(</span>skip_serializing_if <span class="op">=</span> <span class="st">"Option::is_none"</span><span class="at">)]</span></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>    description<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;,</span></span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>serde<span class="at">(</span>rename <span class="op">=</span> <span class="st">"maxConnections"</span><span class="at">)]</span>  <span class="co">// different name in JSON</span></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>    max_connections<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>()<span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span><span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Deserialize from JSON</span></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> json <span class="op">=</span> <span class="st">r#"{</span></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a><span class="st">        "hostname": "node-01",</span></span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a><span class="st">        "port": 8080,</span></span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a><span class="st">        "maxConnections": 1000</span></span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a><span class="st">    }"#</span><span class="op">;</span></span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config<span class="op">:</span> ServerConfig <span class="op">=</span> <span class="pp">serde_json::</span>from_str(json)<span class="op">?;</span></span>
+<span id="cb46-24"><a href="#cb46-24" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{:?}"</span><span class="op">,</span> config)<span class="op">;</span></span>
+<span id="cb46-25"><a href="#cb46-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-26"><a href="#cb46-26" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Serialize to JSON</span></span>
+<span id="cb46-27"><a href="#cb46-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> output <span class="op">=</span> <span class="pp">serde_json::</span>to_string_pretty(<span class="op">&amp;</span>config)<span class="op">?;</span></span>
+<span id="cb46-28"><a href="#cb46-28" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{output}"</span>)<span class="op">;</span></span>
+<span id="cb46-29"><a href="#cb46-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-30"><a href="#cb46-30" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb46-31"><a href="#cb46-31" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="common-serde-attributes" class="level3">
+<h3 class="anchored" data-anchor-id="common-serde-attributes">Common Serde Attributes</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 57%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Attribute</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>#[serde(rename = "name")]</code></td>
+<td>Use different field name in serialized form</td>
+</tr>
+<tr class="even">
+<td><code>#[serde(rename_all = "camelCase")]</code></td>
+<td>Rename all fields (struct-level)</td>
+</tr>
+<tr class="odd">
+<td><code>#[serde(default)]</code></td>
+<td>Use <code>Default::default()</code> if field missing</td>
+</tr>
+<tr class="even">
+<td><code>#[serde(skip)]</code></td>
+<td>Don’t serialize or deserialize this field</td>
+</tr>
+<tr class="odd">
+<td><code>#[serde(skip_serializing)]</code></td>
+<td>Only deserialize, not serialize</td>
+</tr>
+<tr class="even">
+<td><code>#[serde(skip_serializing_if = "Option::is_none")]</code></td>
+<td>Conditionally skip</td>
+</tr>
+<tr class="odd">
+<td><code>#[serde(flatten)]</code></td>
+<td>Flatten nested struct into parent</td>
+</tr>
+<tr class="even">
+<td><code>#[serde(with = "module")]</code></td>
+<td>Use custom serialize/deserialize functions</td>
+</tr>
+<tr class="odd">
+<td><code>#[serde(untagged)]</code></td>
+<td>For enums: no tag, tries each variant</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="enums-in-serde" class="level3">
+<h3 class="anchored" data-anchor-id="enums-in-serde">Enums in Serde</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span>Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>serde<span class="at">(</span>tag <span class="op">=</span> <span class="st">"type"</span><span class="at">)]</span>              <span class="co">// "internally tagged"</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> StorageBackend <span class="op">{</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>serde<span class="at">(</span>rename <span class="op">=</span> <span class="st">"local"</span><span class="at">)]</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    Local <span class="op">{</span> path<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>serde<span class="at">(</span>rename <span class="op">=</span> <span class="st">"s3"</span><span class="at">)]</span></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    S3 <span class="op">{</span> bucket<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> region<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Serializes to: {"type": "local", "path": "/data"}</span></span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a><span class="co">// vs default (externally tagged): {"Local": {"path": "/data"}}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enum representations:</p>
+<ul>
+<li><strong>Externally tagged</strong> (default): <code>{"Variant": {...}}</code></li>
+<li><strong>Internally tagged</strong> (<code>#[serde(tag = "type")]</code>): <code>{"type": "Variant", ...}</code></li>
+<li><strong>Adjacently tagged</strong> (<code>#[serde(tag = "t", content = "c")]</code>): <code>{"t": "Variant", "c": {...}}</code></li>
+<li><strong>Untagged</strong> (<code>#[serde(untagged)]</code>): tries each variant, no tag</li>
+</ul>
+</section>
+<section id="custom-serialization" class="level3">
+<h3 class="anchored" data-anchor-id="custom-serialization">Custom Serialization</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">serde::</span><span class="op">{</span>Serializer<span class="op">,</span> Deserializer<span class="op">};</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Timestamp(<span class="dt">i64</span>)<span class="op">;</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Serialize <span class="cf">for</span> Timestamp <span class="op">{</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> serialize<span class="op">&lt;</span>S<span class="op">:</span> Serializer<span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> serializer<span class="op">:</span> S) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="pp">S::</span><span class="cn">Ok</span><span class="op">,</span> <span class="pp">S::</span><span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Serialize as ISO 8601 string instead of raw i64</span></span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> datetime <span class="op">=</span> <span class="pp">chrono::DateTime::</span>from_timestamp(<span class="kw">self</span><span class="op">.</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>        serializer<span class="op">.</span>serialize_str(<span class="op">&amp;</span>datetime<span class="op">.</span>to_rfc3339())</span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="reading-config-files" class="level3">
+<h3 class="anchored" data-anchor-id="reading-config-files">Reading Config Files</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>fs<span class="op">;</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="co">// TOML config file</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load_toml_config(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>ServerConfig<span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span><span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> contents <span class="op">=</span> <span class="pp">fs::</span>read_to_string(path)<span class="op">?;</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config<span class="op">:</span> ServerConfig <span class="op">=</span> <span class="pp">toml::</span>from_str(<span class="op">&amp;</span>contents)<span class="op">?;</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(config)</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a><span class="co">// JSON config file</span></span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load_json_config(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>ServerConfig<span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span><span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> contents <span class="op">=</span> <span class="pp">fs::</span>read_to_string(path)<span class="op">?;</span></span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config<span class="op">:</span> ServerConfig <span class="op">=</span> <span class="pp">serde_json::</span>from_str(<span class="op">&amp;</span>contents)<span class="op">?;</span></span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(config)</span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Practical tip</strong>: Use <code>serde_json::Value</code> for dynamic/unknown JSON structures:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">serde_json::</span>Value<span class="op">;</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> v<span class="op">:</span> Value <span class="op">=</span> <span class="pp">serde_json::</span>from_str(json)<span class="op">?;</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> hostname <span class="op">=</span> v[<span class="st">"hostname"</span>]<span class="op">.</span>as_str()<span class="op">.</span>unwrap_or(<span class="st">"unknown"</span>)<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="macros" class="level2">
+<h2 class="anchored" data-anchor-id="macros">21. Macros</h2>
+<p>Macros are code that writes code. Rust has two types: declarative macros (<code>macro_rules!</code>) and procedural macros.</p>
+<section id="declarative-macros-macro_rules" class="level3">
+<h3 class="anchored" data-anchor-id="declarative-macros-macro_rules">Declarative Macros (<code>macro_rules!</code>)</h3>
+<p>These are pattern-matching based. You’ve already used them: <code>println!</code>, <code>vec!</code>, <code>format!</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Simple macro</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> say_hello <span class="op">{</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    () <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"Hello!"</span>)<span class="op">;</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="co">// With arguments</span></span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> create_function <span class="op">{</span></span>
+<span id="cb51-10"><a href="#cb51-10" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>name<span class="op">:</span>ident) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb51-11"><a href="#cb51-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">fn</span> $name() <span class="op">{</span></span>
+<span id="cb51-12"><a href="#cb51-12" aria-hidden="true" tabindex="-1"></a>            <span class="pp">println!</span>(<span class="st">"Function {:?} was called"</span><span class="op">,</span> <span class="pp">stringify!</span>(<span class="op">$</span>name))<span class="op">;</span></span>
+<span id="cb51-13"><a href="#cb51-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb51-14"><a href="#cb51-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb51-15"><a href="#cb51-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb51-16"><a href="#cb51-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-17"><a href="#cb51-17" aria-hidden="true" tabindex="-1"></a><span class="pp">create_function!</span>(foo)<span class="op">;</span>  <span class="co">// creates: fn foo() { ... }</span></span>
+<span id="cb51-18"><a href="#cb51-18" aria-hidden="true" tabindex="-1"></a><span class="pp">create_function!</span>(bar)<span class="op">;</span>  <span class="co">// creates: fn bar() { ... }</span></span>
+<span id="cb51-19"><a href="#cb51-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-20"><a href="#cb51-20" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb51-21"><a href="#cb51-21" aria-hidden="true" tabindex="-1"></a>    <span class="pp">say_hello!</span>()<span class="op">;</span></span>
+<span id="cb51-22"><a href="#cb51-22" aria-hidden="true" tabindex="-1"></a>    foo()<span class="op">;</span></span>
+<span id="cb51-23"><a href="#cb51-23" aria-hidden="true" tabindex="-1"></a>    bar()<span class="op">;</span></span>
+<span id="cb51-24"><a href="#cb51-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="fragment-types-what-you-can-match" class="level3">
+<h3 class="anchored" data-anchor-id="fragment-types-what-you-can-match">Fragment Types (What You Can Match)</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 35%">
+<col style="width: 32%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Fragment</th>
+<th>Matches</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>$x:ident</code></td>
+<td>Identifier</td>
+<td><code>foo</code>, <code>my_var</code></td>
+</tr>
+<tr class="even">
+<td><code>$x:expr</code></td>
+<td>Expression</td>
+<td><code>1 + 2</code>, <code>foo()</code></td>
+</tr>
+<tr class="odd">
+<td><code>$x:ty</code></td>
+<td>Type</td>
+<td><code>i32</code>, <code>Vec&lt;String&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>$x:path</code></td>
+<td>Path</td>
+<td><code>std::collections::HashMap</code></td>
+</tr>
+<tr class="odd">
+<td><code>$x:stmt</code></td>
+<td>Statement</td>
+<td><code>let x = 1;</code></td>
+</tr>
+<tr class="even">
+<td><code>$x:block</code></td>
+<td>Block</td>
+<td><code>{ ... }</code></td>
+</tr>
+<tr class="odd">
+<td><code>$x:item</code></td>
+<td>Item (fn, struct, etc.)</td>
+<td><code>fn foo() {}</code></td>
+</tr>
+<tr class="even">
+<td><code>$x:pat</code></td>
+<td>Pattern</td>
+<td><code>Some(x)</code>, <code>_</code></td>
+</tr>
+<tr class="odd">
+<td><code>$x:literal</code></td>
+<td>Literal</td>
+<td><code>42</code>, <code>"hello"</code></td>
+</tr>
+<tr class="even">
+<td><code>$x:tt</code></td>
+<td>Token tree (anything)</td>
+<td>any single token or <code>(...)</code>, <code>[...]</code>, <code>{...}</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="repetition" class="level3">
+<h3 class="anchored" data-anchor-id="repetition">Repetition</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co">// The vec! macro (simplified)</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> my_vec <span class="op">{</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Match zero or more expressions separated by commas</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    ( <span class="op">$</span>( <span class="op">$</span>elem<span class="op">:</span>expr )<span class="op">,*</span> ) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> <span class="kw">mut</span> v <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>new()<span class="op">;</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>            <span class="op">$</span>( v<span class="op">.</span>push(<span class="op">$</span>elem)<span class="op">;</span> )<span class="op">*</span>    <span class="co">// repeat the push for each element</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>            v</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nums <span class="op">=</span> <span class="pp">my_vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">5</span>]<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Repetition operators: - <code>*</code> — zero or more - <code>+</code> — one or more - <code>?</code> — zero or one</p>
+</section>
+<section id="practical-example-a-logging-macro" class="level3">
+<h3 class="anchored" data-anchor-id="practical-example-a-logging-macro">Practical Example: A Logging Macro</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="pp">macro_rules!</span> log_debug <span class="op">{</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    (<span class="op">$</span>(<span class="op">$</span>arg<span class="op">:</span>tt)<span class="op">*</span>) <span class="op">=&gt;</span> <span class="op">{</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">#[</span>cfg<span class="at">(</span>debug_assertions<span class="at">)]</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>            <span class="pp">eprintln!</span>(<span class="st">"[DEBUG {}:{}] {}"</span><span class="op">,</span> <span class="pp">file!</span>()<span class="op">,</span> <span class="pp">line!</span>()<span class="op">,</span> <span class="pp">format!</span>(<span class="op">$</span>(<span class="op">$</span>arg)<span class="op">*</span>))<span class="op">;</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> process_data(x<span class="op">:</span> <span class="dt">i32</span>) <span class="op">{</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">log_debug!</span>(<span class="st">"Processing value: {}"</span><span class="op">,</span> x)<span class="op">;</span></span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// In release builds, this compiles to nothing</span></span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="procedural-macros-brief-overview" class="level3">
+<h3 class="anchored" data-anchor-id="procedural-macros-brief-overview">Procedural Macros (Brief Overview)</h3>
+<p>Proc macros are more powerful but require a separate crate. There are three types:</p>
+<ol type="1">
+<li><strong>Derive macros</strong> — <code>#[derive(MyTrait)]</code></li>
+<li><strong>Attribute macros</strong> — <code>#[my_attribute]</code></li>
+<li><strong>Function-like macros</strong> — <code>my_macro!(...)</code></li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Using a derive macro (you use these all the time)</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> Serialize<span class="op">,</span> Deserialize<span class="at">)]</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MyStruct <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Using an attribute macro</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">tokio::</span>main<span class="at">]</span>           <span class="co">// transforms fn main into async runtime setup</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> main() <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>test<span class="at">]</span>                  <span class="co">// marks function as a test</span></span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> test_something() <span class="op">{</span> <span class="op">...</span> <span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Writing proc macros requires the <code>proc_macro</code>, <code>syn</code> (parsing), and <code>quote</code> (code generation) crates:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In a separate crate with proc-macro = true in Cargo.toml</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">proc_macro::</span>TokenStream<span class="op">;</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">quote::</span>quote<span class="op">;</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">syn::</span><span class="op">{</span>parse_macro_input<span class="op">,</span> DeriveInput<span class="op">};</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>proc_macro_derive<span class="at">(</span>MyDebug<span class="at">)]</span></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> my_debug_derive(input<span class="op">:</span> TokenStream) <span class="op">-&gt;</span> TokenStream <span class="op">{</span></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> input <span class="op">=</span> <span class="pp">parse_macro_input!</span>(input <span class="kw">as</span> DeriveInput)<span class="op">;</span></span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> name <span class="op">=</span> input<span class="op">.</span>ident<span class="op">;</span></span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> expanded <span class="op">=</span> <span class="pp">quote!</span> <span class="op">{</span></span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">impl</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span> <span class="cf">for</span> #name <span class="op">{</span></span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>            <span class="kw">fn</span> fmt(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> f<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="pp">std::fmt::</span>Formatter<span class="op">&lt;</span><span class="ot">'_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="pp">std::fmt::</span><span class="dt">Result</span> <span class="op">{</span></span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>                <span class="pp">write!</span>(f<span class="op">,</span> <span class="pp">stringify!</span>(#name))</span>
+<span id="cb55-15"><a href="#cb55-15" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb55-16"><a href="#cb55-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb55-17"><a href="#cb55-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb55-18"><a href="#cb55-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-19"><a href="#cb55-19" aria-hidden="true" tabindex="-1"></a>    <span class="pp">TokenStream::</span>from(expanded)</span>
+<span id="cb55-20"><a href="#cb55-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="when-to-use-macros" class="level3">
+<h3 class="anchored" data-anchor-id="when-to-use-macros">When to Use Macros</h3>
+<p><strong>Use declarative macros</strong> (<code>macro_rules!</code>) for: - Reducing repetitive code patterns - DSLs (domain-specific languages) - Compile-time code generation - Variadic functions (Rust doesn’t have them otherwise)</p>
+<p><strong>Use derive macros</strong> when: - You need to implement traits automatically - The implementation follows a pattern based on struct/enum structure</p>
+<p><strong>Prefer functions over macros</strong> when: - A regular function would work (macros are harder to debug) - You don’t need compile-time code generation</p>
+<hr>
+</section>
+</section>
+<section id="unsafe-rust" class="level2">
+<h2 class="anchored" data-anchor-id="unsafe-rust">22. Unsafe Rust</h2>
+<p><code>unsafe</code> lets you do five things the compiler can’t verify. It doesn’t turn off the borrow checker — it just gives you access to low-level operations.</p>
+<section id="what-unsafe-allows" class="level3">
+<h3 class="anchored" data-anchor-id="what-unsafe-allows">What Unsafe Allows</h3>
+<ol type="1">
+<li>Dereference raw pointers</li>
+<li>Call unsafe functions/methods</li>
+<li>Access/modify mutable static variables</li>
+<li>Implement unsafe traits</li>
+<li>Access fields of <code>union</code>s</li>
+</ol>
+</section>
+<section id="raw-pointers" class="level3">
+<h3 class="anchored" data-anchor-id="raw-pointers">Raw Pointers</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> x <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Creating raw pointers is safe</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ptr_immut<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">i32</span> <span class="op">=</span> <span class="op">&amp;</span>x<span class="op">;</span>       <span class="co">// immutable raw pointer</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ptr_mut<span class="op">:</span> <span class="op">*</span><span class="kw">mut</span> <span class="dt">i32</span> <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> x<span class="op">;</span>       <span class="co">// mutable raw pointer</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Dereferencing requires unsafe</span></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"Value: {}"</span><span class="op">,</span> <span class="op">*</span>ptr_immut)<span class="op">;</span></span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>ptr_mut <span class="op">=</span> <span class="dv">20</span><span class="op">;</span></span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"New value: {}"</span><span class="op">,</span> <span class="op">*</span>ptr_mut)<span class="op">;</span></span>
+<span id="cb56-13"><a href="#cb56-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb56-14"><a href="#cb56-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Raw pointers: - Are allowed to be null - Don’t guarantee they point to valid memory - Can have multiple mutable pointers to the same location - Don’t have lifetimes (no borrow checker enforcement)</p>
+</section>
+<section id="unsafe-functions" class="level3">
+<h3 class="anchored" data-anchor-id="unsafe-functions">Unsafe Functions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Marked unsafe because caller must ensure preconditions</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="kw">fn</span> dangerous(ptr<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>ptr    <span class="co">// could crash if ptr is null or invalid</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> dangerous(<span class="op">&amp;</span>x) <span class="op">};</span></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{result}"</span>)<span class="op">;</span></span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="safe-abstractions-over-unsafe-code" class="level3">
+<h3 class="anchored" data-anchor-id="safe-abstractions-over-unsafe-code">Safe Abstractions Over Unsafe Code</h3>
+<p>This is the key pattern: wrap unsafe code in safe interfaces.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> split_at_mut(values<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">i32</span>]<span class="op">,</span> mid<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> (<span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">i32</span>]<span class="op">,</span> <span class="op">&amp;</span><span class="kw">mut</span> [<span class="dt">i32</span>]) <span class="op">{</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> len <span class="op">=</span> values<span class="op">.</span>len()<span class="op">;</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ptr <span class="op">=</span> values<span class="op">.</span>as_mut_ptr()<span class="op">;</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">assert!</span>(mid <span class="op">&lt;=</span> len)<span class="op">;</span>  <span class="co">// safety check</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>        (</span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a>            <span class="pp">std::slice::</span>from_raw_parts_mut(ptr<span class="op">,</span> mid)<span class="op">,</span></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a>            <span class="pp">std::slice::</span>from_raw_parts_mut(ptr<span class="op">.</span>add(mid)<span class="op">,</span> len <span class="op">-</span> mid)<span class="op">,</span></span>
+<span id="cb58-11"><a href="#cb58-11" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb58-12"><a href="#cb58-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb58-13"><a href="#cb58-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb58-14"><a href="#cb58-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-15"><a href="#cb58-15" aria-hidden="true" tabindex="-1"></a><span class="co">// The function itself is safe because:</span></span>
+<span id="cb58-16"><a href="#cb58-16" aria-hidden="true" tabindex="-1"></a><span class="co">// 1. We validated mid &lt;= len</span></span>
+<span id="cb58-17"><a href="#cb58-17" aria-hidden="true" tabindex="-1"></a><span class="co">// 2. The two slices don't overlap</span></span>
+<span id="cb58-18"><a href="#cb58-18" aria-hidden="true" tabindex="-1"></a><span class="co">// 3. The lifetimes are correctly tied to the input</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="calling-c-functions-ffi" class="level3">
+<h3 class="anchored" data-anchor-id="calling-c-functions-ffi">Calling C Functions (FFI)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Link to the C standard library</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="st">"C"</span> <span class="op">{</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> abs(input<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span><span class="op">;</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> strlen(s<span class="op">:</span> <span class="op">*</span><span class="kw">const</span> <span class="dt">i8</span>) <span class="op">-&gt;</span> <span class="dt">usize</span><span class="op">;</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"abs(-5) = {}"</span><span class="op">,</span> abs(<span class="op">-</span><span class="dv">5</span>))<span class="op">;</span></span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For proper FFI, use the <code>libc</code> crate and consider <code>bindgen</code> for generating bindings automatically.</p>
+</section>
+<section id="mutable-static-variables" class="level3">
+<h3 class="anchored" data-anchor-id="mutable-static-variables">Mutable Static Variables</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">static</span> <span class="kw">mut</span> COUNTER<span class="op">:</span> <span class="dt">u32</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> increment() <span class="op">{</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>        COUNTER <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb60-10"><a href="#cb60-10" aria-hidden="true" tabindex="-1"></a>    increment()<span class="op">;</span></span>
+<span id="cb60-11"><a href="#cb60-11" aria-hidden="true" tabindex="-1"></a>    increment()<span class="op">;</span></span>
+<span id="cb60-12"><a href="#cb60-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb60-13"><a href="#cb60-13" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"COUNTER: {COUNTER}"</span>)<span class="op">;</span></span>
+<span id="cb60-14"><a href="#cb60-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb60-15"><a href="#cb60-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Avoid mutable statics</strong> — they’re a source of data races. Use <code>AtomicU32</code>, <code>Mutex</code>, or <code>lazy_static!</code> / <code>once_cell</code> instead.</p>
+</section>
+<section id="when-to-use-unsafe" class="level3">
+<h3 class="anchored" data-anchor-id="when-to-use-unsafe">When to Use Unsafe</h3>
+<p><strong>Legitimate uses:</strong> - FFI (calling C libraries) - Performance-critical code where you can prove safety but the compiler can’t - Implementing low-level data structures (linked lists, trees with parent pointers) - Interfacing with hardware / OS APIs</p>
+<p><strong>Guidelines:</strong> 1. Keep <code>unsafe</code> blocks as small as possible 2. Document the invariants you’re maintaining 3. Wrap unsafe code in safe abstractions 4. Use <code>#[deny(unsafe_code)]</code> crate-wide, then allow it explicitly where needed</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Good: minimal unsafe, safe wrapper</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> get_unchecked(slice<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">i32</span>]<span class="op">,</span> index<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">// SAFETY: Caller must ensure index &lt; slice.len()</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">unsafe</span> <span class="op">{</span> <span class="op">*</span>slice<span class="op">.</span>get_unchecked(index) <span class="op">}</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb61-7"><a href="#cb61-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Better: don't expose unsafe at all</span></span>
+<span id="cb61-8"><a href="#cb61-8" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> get_or_default(slice<span class="op">:</span> <span class="op">&amp;</span>[<span class="dt">i32</span>]<span class="op">,</span> index<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span> <span class="kw">default</span><span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb61-9"><a href="#cb61-9" aria-hidden="true" tabindex="-1"></a>    slice<span class="op">.</span>get(index)<span class="op">.</span>copied()<span class="op">.</span>unwrap_or(<span class="kw">default</span>)</span>
+<span id="cb61-10"><a href="#cb61-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="common-unsafe-patterns-to-know" class="level3">
+<h3 class="anchored" data-anchor-id="common-unsafe-patterns-to-know">Common Unsafe Patterns to Know</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Transmute: reinterpret bytes (very dangerous)</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="op">{</span> <span class="pp">std::mem::</span>transmute([<span class="dv">0u8</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">1</span>]) <span class="op">};</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="co">// ManuallyDrop: prevent destructor from running</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> <span class="pp">std::mem::ManuallyDrop::</span>new(<span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>))<span class="op">;</span></span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a><span class="co">// s will NOT be dropped when it goes out of scope</span></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a><span class="co">// MaybeUninit: uninitialized memory</span></span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::mem::</span>MaybeUninit<span class="op">;</span></span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> x <span class="op">=</span> <span class="pp">MaybeUninit::</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span><span class="pp">::</span>uninit()<span class="op">;</span></span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a><span class="kw">unsafe</span> <span class="op">{</span></span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>    x<span class="op">.</span>as_mut_ptr()<span class="op">.</span>write(<span class="dv">42</span>)<span class="op">;</span></span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> val <span class="op">=</span> x<span class="op">.</span>assume_init()<span class="op">;</span>  <span class="co">// now safe to use</span></span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Bottom line</strong>: Most Rust code is 100% safe. You can write entire applications without a single <code>unsafe</code>. But when you need it — for FFI, hardware access, or performance — it’s there, and the explicit marking makes it easy to audit.</p>
+<hr>
+</section>
+</section>
 <section id="what-to-learn-next" class="level2">
-<h2 class="anchored" data-anchor-id="what-to-learn-next">20. What to Learn Next</h2>
+<h2 class="anchored" data-anchor-id="what-to-learn-next">23. What to Learn Next</h2>
 <p>Once you’re comfortable with the above, these are the next frontiers:</p>
 <ul>
-<li><strong>Async Rust in depth</strong>: Tokio runtime, futures, <code>select!</code>, streams</li>
-<li><strong>Serde</strong>: The serialization framework (JSON, TOML, YAML, etc.)</li>
+<li><strong>Async Rust in depth</strong>: Tokio runtime, futures, <code>select!</code>, streams, async traits</li>
 <li><strong>Error handling patterns</strong>: <code>thiserror</code> for libraries, <code>anyhow</code> for applications</li>
-<li><strong>Macros</strong>: <code>macro_rules!</code> for declarative, proc macros for derive</li>
-<li><strong>Unsafe Rust</strong>: Raw pointers, FFI with C — you’ll rarely need this</li>
-<li><strong>Pinning</strong>: Required for self-referential types in async</li>
+<li><strong>Pinning</strong>: Required for self-referential types in async code</li>
+<li><strong>Advanced FFI</strong>: <code>bindgen</code> for auto-generating C bindings, <code>cbindgen</code> for exposing Rust to C</li>
+<li><strong>Embedded Rust</strong>: <code>no_std</code>, bare metal programming</li>
+<li><strong>SIMD and performance</strong>: <code>std::simd</code>, profiling with <code>perf</code>, <code>criterion</code> for benchmarks</li>
 <li><strong>The <code>std</code> docs</strong>: Genuinely excellent — <a href="https://doc.rust-lang.org/std/" class="uri">https://doc.rust-lang.org/std/</a></li>
 </ul>
 <blockquote class="blockquote">
