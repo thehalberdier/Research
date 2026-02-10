@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Research Notes">
+<meta name="dcterms.date" content="2026-02-10">
+
+<title>Rust Primer for C++/Java Developers – Research</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-0b37c64f34216b628666a8dac638b53b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Research</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./rust_primer.html" aria-current="page"> 
+<span class="menu-text">Rust Primer</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./hdd_tco_summary.html"> 
+<span class="menu-text">HDD TCO</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./ampereone_m_vs_amd_epyc.html"> 
+<span class="menu-text">Ampere vs AMD</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./arista_switch_health_report.html"> 
+<span class="menu-text">Arista Health</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#first-things-first-cargo-project-setup" id="toc-first-things-first-cargo-project-setup" class="nav-link active" data-scroll-target="#first-things-first-cargo-project-setup">1. First Things First: Cargo &amp; Project Setup</a></li>
+  <li><a href="#the-big-idea-ownership" id="toc-the-big-idea-ownership" class="nav-link" data-scroll-target="#the-big-idea-ownership">2. The Big Idea: Ownership</a>
+  <ul class="collapse">
+  <li><a href="#the-three-rules" id="toc-the-three-rules" class="nav-link" data-scroll-target="#the-three-rules">The Three Rules</a></li>
+  <li><a href="#stack-vs.-heap-copy-types" id="toc-stack-vs.-heap-copy-types" class="nav-link" data-scroll-target="#stack-vs.-heap-copy-types">Stack vs.&nbsp;Heap &amp; Copy Types</a></li>
+  <li><a href="#clone-explicit-deep-copy" id="toc-clone-explicit-deep-copy" class="nav-link" data-scroll-target="#clone-explicit-deep-copy">Clone: Explicit Deep Copy</a></li>
+  </ul></li>
+  <li><a href="#borrowing-references" id="toc-borrowing-references" class="nav-link" data-scroll-target="#borrowing-references">3. Borrowing &amp; References</a>
+  <ul class="collapse">
+  <li><a href="#the-borrowing-rules" id="toc-the-borrowing-rules" class="nav-link" data-scroll-target="#the-borrowing-rules">The Borrowing Rules</a></li>
+  </ul></li>
+  <li><a href="#lifetimes-the-minimum-you-need" id="toc-lifetimes-the-minimum-you-need" class="nav-link" data-scroll-target="#lifetimes-the-minimum-you-need">4. Lifetimes (The Minimum You Need)</a></li>
+  <li><a href="#types-structs-enums" id="toc-types-structs-enums" class="nav-link" data-scroll-target="#types-structs-enums">5. Types, Structs, Enums</a>
+  <ul class="collapse">
+  <li><a href="#primitive-types" id="toc-primitive-types" class="nav-link" data-scroll-target="#primitive-types">Primitive Types</a></li>
+  <li><a href="#structs-like-c-structs-java-classes-but-no-inheritance" id="toc-structs-like-c-structs-java-classes-but-no-inheritance" class="nav-link" data-scroll-target="#structs-like-c-structs-java-classes-but-no-inheritance">Structs (like C++ structs / Java classes, but no inheritance)</a></li>
+  <li><a href="#enums-way-more-powerful-than-cjava-enums" id="toc-enums-way-more-powerful-than-cjava-enums" class="nav-link" data-scroll-target="#enums-way-more-powerful-than-cjava-enums">Enums (WAY more powerful than C++/Java enums)</a></li>
+  </ul></li>
+  <li><a href="#pattern-matching" id="toc-pattern-matching" class="nav-link" data-scroll-target="#pattern-matching">6. Pattern Matching</a>
+  <ul class="collapse">
+  <li><a href="#if-let-when-you-only-care-about-one-variant" id="toc-if-let-when-you-only-care-about-one-variant" class="nav-link" data-scroll-target="#if-let-when-you-only-care-about-one-variant"><code>if let</code> — when you only care about one variant</a></li>
+  <li><a href="#let-...-else-early-return-on-mismatch-rust-1.65" id="toc-let-...-else-early-return-on-mismatch-rust-1.65" class="nav-link" data-scroll-target="#let-...-else-early-return-on-mismatch-rust-1.65"><code>let ... else</code> — early return on mismatch (Rust 1.65+)</a></li>
+  </ul></li>
+  <li><a href="#traits-interfaces-typeclasses" id="toc-traits-interfaces-typeclasses" class="nav-link" data-scroll-target="#traits-interfaces-typeclasses">7. Traits (≈ Interfaces + Typeclasses)</a>
+  <ul class="collapse">
+  <li><a href="#trait-bounds-generics-constrained-by-traits" id="toc-trait-bounds-generics-constrained-by-traits" class="nav-link" data-scroll-target="#trait-bounds-generics-constrained-by-traits">Trait Bounds (= Generics constrained by traits)</a></li>
+  <li><a href="#impl-trait-syntax-simpler" id="toc-impl-trait-syntax-simpler" class="nav-link" data-scroll-target="#impl-trait-syntax-simpler"><code>impl Trait</code> syntax (simpler)</a></li>
+  <li><a href="#common-standard-library-traits-youll-use-constantly" id="toc-common-standard-library-traits-youll-use-constantly" class="nav-link" data-scroll-target="#common-standard-library-traits-youll-use-constantly">Common Standard Library Traits You’ll Use Constantly</a></li>
+  </ul></li>
+  <li><a href="#error-handling-result-and-option" id="toc-error-handling-result-and-option" class="nav-link" data-scroll-target="#error-handling-result-and-option">8. Error Handling: <code>Result</code> and <code>Option</code></a>
+  <ul class="collapse">
+  <li><a href="#optiont-value-might-be-absent" id="toc-optiont-value-might-be-absent" class="nav-link" data-scroll-target="#optiont-value-might-be-absent"><code>Option&lt;T&gt;</code> — value might be absent</a></li>
+  <li><a href="#resultt-e-operation-might-fail" id="toc-resultt-e-operation-might-fail" class="nav-link" data-scroll-target="#resultt-e-operation-might-fail"><code>Result&lt;T, E&gt;</code> — operation might fail</a></li>
+  <li><a href="#the-operator-this-is-huge" id="toc-the-operator-this-is-huge" class="nav-link" data-scroll-target="#the-operator-this-is-huge">The <code>?</code> Operator (This Is Huge)</a></li>
+  </ul></li>
+  <li><a href="#collections-iterators" id="toc-collections-iterators" class="nav-link" data-scroll-target="#collections-iterators">9. Collections &amp; Iterators</a>
+  <ul class="collapse">
+  <li><a href="#key-collections" id="toc-key-collections" class="nav-link" data-scroll-target="#key-collections">Key Collections</a></li>
+  <li><a href="#iterators-rusts-secret-weapon" id="toc-iterators-rusts-secret-weapon" class="nav-link" data-scroll-target="#iterators-rusts-secret-weapon">Iterators (Rust’s Secret Weapon)</a></li>
+  </ul></li>
+  <li><a href="#closures" id="toc-closures" class="nav-link" data-scroll-target="#closures">10. Closures</a></li>
+  <li><a href="#smart-pointers" id="toc-smart-pointers" class="nav-link" data-scroll-target="#smart-pointers">11. Smart Pointers</a></li>
+  <li><a href="#concurrency" id="toc-concurrency" class="nav-link" data-scroll-target="#concurrency">12. Concurrency</a>
+  <ul class="collapse">
+  <li><a href="#threads" id="toc-threads" class="nav-link" data-scroll-target="#threads">Threads</a></li>
+  <li><a href="#channels-message-passing" id="toc-channels-message-passing" class="nav-link" data-scroll-target="#channels-message-passing">Channels (message passing)</a></li>
+  <li><a href="#asyncawait-brief-overview" id="toc-asyncawait-brief-overview" class="nav-link" data-scroll-target="#asyncawait-brief-overview">Async/Await (brief overview)</a></li>
+  </ul></li>
+  <li><a href="#modules-visibility" id="toc-modules-visibility" class="nav-link" data-scroll-target="#modules-visibility">13. Modules &amp; Visibility</a></li>
+  <li><a href="#generics" id="toc-generics" class="nav-link" data-scroll-target="#generics">14. Generics</a>
+  <ul class="collapse">
+  <li><a href="#dynamic-dispatch-dyn-trait" id="toc-dynamic-dispatch-dyn-trait" class="nav-link" data-scroll-target="#dynamic-dispatch-dyn-trait">Dynamic Dispatch (<code>dyn Trait</code>)</a></li>
+  </ul></li>
+  <li><a href="#string-types-cheat-sheet" id="toc-string-types-cheat-sheet" class="nav-link" data-scroll-target="#string-types-cheat-sheet">15. String Types Cheat Sheet</a></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">16. Testing</a></li>
+  <li><a href="#practical-patterns-youll-use-daily" id="toc-practical-patterns-youll-use-daily" class="nav-link" data-scroll-target="#practical-patterns-youll-use-daily">17. Practical Patterns You’ll Use Daily</a>
+  <ul class="collapse">
+  <li><a href="#builder-pattern-common-in-rust-apis" id="toc-builder-pattern-common-in-rust-apis" class="nav-link" data-scroll-target="#builder-pattern-common-in-rust-apis">Builder Pattern (common in Rust APIs)</a></li>
+  <li><a href="#from-into-conversions" id="toc-from-into-conversions" class="nav-link" data-scroll-target="#from-into-conversions"><code>From</code> / <code>Into</code> Conversions</a></li>
+  <li><a href="#type-aliases" id="toc-type-aliases" class="nav-link" data-scroll-target="#type-aliases">Type Aliases</a></li>
+  <li><a href="#destructuring" id="toc-destructuring" class="nav-link" data-scroll-target="#destructuring">Destructuring</a></li>
+  </ul></li>
+  <li><a href="#key-differences-cheat-sheet" id="toc-key-differences-cheat-sheet" class="nav-link" data-scroll-target="#key-differences-cheat-sheet">18. Key Differences Cheat Sheet</a></li>
+  <li><a href="#quick-syntax-reference" id="toc-quick-syntax-reference" class="nav-link" data-scroll-target="#quick-syntax-reference">19. Quick Syntax Reference</a></li>
+  <li><a href="#what-to-learn-next" id="toc-what-to-learn-next" class="nav-link" data-scroll-target="#what-to-learn-next">20. What to Learn Next</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Rust Primer for C++/Java Developers</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Research Notes </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 10, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<blockquote class="blockquote">
+<p><strong>Goal</strong>: Get you to ~80% of Rust, fast. Assumes you know C++/Java, understand types, pointers, and memory. Skips: unsafe, macros-in-depth, async runtime internals, FFI, advanced lifetime gymnastics.</p>
+</blockquote>
+<hr>
+<section id="first-things-first-cargo-project-setup" class="level2">
+<h2 class="anchored" data-anchor-id="first-things-first-cargo-project-setup">1. First Things First: Cargo &amp; Project Setup</h2>
+<p>Cargo is Rust’s build system + package manager. Think CMake + Conan + Maven rolled into one, but actually pleasant.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> new myproject        <span class="co"># creates a new binary project</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> new mylib <span class="at">--lib</span>      <span class="co"># creates a library</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build                <span class="co"># compile (debug)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> build <span class="at">--release</span>      <span class="co"># compile (optimized)</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run                  <span class="co"># build + run</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> test                 <span class="co"># run tests</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> add serde            <span class="co"># add a dependency (like `npm install`)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Project structure:</p>
+<pre><code>myproject/
+├── Cargo.toml             # like pom.xml / CMakeLists.txt
+├── src/
+│   └── main.rs            # entry point (fn main)</code></pre>
+<p><code>Cargo.toml</code> declares dependencies:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode toml code-with-copy"><code class="sourceCode toml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">serde</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">"1.0"</span><span class="op">, </span><span class="dt">features</span><span class="op"> =</span> <span class="op">[</span><span class="st">"derive"</span><span class="op">] }</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="dt">tokio</span> <span class="op">=</span> <span class="op">{ </span><span class="dt">version</span><span class="op"> =</span> <span class="st">"1"</span><span class="op">, </span><span class="dt">features</span><span class="op"> =</span> <span class="op">[</span><span class="st">"full"</span><span class="op">] }</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Crates.io is the package registry (like Maven Central / crates ≈ packages).</p>
+<hr>
+</section>
+<section id="the-big-idea-ownership" class="level2">
+<h2 class="anchored" data-anchor-id="the-big-idea-ownership">2. The Big Idea: Ownership</h2>
+<p>This is THE thing that makes Rust different. If you internalize this section, the rest falls into place.</p>
+<section id="the-three-rules" class="level3">
+<h3 class="anchored" data-anchor-id="the-three-rules">The Three Rules</h3>
+<ol type="1">
+<li>Every value has exactly <strong>one owner</strong> (a variable).</li>
+<li>When the owner goes out of scope, the value is <strong>dropped</strong> (destructor runs, memory freed).</li>
+<li>Ownership can be <strong>moved</strong>, but then the old variable is invalid.</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> s1 <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>)<span class="op">;</span>  <span class="co">// s1 owns the String</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> s2 <span class="op">=</span> s1<span class="op">;</span>                      <span class="co">// ownership MOVED to s2</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// println!("{}", s1);            // COMPILE ERROR: s1 is no longer valid</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}"</span><span class="op">,</span> s2)<span class="op">;</span>               <span class="co">// fine</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>C++ analogy</strong>: Think <code>std::unique_ptr</code>. Assignment = move. But Rust enforces this for ALL types at compile time, not just smart pointers.</p>
+<p><strong>Java comparison</strong>: In Java, <code>s2 = s1</code> makes both point to the same object. In Rust, <code>s1</code> is dead after the move.</p>
+</section>
+<section id="stack-vs.-heap-copy-types" class="level3">
+<h3 class="anchored" data-anchor-id="stack-vs.-heap-copy-types">Stack vs.&nbsp;Heap &amp; Copy Types</h3>
+<p>Simple scalar types (<code>i32</code>, <code>f64</code>, <code>bool</code>, <code>char</code>, tuples of these) implement <code>Copy</code> — they’re copied on assignment, not moved. Just like in C++.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> y <span class="op">=</span> x<span class="op">;</span>       <span class="co">// x is copied, both valid</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">"{x} {y}"</span>)<span class="op">;</span> <span class="co">// fine</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Heap-allocated types (<code>String</code>, <code>Vec&lt;T&gt;</code>, <code>Box&lt;T&gt;</code>) are moved.</p>
+</section>
+<section id="clone-explicit-deep-copy" class="level3">
+<h3 class="anchored" data-anchor-id="clone-explicit-deep-copy">Clone: Explicit Deep Copy</h3>
+<p>If you actually want a deep copy, say so:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s1 <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>)<span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s2 <span class="op">=</span> s1<span class="op">.</span>clone()<span class="op">;</span>  <span class="co">// explicit deep copy</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">"{s1} {s2}"</span>)<span class="op">;</span> <span class="co">// both valid</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="borrowing-references" class="level2">
+<h2 class="anchored" data-anchor-id="borrowing-references">3. Borrowing &amp; References</h2>
+<p>You don’t always want to move ownership. Borrowing lets you lend access.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> print_length(s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">String</span>) <span class="op">{</span>   <span class="co">// borrows s (immutable reference)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"len = {}"</span><span class="op">,</span> s<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> s <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>)<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    print_length(<span class="op">&amp;</span>s)<span class="op">;</span>            <span class="co">// lend s</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{s}"</span>)<span class="op">;</span>             <span class="co">// still valid — we only lent it</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="the-borrowing-rules" class="level3">
+<h3 class="anchored" data-anchor-id="the-borrowing-rules">The Borrowing Rules</h3>
+<p>At any given time, you can have <strong>either</strong>: - <strong>Any number</strong> of immutable references (<code>&amp;T</code>), <strong>OR</strong> - <strong>Exactly one</strong> mutable reference (<code>&amp;mut T</code>)</p>
+<p>Never both at the same time.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>)<span class="op">;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> r1 <span class="op">=</span> <span class="op">&amp;</span>s<span class="op">;</span>       <span class="co">// ok</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> r2 <span class="op">=</span> <span class="op">&amp;</span>s<span class="op">;</span>       <span class="co">// ok — multiple immutable refs fine</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">// let r3 = &amp;mut s; // COMPILE ERROR: can't borrow mutably while immutable refs exist</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">"{r1} {r2}"</span>)<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">// r1, r2 no longer used after this point (their lifetime ends)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> r3 <span class="op">=</span> <span class="op">&amp;</span><span class="kw">mut</span> s<span class="op">;</span>   <span class="co">// now ok — no immutable refs alive</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>r3<span class="op">.</span>push_str(<span class="st">" world"</span>)<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Why</strong>: This is Rust’s compile-time data race prevention. No reader-writer conflicts, ever.</p>
+<p><strong>C++ analogy</strong>: Like <code>const T&amp;</code> vs <code>T&amp;</code>, but the compiler actually enforces that you can’t alias a mutable ref.</p>
+<hr>
+</section>
+</section>
+<section id="lifetimes-the-minimum-you-need" class="level2">
+<h2 class="anchored" data-anchor-id="lifetimes-the-minimum-you-need">4. Lifetimes (The Minimum You Need)</h2>
+<p>Lifetimes ensure references don’t outlive the data they point to. Most of the time, the compiler infers them. You only write them when the compiler can’t figure it out — typically in function signatures returning references.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">// "The returned reference lives as long as BOTH inputs live"</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> longer<span class="op">&lt;</span><span class="ot">'a</span><span class="op">&gt;</span>(s1<span class="op">:</span> <span class="op">&amp;</span><span class="ot">'a</span> <span class="dt">str</span><span class="op">,</span> s2<span class="op">:</span> <span class="op">&amp;</span><span class="ot">'a</span> <span class="dt">str</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="ot">'a</span> <span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> s1<span class="op">.</span>len() <span class="op">&gt;=</span> s2<span class="op">.</span>len() <span class="op">{</span> s1 <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> s2 <span class="op">}</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>'a</code> is a lifetime parameter. Read it as: “the output reference is valid for at least as long as both input references.”</p>
+<p><strong>Practical rule of thumb</strong>: If the compiler says “missing lifetime specifier,” add <code>&lt;'a&gt;</code> to the function and annotate the references. If you’re storing references in a struct, you need lifetimes on the struct too:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Excerpt<span class="op">&lt;</span><span class="ot">'a</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    text<span class="op">:</span> <span class="op">&amp;</span><span class="ot">'a</span> <span class="dt">str</span><span class="op">,</span>   <span class="co">// this struct can't outlive the string it borrows</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Escape hatch</strong>: If lifetimes get painful, just own the data instead (<code>String</code> instead of <code>&amp;str</code>, <code>Vec&lt;T&gt;</code> instead of <code>&amp;[T]</code>). Cloning is fine. Don’t fight the borrow checker when you’re learning.</p>
+<hr>
+</section>
+<section id="types-structs-enums" class="level2">
+<h2 class="anchored" data-anchor-id="types-structs-enums">5. Types, Structs, Enums</h2>
+<section id="primitive-types" class="level3">
+<h3 class="anchored" data-anchor-id="primitive-types">Primitive Types</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>        <span class="co">// signed: i8, i16, i32, i64, i128, isize</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> y<span class="op">:</span> <span class="dt">u64</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>       <span class="co">// unsigned: u8, u16, u32, u64, u128, usize</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> f<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="dv">3.14</span><span class="op">;</span>      <span class="co">// f32, f64</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> b<span class="op">:</span> <span class="dt">bool</span> <span class="op">=</span> <span class="cn">true</span><span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> c<span class="op">:</span> <span class="dt">char</span> <span class="op">=</span> <span class="ch">'🦀'</span><span class="op">;</span>     <span class="co">// 4 bytes, Unicode scalar value</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>usize</code> / <code>isize</code> = pointer-sized integers. Used for indexing.</p>
+</section>
+<section id="structs-like-c-structs-java-classes-but-no-inheritance" class="level3">
+<h3 class="anchored" data-anchor-id="structs-like-c-structs-java-classes-but-no-inheritance">Structs (like C++ structs / Java classes, but no inheritance)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Server <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    hostname<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    cpu_cores<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    is_active<span class="op">:</span> <span class="dt">bool</span><span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Server <span class="op">{</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Associated function (like static method). Convention: `new` is the constructor.</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> new(hostname<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> cores<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        Server <span class="op">{</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>            hostname<span class="op">,</span>          <span class="co">// shorthand when field name == variable name</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>            cpu_cores<span class="op">:</span> cores<span class="op">,</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>            is_active<span class="op">:</span> <span class="cn">true</span><span class="op">,</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Method: takes &amp;self (immutable borrow of the instance)</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> summary(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        <span class="pp">format!</span>(<span class="st">"{}: {} cores"</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span>hostname<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>cpu_cores)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Mutable method: takes &amp;mut self</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> deactivate(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">{</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>is_active <span class="op">=</span> <span class="cn">false</span><span class="op">;</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> srv <span class="op">=</span> <span class="pp">Server::</span>new(<span class="st">"node-01"</span><span class="op">.</span>to_string()<span class="op">,</span> <span class="dv">64</span>)<span class="op">;</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}"</span><span class="op">,</span> srv<span class="op">.</span>summary())<span class="op">;</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    srv<span class="op">.</span>deactivate()<span class="op">;</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>No inheritance.</strong> Composition + traits instead (see §7).</p>
+</section>
+<section id="enums-way-more-powerful-than-cjava-enums" class="level3">
+<h3 class="anchored" data-anchor-id="enums-way-more-powerful-than-cjava-enums">Enums (WAY more powerful than C++/Java enums)</h3>
+<p>Rust enums are algebraic data types (tagged unions). Each variant can hold data.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> StorageBackend <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    Local <span class="op">{</span> path<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    Ceph <span class="op">{</span> pool<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> namespace<span class="op">:</span> <span class="dt">String</span> <span class="op">},</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    NVMe <span class="op">{</span> device_id<span class="op">:</span> <span class="dt">u32</span> <span class="op">},</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="cn">None</span><span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> describe(backend<span class="op">:</span> <span class="op">&amp;</span>StorageBackend) <span class="op">{</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> backend <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="pp">StorageBackend::</span>Local <span class="op">{</span> path <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Local at {path}"</span>)<span class="op">,</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        <span class="pp">StorageBackend::</span>Ceph <span class="op">{</span> pool<span class="op">,</span> <span class="op">..</span> <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Ceph pool: {pool}"</span>)<span class="op">,</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="pp">StorageBackend::</span>NVMe <span class="op">{</span> device_id <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"NVMe dev {device_id}"</span>)<span class="op">,</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        <span class="pp">StorageBackend::</span><span class="cn">None</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"No storage"</span>)<span class="op">,</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>C++ analogy</strong>: <code>std::variant</code>, but with exhaustive pattern matching enforced by the compiler.</p>
+<hr>
+</section>
+</section>
+<section id="pattern-matching" class="level2">
+<h2 class="anchored" data-anchor-id="pattern-matching">6. Pattern Matching</h2>
+<p><code>match</code> is like <code>switch</code> on steroids. It’s exhaustive — you must handle every case.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> x <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"zero"</span>)<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span><span class="op">..=</span><span class="dv">10</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"small"</span>)<span class="op">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="dv">11</span> <span class="op">|</span> <span class="dv">12</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"eleven or twelve"</span>)<span class="op">,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    n <span class="cf">if</span> n <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"negative: {n}"</span>)<span class="op">,</span>   <span class="co">// guard</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    _ <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"something else"</span>)<span class="op">,</span>             <span class="co">// _ = default</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="if-let-when-you-only-care-about-one-variant" class="level3">
+<h3 class="anchored" data-anchor-id="if-let-when-you-only-care-about-one-variant"><code>if let</code> — when you only care about one variant</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> maybe_name<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="cn">Some</span>(<span class="st">"venkat"</span><span class="op">.</span>to_string())<span class="op">;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">let</span> <span class="cn">Some</span>(name) <span class="op">=</span> maybe_name <span class="op">{</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Got: {name}"</span>)<span class="op">;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Use this instead of a full match when you don't care about the other cases.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="let-...-else-early-return-on-mismatch-rust-1.65" class="level3">
+<h3 class="anchored" data-anchor-id="let-...-else-early-return-on-mismatch-rust-1.65"><code>let ... else</code> — early return on mismatch (Rust 1.65+)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> process(val<span class="op">:</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span>) <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="cn">Some</span>(x) <span class="op">=</span> val <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"was None, bailing"</span>)<span class="op">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"processing {x}"</span>)<span class="op">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="traits-interfaces-typeclasses" class="level2">
+<h2 class="anchored" data-anchor-id="traits-interfaces-typeclasses">7. Traits (≈ Interfaces + Typeclasses)</h2>
+<p>Traits define shared behavior. Like Java interfaces, but can have default implementations and can be implemented for types you didn’t define.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Describable <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> describe(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span><span class="op">;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Default implementation (like Java default methods)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> short_desc(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="pp">format!</span>(<span class="st">"{}..."</span><span class="op">,</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>describe()[<span class="op">..</span><span class="dv">20</span><span class="op">.</span>min(<span class="kw">self</span><span class="op">.</span>describe()<span class="op">.</span>len())])</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Describable <span class="cf">for</span> Server <span class="op">{</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> describe(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        <span class="pp">format!</span>(<span class="st">"Server {} with {} cores"</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span>hostname<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>cpu_cores)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="trait-bounds-generics-constrained-by-traits" class="level3">
+<h3 class="anchored" data-anchor-id="trait-bounds-generics-constrained-by-traits">Trait Bounds (= Generics constrained by traits)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Any T that implements Describable</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> log_item<span class="op">&lt;</span>T<span class="op">:</span> Describable<span class="op">&gt;</span>(item<span class="op">:</span> <span class="op">&amp;</span>T) <span class="op">{</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"[LOG] {}"</span><span class="op">,</span> item<span class="op">.</span>describe())<span class="op">;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Equivalent with `where` clause (cleaner for multiple bounds)</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> log_item2<span class="op">&lt;</span>T<span class="op">&gt;</span>(item<span class="op">:</span> <span class="op">&amp;</span>T)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    T<span class="op">:</span> Describable <span class="op">+</span> <span class="bu">Clone</span> <span class="op">+</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span><span class="op">,</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"[LOG] {:?} — {}"</span><span class="op">,</span> item<span class="op">,</span> item<span class="op">.</span>describe())<span class="op">;</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="impl-trait-syntax-simpler" class="level3">
+<h3 class="anchored" data-anchor-id="impl-trait-syntax-simpler"><code>impl Trait</code> syntax (simpler)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> log_item3(item<span class="op">:</span> <span class="op">&amp;</span><span class="kw">impl</span> Describable) <span class="op">{</span>  <span class="co">// same as the generic version above</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"[LOG] {}"</span><span class="op">,</span> item<span class="op">.</span>describe())<span class="op">;</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> make_server() <span class="op">-&gt;</span> <span class="kw">impl</span> Describable <span class="op">{</span>    <span class="co">// return "some type that is Describable"</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">Server::</span>new(<span class="st">"anon"</span><span class="op">.</span>into()<span class="op">,</span> <span class="dv">8</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="common-standard-library-traits-youll-use-constantly" class="level3">
+<h3 class="anchored" data-anchor-id="common-standard-library-traits-youll-use-constantly">Common Standard Library Traits You’ll Use Constantly</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Trait</th>
+<th>What it does</th>
+<th>C++/Java analogy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Clone</code></td>
+<td>Explicit deep copy (<code>.clone()</code>)</td>
+<td>Copy constructor</td>
+</tr>
+<tr class="even">
+<td><code>Copy</code></td>
+<td>Implicit bitwise copy</td>
+<td>POD types</td>
+</tr>
+<tr class="odd">
+<td><code>Debug</code></td>
+<td>Format with <code>{:?}</code> for debugging</td>
+<td><code>toString()</code> for debug</td>
+</tr>
+<tr class="even">
+<td><code>Display</code></td>
+<td>Format with <code>{}</code> for user-facing output</td>
+<td><code>toString()</code></td>
+</tr>
+<tr class="odd">
+<td><code>PartialEq</code>, <code>Eq</code></td>
+<td><code>==</code> / <code>!=</code></td>
+<td><code>operator==</code> / <code>equals()</code></td>
+</tr>
+<tr class="even">
+<td><code>PartialOrd</code>, <code>Ord</code></td>
+<td><code>&lt;</code>, <code>&gt;</code>, sorting</td>
+<td><code>operator&lt;</code> / <code>Comparable</code></td>
+</tr>
+<tr class="odd">
+<td><code>Hash</code></td>
+<td>Hashing for <code>HashMap</code> keys</td>
+<td><code>hashCode()</code></td>
+</tr>
+<tr class="even">
+<td><code>Default</code></td>
+<td>Default value (<code>T::default()</code>)</td>
+<td>Default constructor</td>
+</tr>
+<tr class="odd">
+<td><code>From</code> / <code>Into</code></td>
+<td>Type conversion</td>
+<td>Conversion constructors</td>
+</tr>
+<tr class="even">
+<td><code>Iterator</code></td>
+<td>Iteration protocol</td>
+<td><code>Iterator&lt;T&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>Drop</code></td>
+<td>Destructor</td>
+<td>Destructor / <code>finalize()</code></td>
+</tr>
+</tbody>
+</table>
+<p>Most of these can be auto-derived:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="op">,</span> <span class="bu">Clone</span><span class="op">,</span> <span class="bu">PartialEq</span><span class="op">,</span> <span class="bu">Eq</span><span class="op">,</span> <span class="bu">Hash</span><span class="at">)]</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> NodeId <span class="op">{</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    rack<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    slot<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="error-handling-result-and-option" class="level2">
+<h2 class="anchored" data-anchor-id="error-handling-result-and-option">8. Error Handling: <code>Result</code> and <code>Option</code></h2>
+<p>No exceptions in Rust. Errors are values.</p>
+<section id="optiont-value-might-be-absent" class="level3">
+<h3 class="anchored" data-anchor-id="optiont-value-might-be-absent"><code>Option&lt;T&gt;</code> — value might be absent</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Option is just: enum Option&lt;T&gt; { Some(T), None }</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> find_server(id<span class="op">:</span> <span class="dt">u32</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span>Server<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> id <span class="op">==</span> <span class="dv">1</span> <span class="op">{</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(<span class="pp">Server::</span>new(<span class="st">"node-01"</span><span class="op">.</span>into()<span class="op">,</span> <span class="dv">64</span>))</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>        <span class="cn">None</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Handling:</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="cf">match</span> find_server(<span class="dv">1</span>) <span class="op">{</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Some</span>(srv) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"{}"</span><span class="op">,</span> srv<span class="op">.</span>summary())<span class="op">,</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="cn">None</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"not found"</span>)<span class="op">,</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Or more concisely:</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> srv <span class="op">=</span> find_server(<span class="dv">1</span>)<span class="op">.</span>unwrap()<span class="op">;</span>             <span class="co">// panics if None (like .get() on null)</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> srv <span class="op">=</span> find_server(<span class="dv">1</span>)<span class="op">.</span>unwrap_or(<span class="kw">default</span>)<span class="op">;</span>   <span class="co">// fallback</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> srv <span class="op">=</span> find_server(<span class="dv">1</span>)<span class="op">.</span>expect(<span class="st">"server 1 must exist"</span>)<span class="op">;</span> <span class="co">// panic with message</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="resultt-e-operation-might-fail" class="level3">
+<h3 class="anchored" data-anchor-id="resultt-e-operation-might-fail"><code>Result&lt;T, E&gt;</code> — operation might fail</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Result is just: enum Result&lt;T, E&gt; { Ok(T), Err(E) }</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>fs<span class="op">;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>io<span class="op">;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> read_config(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="pp">io::</span><span class="bu">Error</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">fs::</span>read_to_string(path)</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> read_config(<span class="st">"/etc/myapp.conf"</span>) <span class="op">{</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Ok</span>(contents) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Config: {contents}"</span>)<span class="op">,</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Err</span>(e) <span class="op">=&gt;</span> <span class="pp">eprintln!</span>(<span class="st">"Failed: {e}"</span>)<span class="op">,</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="the-operator-this-is-huge" class="level3">
+<h3 class="anchored" data-anchor-id="the-operator-this-is-huge">The <code>?</code> Operator (This Is Huge)</h3>
+<p><code>?</code> propagates errors upward. If the Result is <code>Err</code>, return early with that error. If <code>Ok</code>, unwrap the value. This replaces try-catch with zero boilerplate.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load_and_parse_config(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Config<span class="op">,</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="pp">std::error::</span><span class="bu">Error</span><span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> contents <span class="op">=</span> <span class="pp">fs::</span>read_to_string(path)<span class="op">?;</span>   <span class="co">// returns Err early if file read fails</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config<span class="op">:</span> Config <span class="op">=</span> <span class="pp">serde_json::</span>from_str(<span class="op">&amp;</span>contents)<span class="op">?;</span>  <span class="co">// returns Err if parse fails</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(config)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>C++ analogy</strong>: Like if every function returned <code>std::expected&lt;T, E&gt;</code> and you had a concise syntax for early returns.</p>
+<p><strong>Practical advice</strong>: Use <code>anyhow::Result</code> (from the <code>anyhow</code> crate) for applications and <code>thiserror</code> for libraries.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In Cargo.toml: anyhow = "1"</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">anyhow::</span><span class="op">{</span>Context<span class="op">,</span> <span class="dt">Result</span><span class="op">};</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load_config(path<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>Config<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> contents <span class="op">=</span> <span class="pp">fs::</span>read_to_string(path)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>context(<span class="st">"failed to read config file"</span>)<span class="op">?;</span>    <span class="co">// adds context to error</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> config <span class="op">=</span> <span class="pp">serde_json::</span>from_str(<span class="op">&amp;</span>contents)</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>context(<span class="st">"failed to parse config"</span>)<span class="op">?;</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(config)</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="collections-iterators" class="level2">
+<h2 class="anchored" data-anchor-id="collections-iterators">9. Collections &amp; Iterators</h2>
+<section id="key-collections" class="level3">
+<h3 class="anchored" data-anchor-id="key-collections">Key Collections</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::collections::</span>HashMap<span class="op">;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Vec&lt;T&gt; — dynamic array (like std::vector / ArrayList)</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> nums<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>]<span class="op">;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>nums<span class="op">.</span>push(<span class="dv">4</span>)<span class="op">;</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co">// String — owned, growable UTF-8 string</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> s <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>)<span class="op">;</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>s<span class="op">.</span>push_str(<span class="st">" world"</span>)<span class="op">;</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="co">// &amp;str — string slice (borrowed view into a String or literal)</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> slice<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="op">&amp;</span>s[<span class="dv">0</span><span class="op">..</span><span class="dv">5</span>]<span class="op">;</span></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="co">// HashMap&lt;K, V&gt; — hash map (like std::unordered_map / HashMap)</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> scores<span class="op">:</span> HashMap<span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">HashMap::</span>new()<span class="op">;</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>scores<span class="op">.</span>insert(<span class="st">"node-01"</span><span class="op">.</span>into()<span class="op">,</span> <span class="dv">95</span>)<span class="op">;</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="co">// VecDeque, BTreeMap, BTreeSet, HashSet also available</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="iterators-rusts-secret-weapon" class="level3">
+<h3 class="anchored" data-anchor-id="iterators-rusts-secret-weapon">Iterators (Rust’s Secret Weapon)</h3>
+<p>Rust iterators are lazy, zero-cost abstractions. They compile down to the same code as hand-written loops.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nums <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span><span class="op">,</span> <span class="dv">4</span><span class="op">,</span> <span class="dv">5</span><span class="op">,</span> <span class="dv">6</span><span class="op">,</span> <span class="dv">7</span><span class="op">,</span> <span class="dv">8</span><span class="op">,</span> <span class="dv">9</span><span class="op">,</span> <span class="dv">10</span>]<span class="op">;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Chained iterator operations</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> nums<span class="op">.</span>iter()</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>filter(<span class="op">|&amp;&amp;</span>x<span class="op">|</span> x <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>)       <span class="co">// keep evens</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>map(<span class="op">|&amp;</span>x<span class="op">|</span> x <span class="op">*</span> x)                <span class="co">// square them</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>collect()<span class="op">;</span>                       <span class="co">// collect into Vec</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co">// result = [4, 16, 36, 64, 100]</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Sum</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> total<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> nums<span class="op">.</span>iter()<span class="op">.</span>sum()<span class="op">;</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Find</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> first_big <span class="op">=</span> nums<span class="op">.</span>iter()<span class="op">.</span>find(<span class="op">|&amp;&amp;</span>x<span class="op">|</span> x <span class="op">&gt;</span> <span class="dv">5</span>)<span class="op">;</span>  <span class="co">// Option&lt;&amp;i32&gt;</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a><span class="co">// for loop (uses IntoIterator under the hood)</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> num <span class="kw">in</span> <span class="op">&amp;</span>nums <span class="op">{</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{num}"</span>)<span class="op">;</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Enumerate (like Python)</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i<span class="op">,</span> num) <span class="kw">in</span> nums<span class="op">.</span>iter()<span class="op">.</span>enumerate() <span class="op">{</span></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"[{i}] = {num}"</span>)<span class="op">;</span></span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a><span class="co">// Iterating over HashMap</span></span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (key<span class="op">,</span> value) <span class="kw">in</span> <span class="op">&amp;</span>scores <span class="op">{</span></span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{key}: {value}"</span>)<span class="op">;</span></span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key iterator methods</strong>: <code>map</code>, <code>filter</code>, <code>flat_map</code>, <code>fold</code>, <code>reduce</code>, <code>take</code>, <code>skip</code>, <code>zip</code>, <code>enumerate</code>, <code>any</code>, <code>all</code>, <code>find</code>, <code>position</code>, <code>collect</code>, <code>count</code>, <code>sum</code>, <code>min</code>, <code>max</code>, <code>chain</code>, <code>peekable</code>.</p>
+<p><code>.collect()</code> can produce different collection types based on the type annotation — it’s generic over the output type.</p>
+<hr>
+</section>
+</section>
+<section id="closures" class="level2">
+<h2 class="anchored" data-anchor-id="closures">10. Closures</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Type-inferred closure</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> add <span class="op">=</span> <span class="op">|</span>a<span class="op">,</span> b<span class="op">|</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">"{}"</span><span class="op">,</span> add(<span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>))<span class="op">;</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co">// With explicit types</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> square <span class="op">=</span> <span class="op">|</span>x<span class="op">:</span> <span class="dt">i32</span><span class="op">|</span> <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span> x <span class="op">*</span> x <span class="op">};</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Closures capture variables from their environment</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> threshold <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> above_threshold <span class="op">=</span> <span class="op">|</span>x<span class="op">:</span> <span class="op">&amp;</span><span class="dt">i32</span><span class="op">|</span> <span class="op">*</span>x <span class="op">&gt;</span> threshold<span class="op">;</span>    <span class="co">// borrows `threshold`</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> results<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> nums<span class="op">.</span>iter()<span class="op">.</span>filter(<span class="op">|</span>x<span class="op">|</span> above_threshold(x))<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Move closure — takes ownership of captured variables</span></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> name <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"venkat"</span>)<span class="op">;</span></span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> greeting <span class="op">=</span> <span class="kw">move</span> <span class="op">||</span> <span class="pp">println!</span>(<span class="st">"Hello, {name}"</span>)<span class="op">;</span>    <span class="co">// `name` moved into closure</span></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a><span class="co">// `name` is no longer usable here</span></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>greeting()<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Closures implement one or more of: <code>Fn</code> (borrows immutably), <code>FnMut</code> (borrows mutably), <code>FnOnce</code> (takes ownership). The compiler figures this out.</p>
+<hr>
+</section>
+<section id="smart-pointers" class="level2">
+<h2 class="anchored" data-anchor-id="smart-pointers">11. Smart Pointers</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 40%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>What it does</th>
+<th>C++ analogy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Box&lt;T&gt;</code></td>
+<td>Heap allocation, single owner</td>
+<td><code>std::unique_ptr&lt;T&gt;</code></td>
+</tr>
+<tr class="even">
+<td><code>Rc&lt;T&gt;</code></td>
+<td>Reference-counted, single thread</td>
+<td><code>std::shared_ptr&lt;T&gt;</code></td>
+</tr>
+<tr class="odd">
+<td><code>Arc&lt;T&gt;</code></td>
+<td>Reference-counted, thread-safe</td>
+<td><code>std::shared_ptr&lt;T&gt;</code> (atomic)</td>
+</tr>
+<tr class="even">
+<td><code>RefCell&lt;T&gt;</code></td>
+<td>Interior mutability (runtime borrow checks)</td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>Mutex&lt;T&gt;</code></td>
+<td>Mutual exclusion with owned data</td>
+<td><code>std::mutex</code> + the data it protects</td>
+</tr>
+<tr class="even">
+<td><code>RwLock&lt;T&gt;</code></td>
+<td>Reader-writer lock with owned data</td>
+<td><code>std::shared_mutex</code> + data</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Box: heap allocation</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> boxed<span class="op">:</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="dt">Box</span><span class="pp">::</span>new(<span class="dv">42</span>)<span class="op">;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Arc + Mutex: shared mutable state across threads</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span><span class="op">{</span>Arc<span class="op">,</span> Mutex<span class="op">};</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> counter <span class="op">=</span> <span class="pp">Arc::</span>new(<span class="pp">Mutex::</span>new(<span class="dv">0</span>))<span class="op">;</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> counter_clone <span class="op">=</span> <span class="pp">Arc::</span>clone(<span class="op">&amp;</span>counter)<span class="op">;</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="pp">std::thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> num <span class="op">=</span> counter_clone<span class="op">.</span>lock()<span class="op">.</span>unwrap()<span class="op">;</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>num <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Key insight</strong>: In Rust, <code>Mutex&lt;T&gt;</code> owns the data it protects. You can’t access the data without locking. This makes data races structurally impossible.</p>
+<hr>
+</section>
+<section id="concurrency" class="level2">
+<h2 class="anchored" data-anchor-id="concurrency">12. Concurrency</h2>
+<section id="threads" class="level3">
+<h3 class="anchored" data-anchor-id="threads">Threads</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>thread<span class="op">;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> handle <span class="op">=</span> <span class="pp">thread::</span>spawn(<span class="op">||</span> <span class="op">{</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"hello from thread"</span>)<span class="op">;</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="dv">42</span>   <span class="co">// return value</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> result <span class="op">=</span> handle<span class="op">.</span>join()<span class="op">.</span>unwrap()<span class="op">;</span>  <span class="co">// wait + get result</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="channels-message-passing" class="level3">
+<h3 class="anchored" data-anchor-id="channels-message-passing">Channels (message passing)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::sync::</span>mpsc<span class="op">;</span>  <span class="co">// multi-producer, single-consumer</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (tx<span class="op">,</span> rx) <span class="op">=</span> <span class="pp">mpsc::</span>channel()<span class="op">;</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> tx2 <span class="op">=</span> tx<span class="op">.</span>clone()<span class="op">;</span>   <span class="co">// clone sender for multiple producers</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="pp">thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span> tx<span class="op">.</span>send(<span class="st">"from thread 1"</span>)<span class="op">.</span>unwrap()<span class="op">;</span> <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="pp">thread::</span>spawn(<span class="kw">move</span> <span class="op">||</span> <span class="op">{</span> tx2<span class="op">.</span>send(<span class="st">"from thread 2"</span>)<span class="op">.</span>unwrap()<span class="op">;</span> <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> msg <span class="kw">in</span> rx <span class="op">{</span>  <span class="co">// blocks until all senders dropped</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Got: {msg}"</span>)<span class="op">;</span></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="asyncawait-brief-overview" class="level3">
+<h3 class="anchored" data-anchor-id="asyncawait-brief-overview">Async/Await (brief overview)</h3>
+<p>Rust has async syntax but no built-in runtime. You pick one (usually <code>tokio</code>).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Cargo.toml: tokio = { version = "1", features = ["full"] }</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span><span class="pp">tokio::</span>main<span class="at">]</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> fetch_data()<span class="op">.</span><span class="kw">await</span><span class="op">;</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{result}"</span>)<span class="op">;</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="kw">async</span> <span class="kw">fn</span> fetch_data() <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// async operations here</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data"</span><span class="op">.</span>to_string()</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="modules-visibility" class="level2">
+<h2 class="anchored" data-anchor-id="modules-visibility">13. Modules &amp; Visibility</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">// In src/main.rs or src/lib.rs</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> network <span class="op">{</span>                    <span class="co">// inline module</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">struct</span> Connection <span class="op">{</span>      <span class="co">// pub = public</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">pub</span> host<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>        port<span class="op">:</span> <span class="dt">u16</span><span class="op">,</span>               <span class="co">// private by default</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">impl</span> Connection <span class="op">{</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">pub</span> <span class="kw">fn</span> new(host<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> port<span class="op">:</span> <span class="dt">u16</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>            Connection <span class="op">{</span> host<span class="op">,</span> port <span class="op">}</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">pub</span> <span class="kw">fn</span> connect(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">{</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>            <span class="pp">println!</span>(<span class="st">"Connecting to {}:{}"</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span>host<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>port)<span class="op">;</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">pub</span> <span class="kw">mod</span> dns <span class="op">{</span>                <span class="co">// nested module</span></span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">pub</span> <span class="kw">fn</span> resolve(hostname<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>            <span class="pp">format!</span>(<span class="st">"192.168.1.1 (resolved {hostname})"</span>)</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> conn <span class="op">=</span> <span class="pp">network::Connection::</span>new(<span class="st">"10.0.0.1"</span><span class="op">.</span>into()<span class="op">,</span> <span class="dv">8080</span>)<span class="op">;</span></span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>    conn<span class="op">.</span>connect()<span class="op">;</span></span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ip <span class="op">=</span> <span class="pp">network::dns::</span>resolve(<span class="st">"node-01"</span>)<span class="op">;</span></span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For file-based modules:</p>
+<pre><code>src/
+├── main.rs         // declares: mod network;
+├── network/
+│   ├── mod.rs      // declares: pub mod dns;
+│   └── dns.rs      // the dns module</code></pre>
+<p>Or the newer flat style (Rust 2018+):</p>
+<pre><code>src/
+├── main.rs         // declares: mod network;
+├── network.rs      // the network module, declares: pub mod dns;
+├── network/
+│   └── dns.rs</code></pre>
+<p><code>use</code> brings items into scope:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">network::</span>Connection<span class="op">;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::collections::</span>HashMap<span class="op">;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::io::</span><span class="op">{</span><span class="kw">self</span><span class="op">,</span> <span class="bu">Read</span><span class="op">,</span> <span class="bu">Write</span><span class="op">};</span>  <span class="co">// multiple imports</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="generics" class="level2">
+<h2 class="anchored" data-anchor-id="generics">14. Generics</h2>
+<p>Like C++ templates / Java generics, but with trait bounds instead of SFINAE / concepts.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Generic function</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> largest<span class="op">&lt;</span>T<span class="op">:</span> <span class="bu">PartialOrd</span><span class="op">&gt;</span>(list<span class="op">:</span> <span class="op">&amp;</span>[T]) <span class="op">-&gt;</span> <span class="op">&amp;</span>T <span class="op">{</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> largest <span class="op">=</span> <span class="op">&amp;</span>list[<span class="dv">0</span>]<span class="op">;</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> item <span class="kw">in</span> <span class="op">&amp;</span>list[<span class="dv">1</span><span class="op">..</span>] <span class="op">{</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> item <span class="op">&gt;</span> largest <span class="op">{</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>            largest <span class="op">=</span> item<span class="op">;</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    largest</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Generic struct</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Cache<span class="op">&lt;</span>K<span class="op">,</span> V<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    entries<span class="op">:</span> HashMap<span class="op">&lt;</span>K<span class="op">,</span> V<span class="op">&gt;,</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a>    max_size<span class="op">:</span> <span class="dt">usize</span><span class="op">,</span></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span>K<span class="op">:</span> <span class="bu">Eq</span> <span class="op">+</span> <span class="bu">Hash</span><span class="op">,</span> V<span class="op">&gt;</span> Cache<span class="op">&lt;</span>K<span class="op">,</span> V<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> new(max_size<span class="op">:</span> <span class="dt">usize</span>) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a>        Cache <span class="op">{</span></span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a>            entries<span class="op">:</span> <span class="pp">HashMap::</span>new()<span class="op">,</span></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a>            max_size<span class="op">,</span></span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-26"><a href="#cb36-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> get(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> key<span class="op">:</span> <span class="op">&amp;</span>K) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;&amp;</span>V<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb36-27"><a href="#cb36-27" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>entries<span class="op">.</span>get(key)</span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="dynamic-dispatch-dyn-trait" class="level3">
+<h3 class="anchored" data-anchor-id="dynamic-dispatch-dyn-trait">Dynamic Dispatch (<code>dyn Trait</code>)</h3>
+<p>When you need runtime polymorphism (like virtual functions in C++ / interface references in Java):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> log_all(items<span class="op">:</span> <span class="op">&amp;</span>[<span class="op">&amp;</span><span class="kw">dyn</span> Describable]) <span class="op">{</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> item <span class="kw">in</span> items <span class="op">{</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"{}"</span><span class="op">,</span> item<span class="op">.</span>describe())<span class="op">;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Or with Box for owned trait objects</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> get_backend(config<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> StorageTrait<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> config <span class="op">{</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ceph"</span> <span class="op">=&gt;</span> <span class="dt">Box</span><span class="pp">::</span>new(<span class="pp">CephBackend::</span>new())<span class="op">,</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"local"</span> <span class="op">=&gt;</span> <span class="dt">Box</span><span class="pp">::</span>new(<span class="pp">LocalBackend::</span>new())<span class="op">,</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=&gt;</span> <span class="pp">panic!</span>(<span class="st">"unknown backend"</span>)<span class="op">,</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>dyn Trait</code> = vtable dispatch (like C++ virtual). <code>impl Trait</code> / generics = monomorphization (like C++ templates). Prefer generics for performance; use <code>dyn</code> when you need heterogeneous collections or runtime selection.</p>
+<hr>
+</section>
+</section>
+<section id="string-types-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="string-types-cheat-sheet">15. String Types Cheat Sheet</h2>
+<p>This trips up every newcomer:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 28%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>What</th>
+<th>Analogy</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>String</code></td>
+<td>Owned, heap-allocated, growable</td>
+<td><code>std::string</code></td>
+</tr>
+<tr class="even">
+<td><code>&amp;str</code></td>
+<td>Borrowed slice (view into a String or literal)</td>
+<td><code>std::string_view</code> / <code>const char*</code></td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> owned<span class="op">:</span> <span class="dt">String</span> <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>)<span class="op">;</span>   <span class="co">// or "hello".to_string()</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> slice<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="op">&amp;</span>owned<span class="op">;</span>                     <span class="co">// borrow as slice</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> literal<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">"hello"</span><span class="op">;</span>                  <span class="co">// string literal (lives in binary, static lifetime)</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="co">// Convert between them:</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="dt">String</span> <span class="op">=</span> <span class="st">"hello"</span><span class="op">.</span>to_string()<span class="op">;</span>          <span class="co">// &amp;str → String</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="dt">String</span> <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"hello"</span>)<span class="op">;</span>        <span class="co">// same</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="op">&amp;</span>owned<span class="op">;</span>                         <span class="co">// String → &amp;str (via Deref coercion)</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> s<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> owned<span class="op">.</span>as_str()<span class="op">;</span>                 <span class="co">// explicit</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Rule of thumb</strong>: Functions should take <code>&amp;str</code> as input (accepts both) and return <code>String</code> if they’re creating new string data.</p>
+<hr>
+</section>
+<section id="testing" class="level2">
+<h2 class="anchored" data-anchor-id="testing">16. Testing</h2>
+<p>Tests live right next to the code. No separate test files needed (though you can have them).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> add(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    a <span class="op">+</span> b</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>cfg<span class="at">(</span>test<span class="at">)]</span>                       <span class="co">// only compiled during `cargo test`</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="kw">mod</span> tests <span class="op">{</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">use</span> <span class="kw">super</span><span class="pp">::</span><span class="op">*;</span>                  <span class="co">// import from parent module</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> test_add() <span class="op">{</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert_eq!</span>(add(<span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">,</span> <span class="dv">5</span>)<span class="op">;</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> test_add_negative() <span class="op">{</span></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a>        <span class="pp">assert_eq!</span>(add(<span class="op">-</span><span class="dv">1</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>test<span class="at">]</span></span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">#[</span>should_panic<span class="at">(</span>expected <span class="op">=</span> <span class="st">"overflow"</span><span class="at">)]</span></span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> test_overflow() <span class="op">{</span></span>
+<span id="cb39-22"><a href="#cb39-22" aria-hidden="true" tabindex="-1"></a>        <span class="co">// test that something panics</span></span>
+<span id="cb39-23"><a href="#cb39-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb39-24"><a href="#cb39-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Integration tests go in <code>tests/</code> directory at the project root.</p>
+<hr>
+</section>
+<section id="practical-patterns-youll-use-daily" class="level2">
+<h2 class="anchored" data-anchor-id="practical-patterns-youll-use-daily">17. Practical Patterns You’ll Use Daily</h2>
+<section id="builder-pattern-common-in-rust-apis" class="level3">
+<h3 class="anchored" data-anchor-id="builder-pattern-common-in-rust-apis">Builder Pattern (common in Rust APIs)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> client <span class="op">=</span> <span class="pp">ClientBuilder::</span>new()</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>timeout(<span class="pp">Duration::</span>from_secs(<span class="dv">30</span>))</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>max_retries(<span class="dv">3</span>)</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>base_url(<span class="st">"https://api.example.com"</span>)</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span>build()<span class="op">?;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="from-into-conversions" class="level3">
+<h3 class="anchored" data-anchor-id="from-into-conversions"><code>From</code> / <code>Into</code> Conversions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="bu">From</span><span class="op">&lt;</span>NodeConfig<span class="op">&gt;</span> <span class="cf">for</span> Server <span class="op">{</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> from(config<span class="op">:</span> NodeConfig) <span class="op">-&gt;</span> <span class="dt">Self</span> <span class="op">{</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>        <span class="pp">Server::</span>new(config<span class="op">.</span>hostname<span class="op">,</span> config<span class="op">.</span>cores)</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Now you can do:</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> server<span class="op">:</span> Server <span class="op">=</span> config<span class="op">.</span>into()<span class="op">;</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> server <span class="op">=</span> <span class="pp">Server::</span>from(config)<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="type-aliases" class="level3">
+<h3 class="anchored" data-anchor-id="type-aliases">Type Aliases</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> Result<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">=</span> <span class="pp">std::result::</span><span class="dt">Result</span><span class="op">&lt;</span>T<span class="op">,</span> MyError<span class="op">&gt;;</span>   <span class="co">// common in libraries</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">type</span> NodeMap <span class="op">=</span> HashMap<span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">Vec</span><span class="op">&lt;</span>Server<span class="op">&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="destructuring" class="level3">
+<h3 class="anchored" data-anchor-id="destructuring">Destructuring</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> (x<span class="op">,</span> y<span class="op">,</span> z) <span class="op">=</span> (<span class="dv">1</span><span class="op">,</span> <span class="dv">2</span><span class="op">,</span> <span class="dv">3</span>)<span class="op">;</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> Server <span class="op">{</span> hostname<span class="op">,</span> cpu_cores<span class="op">,</span> <span class="op">..</span> <span class="op">}</span> <span class="op">=</span> <span class="op">&amp;</span>server<span class="op">;</span>   <span class="co">// struct destructuring</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">let</span> <span class="cn">Ok</span>(config) <span class="op">=</span> load_config(<span class="st">"path"</span>) <span class="op">{</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// use config</span></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="key-differences-cheat-sheet" class="level2">
+<h2 class="anchored" data-anchor-id="key-differences-cheat-sheet">18. Key Differences Cheat Sheet</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 19%">
+<col style="width: 23%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>C++</th>
+<th>Java</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Memory</td>
+<td>Manual / RAII</td>
+<td>GC</td>
+<td>Ownership + RAII</td>
+</tr>
+<tr class="even">
+<td>Null</td>
+<td><code>nullptr</code></td>
+<td><code>null</code></td>
+<td><code>Option&lt;T&gt;</code> (no null)</td>
+</tr>
+<tr class="odd">
+<td>Errors</td>
+<td>Exceptions / error codes</td>
+<td>Exceptions</td>
+<td><code>Result&lt;T, E&gt;</code></td>
+</tr>
+<tr class="even">
+<td>Inheritance</td>
+<td>Class hierarchy</td>
+<td>Class hierarchy</td>
+<td><strong>None</strong> (use traits + composition)</td>
+</tr>
+<tr class="odd">
+<td>Polymorphism</td>
+<td>Virtual functions</td>
+<td>Interfaces</td>
+<td>Traits (<code>dyn</code> or generics)</td>
+</tr>
+<tr class="even">
+<td>Concurrency safety</td>
+<td>“be careful”</td>
+<td>“be careful”</td>
+<td>Compile-time enforcement</td>
+</tr>
+<tr class="odd">
+<td>Package manager</td>
+<td>???</td>
+<td>Maven/Gradle</td>
+<td>Cargo (it’s great)</td>
+</tr>
+<tr class="even">
+<td>Strings</td>
+<td><code>std::string</code> / <code>const char*</code></td>
+<td><code>String</code></td>
+<td><code>String</code> / <code>&amp;str</code></td>
+</tr>
+<tr class="odd">
+<td>Default mutability</td>
+<td>Mutable</td>
+<td>Mutable (refs)</td>
+<td><strong>Immutable</strong></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="quick-syntax-reference" class="level2">
+<h2 class="anchored" data-anchor-id="quick-syntax-reference">19. Quick Syntax Reference</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Variables</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>                     <span class="co">// immutable</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> <span class="kw">mut</span> y <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>                <span class="co">// mutable</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> z<span class="op">:</span> <span class="dt">i64</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>             <span class="co">// explicit type</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Functions</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> add(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    a <span class="op">+</span> b                       <span class="co">// no semicolon = return value (expression)</span></span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Conditionals (expressions — they return values)</span></span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> status <span class="op">=</span> <span class="cf">if</span> cpu_load <span class="op">&gt;</span> <span class="dv">90</span> <span class="op">{</span> <span class="st">"critical"</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> <span class="st">"ok"</span> <span class="op">};</span></span>
+<span id="cb44-13"><a href="#cb44-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Loops</span></span>
+<span id="cb44-15"><a href="#cb44-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> item <span class="kw">in</span> <span class="op">&amp;</span>collection <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb44-16"><a href="#cb44-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span><span class="dv">10</span> <span class="op">{</span> <span class="op">}</span>            <span class="co">// 0 to 9</span></span>
+<span id="cb44-17"><a href="#cb44-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">10</span> <span class="op">{</span> <span class="op">}</span>           <span class="co">// 0 to 10 (inclusive)</span></span>
+<span id="cb44-18"><a href="#cb44-18" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> condition <span class="op">{</span> <span class="op">}</span></span>
+<span id="cb44-19"><a href="#cb44-19" aria-hidden="true" tabindex="-1"></a><span class="cf">loop</span> <span class="op">{</span> <span class="cf">break</span> value<span class="op">;</span> <span class="op">}</span>          <span class="co">// infinite loop, can return a value</span></span>
+<span id="cb44-20"><a href="#cb44-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-21"><a href="#cb44-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Printing</span></span>
+<span id="cb44-22"><a href="#cb44-22" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">"Hello {name}"</span>)<span class="op">;</span>                      <span class="co">// string interpolation</span></span>
+<span id="cb44-23"><a href="#cb44-23" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">"Debug: {:?}"</span><span class="op">,</span> some_struct)<span class="op">;</span>           <span class="co">// debug format</span></span>
+<span id="cb44-24"><a href="#cb44-24" aria-hidden="true" tabindex="-1"></a><span class="pp">println!</span>(<span class="st">"Pretty debug: {:#?}"</span><span class="op">,</span> some_struct)<span class="op">;</span>   <span class="co">// pretty-printed debug</span></span>
+<span id="cb44-25"><a href="#cb44-25" aria-hidden="true" tabindex="-1"></a><span class="pp">eprintln!</span>(<span class="st">"Error: {e}"</span>)<span class="op">;</span>                        <span class="co">// print to stderr</span></span>
+<span id="cb44-26"><a href="#cb44-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-27"><a href="#cb44-27" aria-hidden="true" tabindex="-1"></a><span class="co">// Turbofish (explicit type for generic functions)</span></span>
+<span id="cb44-28"><a href="#cb44-28" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> nums <span class="op">=</span> <span class="st">"1,2,3"</span><span class="op">.</span>split(<span class="ch">','</span>)<span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">str</span><span class="op">&gt;&gt;</span>()<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="what-to-learn-next" class="level2">
+<h2 class="anchored" data-anchor-id="what-to-learn-next">20. What to Learn Next</h2>
+<p>Once you’re comfortable with the above, these are the next frontiers:</p>
+<ul>
+<li><strong>Async Rust in depth</strong>: Tokio runtime, futures, <code>select!</code>, streams</li>
+<li><strong>Serde</strong>: The serialization framework (JSON, TOML, YAML, etc.)</li>
+<li><strong>Error handling patterns</strong>: <code>thiserror</code> for libraries, <code>anyhow</code> for applications</li>
+<li><strong>Macros</strong>: <code>macro_rules!</code> for declarative, proc macros for derive</li>
+<li><strong>Unsafe Rust</strong>: Raw pointers, FFI with C — you’ll rarely need this</li>
+<li><strong>Pinning</strong>: Required for self-referential types in async</li>
+<li><strong>The <code>std</code> docs</strong>: Genuinely excellent — <a href="https://doc.rust-lang.org/std/" class="uri">https://doc.rust-lang.org/std/</a></li>
+</ul>
+<blockquote class="blockquote">
+<p><strong>Best way to learn</strong>: Pick a small project (a CLI tool, a simple HTTP server with axum/actix, a file processor) and just build. The compiler errors are famously helpful — read them carefully, they usually tell you exactly what to do.</p>
+</blockquote>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/thehalberdier\.github\.io\/Research\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

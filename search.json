@@ -1,17 +1,150 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Research",
+    "objectID": "rust_primer.html",
+    "href": "rust_primer.html",
+    "title": "Rust Primer for C++/Java Developers",
     "section": "",
-    "text": "Notes, writeups, and summaries for personal research projects."
+    "text": "Goal: Get you to ~80% of Rust, fast. Assumes you know C++/Java, understand types, pointers, and memory. Skips: unsafe, macros-in-depth, async runtime internals, FFI, advanced lifetime gymnastics."
   },
   {
-    "objectID": "index.html#documents",
-    "href": "index.html#documents",
-    "title": "Research",
-    "section": "Documents",
-    "text": "Documents\n\nHDD comparison and 5-year TCO"
+    "objectID": "rust_primer.html#first-things-first-cargo-project-setup",
+    "href": "rust_primer.html#first-things-first-cargo-project-setup",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "1. First Things First: Cargo & Project Setup",
+    "text": "1. First Things First: Cargo & Project Setup\nCargo is Rust’s build system + package manager. Think CMake + Conan + Maven rolled into one, but actually pleasant.\ncargo new myproject        # creates a new binary project\ncargo new mylib --lib      # creates a library\ncargo build                # compile (debug)\ncargo build --release      # compile (optimized)\ncargo run                  # build + run\ncargo test                 # run tests\ncargo add serde            # add a dependency (like `npm install`)\nProject structure:\nmyproject/\n├── Cargo.toml             # like pom.xml / CMakeLists.txt\n├── src/\n│   └── main.rs            # entry point (fn main)\nCargo.toml declares dependencies:\n[dependencies]\nserde = { version = \"1.0\", features = [\"derive\"] }\ntokio = { version = \"1\", features = [\"full\"] }\nCrates.io is the package registry (like Maven Central / crates ≈ packages)."
+  },
+  {
+    "objectID": "rust_primer.html#the-big-idea-ownership",
+    "href": "rust_primer.html#the-big-idea-ownership",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "2. The Big Idea: Ownership",
+    "text": "2. The Big Idea: Ownership\nThis is THE thing that makes Rust different. If you internalize this section, the rest falls into place.\n\nThe Three Rules\n\nEvery value has exactly one owner (a variable).\nWhen the owner goes out of scope, the value is dropped (destructor runs, memory freed).\nOwnership can be moved, but then the old variable is invalid.\n\nfn main() {\n    let s1 = String::from(\"hello\");  // s1 owns the String\n    let s2 = s1;                      // ownership MOVED to s2\n    // println!(\"{}\", s1);            // COMPILE ERROR: s1 is no longer valid\n    println!(\"{}\", s2);               // fine\n}\nC++ analogy: Think std::unique_ptr. Assignment = move. But Rust enforces this for ALL types at compile time, not just smart pointers.\nJava comparison: In Java, s2 = s1 makes both point to the same object. In Rust, s1 is dead after the move.\n\n\nStack vs. Heap & Copy Types\nSimple scalar types (i32, f64, bool, char, tuples of these) implement Copy — they’re copied on assignment, not moved. Just like in C++.\nlet x = 5;\nlet y = x;       // x is copied, both valid\nprintln!(\"{x} {y}\"); // fine\nHeap-allocated types (String, Vec&lt;T&gt;, Box&lt;T&gt;) are moved.\n\n\nClone: Explicit Deep Copy\nIf you actually want a deep copy, say so:\nlet s1 = String::from(\"hello\");\nlet s2 = s1.clone();  // explicit deep copy\nprintln!(\"{s1} {s2}\"); // both valid"
+  },
+  {
+    "objectID": "rust_primer.html#borrowing-references",
+    "href": "rust_primer.html#borrowing-references",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "3. Borrowing & References",
+    "text": "3. Borrowing & References\nYou don’t always want to move ownership. Borrowing lets you lend access.\nfn print_length(s: &String) {   // borrows s (immutable reference)\n    println!(\"len = {}\", s.len());\n}\n\nfn main() {\n    let s = String::from(\"hello\");\n    print_length(&s);            // lend s\n    println!(\"{s}\");             // still valid — we only lent it\n}\n\nThe Borrowing Rules\nAt any given time, you can have either: - Any number of immutable references (&T), OR - Exactly one mutable reference (&mut T)\nNever both at the same time.\nlet mut s = String::from(\"hello\");\n\nlet r1 = &s;       // ok\nlet r2 = &s;       // ok — multiple immutable refs fine\n// let r3 = &mut s; // COMPILE ERROR: can't borrow mutably while immutable refs exist\n\nprintln!(\"{r1} {r2}\");\n// r1, r2 no longer used after this point (their lifetime ends)\n\nlet r3 = &mut s;   // now ok — no immutable refs alive\nr3.push_str(\" world\");\nWhy: This is Rust’s compile-time data race prevention. No reader-writer conflicts, ever.\nC++ analogy: Like const T& vs T&, but the compiler actually enforces that you can’t alias a mutable ref."
+  },
+  {
+    "objectID": "rust_primer.html#lifetimes-the-minimum-you-need",
+    "href": "rust_primer.html#lifetimes-the-minimum-you-need",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "4. Lifetimes (The Minimum You Need)",
+    "text": "4. Lifetimes (The Minimum You Need)\nLifetimes ensure references don’t outlive the data they point to. Most of the time, the compiler infers them. You only write them when the compiler can’t figure it out — typically in function signatures returning references.\n// \"The returned reference lives as long as BOTH inputs live\"\nfn longer&lt;'a&gt;(s1: &'a str, s2: &'a str) -&gt; &'a str {\n    if s1.len() &gt;= s2.len() { s1 } else { s2 }\n}\n'a is a lifetime parameter. Read it as: “the output reference is valid for at least as long as both input references.”\nPractical rule of thumb: If the compiler says “missing lifetime specifier,” add &lt;'a&gt; to the function and annotate the references. If you’re storing references in a struct, you need lifetimes on the struct too:\nstruct Excerpt&lt;'a&gt; {\n    text: &'a str,   // this struct can't outlive the string it borrows\n}\nEscape hatch: If lifetimes get painful, just own the data instead (String instead of &str, Vec&lt;T&gt; instead of &[T]). Cloning is fine. Don’t fight the borrow checker when you’re learning."
+  },
+  {
+    "objectID": "rust_primer.html#types-structs-enums",
+    "href": "rust_primer.html#types-structs-enums",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "5. Types, Structs, Enums",
+    "text": "5. Types, Structs, Enums\n\nPrimitive Types\nlet x: i32 = 42;        // signed: i8, i16, i32, i64, i128, isize\nlet y: u64 = 100;       // unsigned: u8, u16, u32, u64, u128, usize\nlet f: f64 = 3.14;      // f32, f64\nlet b: bool = true;\nlet c: char = '🦀';     // 4 bytes, Unicode scalar value\nusize / isize = pointer-sized integers. Used for indexing.\n\n\nStructs (like C++ structs / Java classes, but no inheritance)\nstruct Server {\n    hostname: String,\n    cpu_cores: u32,\n    is_active: bool,\n}\n\nimpl Server {\n    // Associated function (like static method). Convention: `new` is the constructor.\n    fn new(hostname: String, cores: u32) -&gt; Self {\n        Server {\n            hostname,          // shorthand when field name == variable name\n            cpu_cores: cores,\n            is_active: true,\n        }\n    }\n\n    // Method: takes &self (immutable borrow of the instance)\n    fn summary(&self) -&gt; String {\n        format!(\"{}: {} cores\", self.hostname, self.cpu_cores)\n    }\n\n    // Mutable method: takes &mut self\n    fn deactivate(&mut self) {\n        self.is_active = false;\n    }\n}\n\nfn main() {\n    let mut srv = Server::new(\"node-01\".to_string(), 64);\n    println!(\"{}\", srv.summary());\n    srv.deactivate();\n}\nNo inheritance. Composition + traits instead (see §7).\n\n\nEnums (WAY more powerful than C++/Java enums)\nRust enums are algebraic data types (tagged unions). Each variant can hold data.\nenum StorageBackend {\n    Local { path: String },\n    Ceph { pool: String, namespace: String },\n    NVMe { device_id: u32 },\n    None,\n}\n\nfn describe(backend: &StorageBackend) {\n    match backend {\n        StorageBackend::Local { path } =&gt; println!(\"Local at {path}\"),\n        StorageBackend::Ceph { pool, .. } =&gt; println!(\"Ceph pool: {pool}\"),\n        StorageBackend::NVMe { device_id } =&gt; println!(\"NVMe dev {device_id}\"),\n        StorageBackend::None =&gt; println!(\"No storage\"),\n    }\n}\nC++ analogy: std::variant, but with exhaustive pattern matching enforced by the compiler."
+  },
+  {
+    "objectID": "rust_primer.html#pattern-matching",
+    "href": "rust_primer.html#pattern-matching",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "6. Pattern Matching",
+    "text": "6. Pattern Matching\nmatch is like switch on steroids. It’s exhaustive — you must handle every case.\nlet x = 42;\n\nmatch x {\n    0 =&gt; println!(\"zero\"),\n    1..=10 =&gt; println!(\"small\"),\n    11 | 12 =&gt; println!(\"eleven or twelve\"),\n    n if n &lt; 0 =&gt; println!(\"negative: {n}\"),   // guard\n    _ =&gt; println!(\"something else\"),             // _ = default\n}\n\nif let — when you only care about one variant\nlet maybe_name: Option&lt;String&gt; = Some(\"venkat\".to_string());\n\nif let Some(name) = maybe_name {\n    println!(\"Got: {name}\");\n}\n// Use this instead of a full match when you don't care about the other cases.\n\n\nlet ... else — early return on mismatch (Rust 1.65+)\nfn process(val: Option&lt;i32&gt;) {\n    let Some(x) = val else {\n        println!(\"was None, bailing\");\n        return;\n    };\n    println!(\"processing {x}\");\n}"
+  },
+  {
+    "objectID": "rust_primer.html#traits-interfaces-typeclasses",
+    "href": "rust_primer.html#traits-interfaces-typeclasses",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "7. Traits (≈ Interfaces + Typeclasses)",
+    "text": "7. Traits (≈ Interfaces + Typeclasses)\nTraits define shared behavior. Like Java interfaces, but can have default implementations and can be implemented for types you didn’t define.\ntrait Describable {\n    fn describe(&self) -&gt; String;\n\n    // Default implementation (like Java default methods)\n    fn short_desc(&self) -&gt; String {\n        format!(\"{}...\", &self.describe()[..20.min(self.describe().len())])\n    }\n}\n\nimpl Describable for Server {\n    fn describe(&self) -&gt; String {\n        format!(\"Server {} with {} cores\", self.hostname, self.cpu_cores)\n    }\n}\n\nTrait Bounds (= Generics constrained by traits)\n// Any T that implements Describable\nfn log_item&lt;T: Describable&gt;(item: &T) {\n    println!(\"[LOG] {}\", item.describe());\n}\n\n// Equivalent with `where` clause (cleaner for multiple bounds)\nfn log_item2&lt;T&gt;(item: &T)\nwhere\n    T: Describable + Clone + std::fmt::Debug,\n{\n    println!(\"[LOG] {:?} — {}\", item, item.describe());\n}\n\n\nimpl Trait syntax (simpler)\nfn log_item3(item: &impl Describable) {  // same as the generic version above\n    println!(\"[LOG] {}\", item.describe());\n}\n\nfn make_server() -&gt; impl Describable {    // return \"some type that is Describable\"\n    Server::new(\"anon\".into(), 8)\n}\n\n\nCommon Standard Library Traits You’ll Use Constantly\n\n\n\nTrait\nWhat it does\nC++/Java analogy\n\n\n\n\nClone\nExplicit deep copy (.clone())\nCopy constructor\n\n\nCopy\nImplicit bitwise copy\nPOD types\n\n\nDebug\nFormat with {:?} for debugging\ntoString() for debug\n\n\nDisplay\nFormat with {} for user-facing output\ntoString()\n\n\nPartialEq, Eq\n== / !=\noperator== / equals()\n\n\nPartialOrd, Ord\n&lt;, &gt;, sorting\noperator&lt; / Comparable\n\n\nHash\nHashing for HashMap keys\nhashCode()\n\n\nDefault\nDefault value (T::default())\nDefault constructor\n\n\nFrom / Into\nType conversion\nConversion constructors\n\n\nIterator\nIteration protocol\nIterator&lt;T&gt;\n\n\nDrop\nDestructor\nDestructor / finalize()\n\n\n\nMost of these can be auto-derived:\n#[derive(Debug, Clone, PartialEq, Eq, Hash)]\nstruct NodeId {\n    rack: u32,\n    slot: u32,\n}"
+  },
+  {
+    "objectID": "rust_primer.html#error-handling-result-and-option",
+    "href": "rust_primer.html#error-handling-result-and-option",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "8. Error Handling: Result and Option",
+    "text": "8. Error Handling: Result and Option\nNo exceptions in Rust. Errors are values.\n\nOption&lt;T&gt; — value might be absent\n// Option is just: enum Option&lt;T&gt; { Some(T), None }\n\nfn find_server(id: u32) -&gt; Option&lt;Server&gt; {\n    if id == 1 {\n        Some(Server::new(\"node-01\".into(), 64))\n    } else {\n        None\n    }\n}\n\n// Handling:\nmatch find_server(1) {\n    Some(srv) =&gt; println!(\"{}\", srv.summary()),\n    None =&gt; println!(\"not found\"),\n}\n\n// Or more concisely:\nlet srv = find_server(1).unwrap();             // panics if None (like .get() on null)\nlet srv = find_server(1).unwrap_or(default);   // fallback\nlet srv = find_server(1).expect(\"server 1 must exist\"); // panic with message\n\n\nResult&lt;T, E&gt; — operation might fail\n// Result is just: enum Result&lt;T, E&gt; { Ok(T), Err(E) }\n\nuse std::fs;\nuse std::io;\n\nfn read_config(path: &str) -&gt; Result&lt;String, io::Error&gt; {\n    fs::read_to_string(path)\n}\n\nfn main() {\n    match read_config(\"/etc/myapp.conf\") {\n        Ok(contents) =&gt; println!(\"Config: {contents}\"),\n        Err(e) =&gt; eprintln!(\"Failed: {e}\"),\n    }\n}\n\n\nThe ? Operator (This Is Huge)\n? propagates errors upward. If the Result is Err, return early with that error. If Ok, unwrap the value. This replaces try-catch with zero boilerplate.\nfn load_and_parse_config(path: &str) -&gt; Result&lt;Config, Box&lt;dyn std::error::Error&gt;&gt; {\n    let contents = fs::read_to_string(path)?;   // returns Err early if file read fails\n    let config: Config = serde_json::from_str(&contents)?;  // returns Err if parse fails\n    Ok(config)\n}\nC++ analogy: Like if every function returned std::expected&lt;T, E&gt; and you had a concise syntax for early returns.\nPractical advice: Use anyhow::Result (from the anyhow crate) for applications and thiserror for libraries.\n// In Cargo.toml: anyhow = \"1\"\nuse anyhow::{Context, Result};\n\nfn load_config(path: &str) -&gt; Result&lt;Config&gt; {\n    let contents = fs::read_to_string(path)\n        .context(\"failed to read config file\")?;    // adds context to error\n    let config = serde_json::from_str(&contents)\n        .context(\"failed to parse config\")?;\n    Ok(config)\n}"
+  },
+  {
+    "objectID": "rust_primer.html#collections-iterators",
+    "href": "rust_primer.html#collections-iterators",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "9. Collections & Iterators",
+    "text": "9. Collections & Iterators\n\nKey Collections\nuse std::collections::HashMap;\n\n// Vec&lt;T&gt; — dynamic array (like std::vector / ArrayList)\nlet mut nums: Vec&lt;i32&gt; = vec![1, 2, 3];\nnums.push(4);\n\n// String — owned, growable UTF-8 string\nlet mut s = String::from(\"hello\");\ns.push_str(\" world\");\n\n// &str — string slice (borrowed view into a String or literal)\nlet slice: &str = &s[0..5];\n\n// HashMap&lt;K, V&gt; — hash map (like std::unordered_map / HashMap)\nlet mut scores: HashMap&lt;String, i32&gt; = HashMap::new();\nscores.insert(\"node-01\".into(), 95);\n\n// VecDeque, BTreeMap, BTreeSet, HashSet also available\n\n\nIterators (Rust’s Secret Weapon)\nRust iterators are lazy, zero-cost abstractions. They compile down to the same code as hand-written loops.\nlet nums = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\n\n// Chained iterator operations\nlet result: Vec&lt;i32&gt; = nums.iter()\n    .filter(|&&x| x % 2 == 0)       // keep evens\n    .map(|&x| x * x)                // square them\n    .collect();                       // collect into Vec\n// result = [4, 16, 36, 64, 100]\n\n// Sum\nlet total: i32 = nums.iter().sum();\n\n// Find\nlet first_big = nums.iter().find(|&&x| x &gt; 5);  // Option&lt;&i32&gt;\n\n// for loop (uses IntoIterator under the hood)\nfor num in &nums {\n    println!(\"{num}\");\n}\n\n// Enumerate (like Python)\nfor (i, num) in nums.iter().enumerate() {\n    println!(\"[{i}] = {num}\");\n}\n\n// Iterating over HashMap\nfor (key, value) in &scores {\n    println!(\"{key}: {value}\");\n}\nKey iterator methods: map, filter, flat_map, fold, reduce, take, skip, zip, enumerate, any, all, find, position, collect, count, sum, min, max, chain, peekable.\n.collect() can produce different collection types based on the type annotation — it’s generic over the output type."
+  },
+  {
+    "objectID": "rust_primer.html#closures",
+    "href": "rust_primer.html#closures",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "10. Closures",
+    "text": "10. Closures\n// Type-inferred closure\nlet add = |a, b| a + b;\nprintln!(\"{}\", add(2, 3));\n\n// With explicit types\nlet square = |x: i32| -&gt; i32 { x * x };\n\n// Closures capture variables from their environment\nlet threshold = 50;\nlet above_threshold = |x: &i32| *x &gt; threshold;    // borrows `threshold`\n\nlet results: Vec&lt;&i32&gt; = nums.iter().filter(|x| above_threshold(x)).collect();\n\n// Move closure — takes ownership of captured variables\nlet name = String::from(\"venkat\");\nlet greeting = move || println!(\"Hello, {name}\");    // `name` moved into closure\n// `name` is no longer usable here\ngreeting();\nClosures implement one or more of: Fn (borrows immutably), FnMut (borrows mutably), FnOnce (takes ownership). The compiler figures this out."
+  },
+  {
+    "objectID": "rust_primer.html#smart-pointers",
+    "href": "rust_primer.html#smart-pointers",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "11. Smart Pointers",
+    "text": "11. Smart Pointers\n\n\n\n\n\n\n\n\nType\nWhat it does\nC++ analogy\n\n\n\n\nBox&lt;T&gt;\nHeap allocation, single owner\nstd::unique_ptr&lt;T&gt;\n\n\nRc&lt;T&gt;\nReference-counted, single thread\nstd::shared_ptr&lt;T&gt;\n\n\nArc&lt;T&gt;\nReference-counted, thread-safe\nstd::shared_ptr&lt;T&gt; (atomic)\n\n\nRefCell&lt;T&gt;\nInterior mutability (runtime borrow checks)\n—\n\n\nMutex&lt;T&gt;\nMutual exclusion with owned data\nstd::mutex + the data it protects\n\n\nRwLock&lt;T&gt;\nReader-writer lock with owned data\nstd::shared_mutex + data\n\n\n\n// Box: heap allocation\nlet boxed: Box&lt;i32&gt; = Box::new(42);\n\n// Arc + Mutex: shared mutable state across threads\nuse std::sync::{Arc, Mutex};\n\nlet counter = Arc::new(Mutex::new(0));\nlet counter_clone = Arc::clone(&counter);\n\nstd::thread::spawn(move || {\n    let mut num = counter_clone.lock().unwrap();\n    *num += 1;\n});\nKey insight: In Rust, Mutex&lt;T&gt; owns the data it protects. You can’t access the data without locking. This makes data races structurally impossible."
+  },
+  {
+    "objectID": "rust_primer.html#concurrency",
+    "href": "rust_primer.html#concurrency",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "12. Concurrency",
+    "text": "12. Concurrency\n\nThreads\nuse std::thread;\n\nlet handle = thread::spawn(|| {\n    println!(\"hello from thread\");\n    42   // return value\n});\n\nlet result = handle.join().unwrap();  // wait + get result\n\n\nChannels (message passing)\nuse std::sync::mpsc;  // multi-producer, single-consumer\n\nlet (tx, rx) = mpsc::channel();\nlet tx2 = tx.clone();   // clone sender for multiple producers\n\nthread::spawn(move || { tx.send(\"from thread 1\").unwrap(); });\nthread::spawn(move || { tx2.send(\"from thread 2\").unwrap(); });\n\nfor msg in rx {  // blocks until all senders dropped\n    println!(\"Got: {msg}\");\n}\n\n\nAsync/Await (brief overview)\nRust has async syntax but no built-in runtime. You pick one (usually tokio).\n// Cargo.toml: tokio = { version = \"1\", features = [\"full\"] }\n\n#[tokio::main]\nasync fn main() {\n    let result = fetch_data().await;\n    println!(\"{result}\");\n}\n\nasync fn fetch_data() -&gt; String {\n    // async operations here\n    \"data\".to_string()\n}"
+  },
+  {
+    "objectID": "rust_primer.html#modules-visibility",
+    "href": "rust_primer.html#modules-visibility",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "13. Modules & Visibility",
+    "text": "13. Modules & Visibility\n// In src/main.rs or src/lib.rs\n\nmod network {                    // inline module\n    pub struct Connection {      // pub = public\n        pub host: String,\n        port: u16,               // private by default\n    }\n\n    impl Connection {\n        pub fn new(host: String, port: u16) -&gt; Self {\n            Connection { host, port }\n        }\n\n        pub fn connect(&self) {\n            println!(\"Connecting to {}:{}\", self.host, self.port);\n        }\n    }\n\n    pub mod dns {                // nested module\n        pub fn resolve(hostname: &str) -&gt; String {\n            format!(\"192.168.1.1 (resolved {hostname})\")\n        }\n    }\n}\n\nfn main() {\n    let conn = network::Connection::new(\"10.0.0.1\".into(), 8080);\n    conn.connect();\n    let ip = network::dns::resolve(\"node-01\");\n}\nFor file-based modules:\nsrc/\n├── main.rs         // declares: mod network;\n├── network/\n│   ├── mod.rs      // declares: pub mod dns;\n│   └── dns.rs      // the dns module\nOr the newer flat style (Rust 2018+):\nsrc/\n├── main.rs         // declares: mod network;\n├── network.rs      // the network module, declares: pub mod dns;\n├── network/\n│   └── dns.rs\nuse brings items into scope:\nuse network::Connection;\nuse std::collections::HashMap;\nuse std::io::{self, Read, Write};  // multiple imports"
+  },
+  {
+    "objectID": "rust_primer.html#generics",
+    "href": "rust_primer.html#generics",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "14. Generics",
+    "text": "14. Generics\nLike C++ templates / Java generics, but with trait bounds instead of SFINAE / concepts.\n// Generic function\nfn largest&lt;T: PartialOrd&gt;(list: &[T]) -&gt; &T {\n    let mut largest = &list[0];\n    for item in &list[1..] {\n        if item &gt; largest {\n            largest = item;\n        }\n    }\n    largest\n}\n\n// Generic struct\nstruct Cache&lt;K, V&gt; {\n    entries: HashMap&lt;K, V&gt;,\n    max_size: usize,\n}\n\nimpl&lt;K: Eq + Hash, V&gt; Cache&lt;K, V&gt; {\n    fn new(max_size: usize) -&gt; Self {\n        Cache {\n            entries: HashMap::new(),\n            max_size,\n        }\n    }\n\n    fn get(&self, key: &K) -&gt; Option&lt;&V&gt; {\n        self.entries.get(key)\n    }\n}\n\nDynamic Dispatch (dyn Trait)\nWhen you need runtime polymorphism (like virtual functions in C++ / interface references in Java):\nfn log_all(items: &[&dyn Describable]) {\n    for item in items {\n        println!(\"{}\", item.describe());\n    }\n}\n\n// Or with Box for owned trait objects\nfn get_backend(config: &str) -&gt; Box&lt;dyn StorageTrait&gt; {\n    match config {\n        \"ceph\" =&gt; Box::new(CephBackend::new()),\n        \"local\" =&gt; Box::new(LocalBackend::new()),\n        _ =&gt; panic!(\"unknown backend\"),\n    }\n}\ndyn Trait = vtable dispatch (like C++ virtual). impl Trait / generics = monomorphization (like C++ templates). Prefer generics for performance; use dyn when you need heterogeneous collections or runtime selection."
+  },
+  {
+    "objectID": "rust_primer.html#string-types-cheat-sheet",
+    "href": "rust_primer.html#string-types-cheat-sheet",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "15. String Types Cheat Sheet",
+    "text": "15. String Types Cheat Sheet\nThis trips up every newcomer:\n\n\n\n\n\n\n\n\nType\nWhat\nAnalogy\n\n\n\n\nString\nOwned, heap-allocated, growable\nstd::string\n\n\n&str\nBorrowed slice (view into a String or literal)\nstd::string_view / const char*\n\n\n\nlet owned: String = String::from(\"hello\");   // or \"hello\".to_string()\nlet slice: &str = &owned;                     // borrow as slice\nlet literal: &str = \"hello\";                  // string literal (lives in binary, static lifetime)\n\n// Convert between them:\nlet s: String = \"hello\".to_string();          // &str → String\nlet s: String = String::from(\"hello\");        // same\nlet s: &str = &owned;                         // String → &str (via Deref coercion)\nlet s: &str = owned.as_str();                 // explicit\nRule of thumb: Functions should take &str as input (accepts both) and return String if they’re creating new string data."
+  },
+  {
+    "objectID": "rust_primer.html#testing",
+    "href": "rust_primer.html#testing",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "16. Testing",
+    "text": "16. Testing\nTests live right next to the code. No separate test files needed (though you can have them).\npub fn add(a: i32, b: i32) -&gt; i32 {\n    a + b\n}\n\n#[cfg(test)]                       // only compiled during `cargo test`\nmod tests {\n    use super::*;                  // import from parent module\n\n    #[test]\n    fn test_add() {\n        assert_eq!(add(2, 3), 5);\n    }\n\n    #[test]\n    fn test_add_negative() {\n        assert_eq!(add(-1, 1), 0);\n    }\n\n    #[test]\n    #[should_panic(expected = \"overflow\")]\n    fn test_overflow() {\n        // test that something panics\n    }\n}\nIntegration tests go in tests/ directory at the project root."
+  },
+  {
+    "objectID": "rust_primer.html#practical-patterns-youll-use-daily",
+    "href": "rust_primer.html#practical-patterns-youll-use-daily",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "17. Practical Patterns You’ll Use Daily",
+    "text": "17. Practical Patterns You’ll Use Daily\n\nBuilder Pattern (common in Rust APIs)\nlet client = ClientBuilder::new()\n    .timeout(Duration::from_secs(30))\n    .max_retries(3)\n    .base_url(\"https://api.example.com\")\n    .build()?;\n\n\nFrom / Into Conversions\nimpl From&lt;NodeConfig&gt; for Server {\n    fn from(config: NodeConfig) -&gt; Self {\n        Server::new(config.hostname, config.cores)\n    }\n}\n\n// Now you can do:\nlet server: Server = config.into();\nlet server = Server::from(config);\n\n\nType Aliases\ntype Result&lt;T&gt; = std::result::Result&lt;T, MyError&gt;;   // common in libraries\ntype NodeMap = HashMap&lt;String, Vec&lt;Server&gt;&gt;;\n\n\nDestructuring\nlet (x, y, z) = (1, 2, 3);\n\nlet Server { hostname, cpu_cores, .. } = &server;   // struct destructuring\n\nif let Ok(config) = load_config(\"path\") {\n    // use config\n}"
+  },
+  {
+    "objectID": "rust_primer.html#key-differences-cheat-sheet",
+    "href": "rust_primer.html#key-differences-cheat-sheet",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "18. Key Differences Cheat Sheet",
+    "text": "18. Key Differences Cheat Sheet\n\n\n\n\n\n\n\n\n\nConcept\nC++\nJava\nRust\n\n\n\n\nMemory\nManual / RAII\nGC\nOwnership + RAII\n\n\nNull\nnullptr\nnull\nOption&lt;T&gt; (no null)\n\n\nErrors\nExceptions / error codes\nExceptions\nResult&lt;T, E&gt;\n\n\nInheritance\nClass hierarchy\nClass hierarchy\nNone (use traits + composition)\n\n\nPolymorphism\nVirtual functions\nInterfaces\nTraits (dyn or generics)\n\n\nConcurrency safety\n“be careful”\n“be careful”\nCompile-time enforcement\n\n\nPackage manager\n???\nMaven/Gradle\nCargo (it’s great)\n\n\nStrings\nstd::string / const char*\nString\nString / &str\n\n\nDefault mutability\nMutable\nMutable (refs)\nImmutable"
+  },
+  {
+    "objectID": "rust_primer.html#quick-syntax-reference",
+    "href": "rust_primer.html#quick-syntax-reference",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "19. Quick Syntax Reference",
+    "text": "19. Quick Syntax Reference\n// Variables\nlet x = 5;                     // immutable\nlet mut y = 10;                // mutable\nlet z: i64 = 100;             // explicit type\n\n// Functions\nfn add(a: i32, b: i32) -&gt; i32 {\n    a + b                       // no semicolon = return value (expression)\n}\n\n// Conditionals (expressions — they return values)\nlet status = if cpu_load &gt; 90 { \"critical\" } else { \"ok\" };\n\n// Loops\nfor item in &collection { }\nfor i in 0..10 { }            // 0 to 9\nfor i in 0..=10 { }           // 0 to 10 (inclusive)\nwhile condition { }\nloop { break value; }          // infinite loop, can return a value\n\n// Printing\nprintln!(\"Hello {name}\");                      // string interpolation\nprintln!(\"Debug: {:?}\", some_struct);           // debug format\nprintln!(\"Pretty debug: {:#?}\", some_struct);   // pretty-printed debug\neprintln!(\"Error: {e}\");                        // print to stderr\n\n// Turbofish (explicit type for generic functions)\nlet nums = \"1,2,3\".split(',').collect::&lt;Vec&lt;&str&gt;&gt;();"
+  },
+  {
+    "objectID": "rust_primer.html#what-to-learn-next",
+    "href": "rust_primer.html#what-to-learn-next",
+    "title": "Rust Primer for C++/Java Developers",
+    "section": "20. What to Learn Next",
+    "text": "20. What to Learn Next\nOnce you’re comfortable with the above, these are the next frontiers:\n\nAsync Rust in depth: Tokio runtime, futures, select!, streams\nSerde: The serialization framework (JSON, TOML, YAML, etc.)\nError handling patterns: thiserror for libraries, anyhow for applications\nMacros: macro_rules! for declarative, proc macros for derive\nUnsafe Rust: Raw pointers, FFI with C — you’ll rarely need this\nPinning: Required for self-referential types in async\nThe std docs: Genuinely excellent — https://doc.rust-lang.org/std/\n\n\nBest way to learn: Pick a small project (a CLI tool, a simple HTTP server with axum/actix, a file processor) and just build. The compiler errors are famously helpful — read them carefully, they usually tell you exactly what to do."
   },
   {
     "objectID": "hdd_tco_summary.html",
@@ -89,5 +222,152 @@
     "title": "HDD comparison and 5-year TCO",
     "section": "Datasheet links",
     "text": "Datasheet links\n\nSeagate Exos X24 ST24000NM007H: https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html",
+    "href": "ampereone_m_vs_amd_epyc.html",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "",
+    "text": "AmpereOne M product brief: https://amperecomputing.com/briefs/ampereone-m-product-brief\nGIGABYTE R1A3-T40-AAV1 (your link may geo-block; this mirror usually works): https://www.gigabyte.com/il/Enterprise/Rack-Server/R1A3-T40-AAV1\nAMD EPYC 9004 series datasheet (model table includes 9554/9654): https://www.amd.com/content/dam/amd/en/documents/epyc-business-docs/datasheets/amd-epyc-9004-series-processors-datasheet.pdf"
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#sources-used",
+    "href": "ampereone_m_vs_amd_epyc.html#sources-used",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "",
+    "text": "AmpereOne M product brief: https://amperecomputing.com/briefs/ampereone-m-product-brief\nGIGABYTE R1A3-T40-AAV1 (your link may geo-block; this mirror usually works): https://www.gigabyte.com/il/Enterprise/Rack-Server/R1A3-T40-AAV1\nAMD EPYC 9004 series datasheet (model table includes 9554/9654): https://www.amd.com/content/dam/amd/en/documents/epyc-business-docs/datasheets/amd-epyc-9004-series-processors-datasheet.pdf"
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#executive-summary-what-changes-vs-your-current-epyc-nodes",
+    "href": "ampereone_m_vs_amd_epyc.html#executive-summary-what-changes-vs-your-current-epyc-nodes",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "Executive summary (what changes vs your current EPYC nodes)",
+    "text": "Executive summary (what changes vs your current EPYC nodes)\nYou’re comparing two very different approaches to “core dense”:\n\nAMD EPYC 9554 / 9654 (x86_64 + SMT): fewer cores than Ampere’s top-end SKUs, but 2 threads/core, strong per-core performance, and more I/O (128 PCIe Gen5 lanes).\nAmpereOne M (Armv8.6+, single-threaded cores): many single-threaded cores with 12-channel DDR5-5600, and a platform story optimized for predictable, scale-out throughput — but fewer I/O lanes (96 PCIe Gen5) and an Arm software/ops compatibility tax if your stack isn’t already Arm-friendly."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#at-a-glance-specs-socket-level",
+    "href": "ampereone_m_vs_amd_epyc.html#at-a-glance-specs-socket-level",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "At-a-glance specs (socket-level)",
+    "text": "At-a-glance specs (socket-level)\n\n\n\n\n\n\n\n\n\nItem\nAMD EPYC 9554\nAMD EPYC 9654\nAmpereOne M (family)\n\n\n\n\nISA / platform\nx86_64 (SP5)\nx86_64 (SP5)\nArmv8.6+ (SoC)\n\n\nCores / threads\n64 / 128\n96 / 192\n96–192 / 96–192 (single-thread)\n\n\nBase / boost (GHz)\n3.10 / 3.75\n2.40 / 3.70\nModel-dependent (2.6–3.6 shown)\n\n\nDefault / usage power\n360W (default TDP)\n360W (default TDP)\n239–348W “Usage Power*” by model (brief)\n\n\nMemory channels\n12\n12\n12\n\n\nMax DDR5 speed (1DPC)\n4800 MT/s\n4800 MT/s\n5600 MT/s (brief)\n\n\nPeak memory bandwidth\n460.8 GB/s (datasheet)\n460.8 GB/s (datasheet)\n~537.6 GB/s (12 × 5600 MT/s × 8 B; theoretical)\n\n\nPCIe Gen5 lanes\n128\n128\n96 (brief)"
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#pros-cons-amd-epyc-vs-ampereone-m",
+    "href": "ampereone_m_vs_amd_epyc.html#pros-cons-amd-epyc-vs-ampereone-m",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "Pros / cons: AMD EPYC vs AmpereOne M",
+    "text": "Pros / cons: AMD EPYC vs AmpereOne M\n\nAMD EPYC (9554/9654 class)\nPros\n\nSoftware compatibility: x86_64 “just works” for the broadest set of enterprise software, drivers, agents, and proprietary stacks.\nHigh thread count with SMT: if your workload benefits from SMT, you get 2× threads/core.\nI/O headroom: 128 lanes of PCIe Gen5 per socket is hard to beat when you need many GPUs / NICs / NVMe.\nMature tuning + observability: generally easier to find established guidance for BIOS, NUMA, perf counters, and vendor ecosystem tooling.\n\nCons\n\nHigher platform power for a given throughput-per-rack goal if you’re ultimately limited by memory bandwidth efficiency or “scale-out core density”.\nLicense cost sensitivity for software priced per core / per socket can dominate your economics (depends on your stack).\n\n\n\nAmpereOne M\nPros\n\nCore density: 96–192 single-threaded cores per socket can increase throughput-per-rack for workloads that scale well with more independent threads (stateless services, batchy inference, analytics pipelines).\nMemory bandwidth focus: 12-channel DDR5-5600 (brief) is a clear design point for bandwidth-sensitive throughput workloads.\nPredictability: single-threaded cores and the “cloud native” design goal can help with performance consistency (still validate on your stack).\n\nCons\n\nArm migration/ops tax: base images, agents, proprietary libs, and vendor support may lag x86_64 depending on your environment.\nVector ISA / codegen differences: CPU instruction set and library ecosystem differ; some workloads need re-tuning or don’t have comparable optimized kernels.\nLess PCIe lane budget: 96 PCIe Gen5 lanes (brief) can be a real constraint for GPU/NVMe/NIC-heavy designs."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#where-to-run-amd-vs-where-to-run-arm-practical-placement-guide",
+    "href": "ampereone_m_vs_amd_epyc.html#where-to-run-amd-vs-where-to-run-arm-practical-placement-guide",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "Where to run AMD vs where to run Arm (practical placement guide)",
+    "text": "Where to run AMD vs where to run Arm (practical placement guide)\nThink of Arm (AmpereOne M) as a throughput-per-watt / scale-out play, and AMD EPYC as the lowest-risk default for compatibility + per-thread performance + I/O-heavy nodes.\n\nRun on AMD EPYC (x86_64) when…\n\nYou can’t fully support Arm in prod yet: any “must have” component is x86-only (vendor app, security agent, backup agent, monitoring, kernel module, proprietary driver, etc.).\nSingle-thread and tail latency dominate: workloads with strict p95/p99 latency, high per-request CPU, or limited parallelism tend to prefer strong per-core performance.\nYour nodes are I/O-lane constrained: you need lots of PCIe devices per socket (GPUs, multiple high-speed NICs, many NVMe drives, HBAs/DPUs). EPYC’s 128 PCIe Gen5 lanes is a big advantage.\nYou rely on x86-specific acceleration or tuning: compiled kernels, hand-tuned libraries, or toolchains that assume x86 (common in HPC/EDA/legacy stacks).\nSoftware licensing penalizes high core counts: if your critical software is licensed per core, a 160–192-core Arm CPU can be economically worse even if it’s efficient.\n\n\n\nRun on AmpereOne M (Arm) when…\n\nYour stack is “rebuildable”: you can build and ship linux/arm64 artifacts (or use multi-arch container images) for the app and its dependencies.\nThroughput scales with more independent threads: stateless services, web/API tiers, batch workers, message consumers, ETL steps, and many “embarrassingly parallel” jobs.\nYou’re memory bandwidth sensitive: AmpereOne M is explicitly positioned around 12-channel DDR5-5600 and core density; that’s often a good fit when you’re bottlenecked on memory throughput rather than per-thread IPC.\nPower/rack density is a primary constraint: if you’re hitting rack power limits before space limits, Arm’s efficiency goals can translate into real capacity gains (validate with your workload).\n\n\n\nTypical “good fits” (starting assumptions)\n\n\n\n\n\n\n\n\n\nWorkload area\nDefault pick\nWhen Arm usually makes sense\nWhen AMD usually stays better\n\n\n\n\nWeb / API stateless services\nArm candidate\nGo/Java/Node services, containerized, easy CI builds, horizontal scaling\nVery latency-sensitive endpoints or hard-to-rebuild legacy deps\n\n\nBatch workers / queues\nArm candidate\nHigh parallelism, lots of concurrent jobs, predictable CPU work\nJobs with specialized x86-only libraries or heavy per-thread performance needs\n\n\nDatabases / stateful data\nAMD default\nOpen-source DBs you can validate thoroughly; read-heavy fleets; cost/power pressure\nVendor appliances, x86-tuned deployments, extreme p99 requirements, or “one big box” scaling\n\n\nCPU-only inference\ndepends\nMany concurrent small models / pipelines, throughput-oriented serving\nIf per-request latency is strict and model kernels are x86-optimized in your stack\n\n\nGPU-heavy training/inference\nAMD default (for CPU host)\nOnly if the exact GPU + driver + orchestration stack is proven on Arm\nWhen you need maximum PCIe lanes and broadest ecosystem support\n\n\nVirtualization platforms\nAMD default\nIf you run KVM and have full tool/agent support on Arm\nIf you rely on VMware or x86-only guest/management tooling\n\n\n\n\n\nTwo easy deployment patterns\n\nSeparate node pools / fleets:\n\namd64 pool for “everything works” workloads.\narm64 pool for explicitly qualified workloads.\n\nKubernetes: schedule by architecture:\n\nBuild multi-arch images and use node selectors/affinity (e.g., kubernetes.io/arch=arm64)."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#a-simple-decision-tree-for-amd-or-arm",
+    "href": "ampereone_m_vs_amd_epyc.html#a-simple-decision-tree-for-amd-or-arm",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "A simple decision tree for “AMD or Arm?”",
+    "text": "A simple decision tree for “AMD or Arm?”\n\nCan I run it on Arm without heroics? (build + deps + agents + drivers)\n\nNo → AMD\n\nIs it I/O-lane heavy? (lots of PCIe devices per node)\n\nYes → AMD\n\nIs single-thread / p99 critical and hard to parallelize?\n\nYes → AMD\n\nOtherwise, does it scale with many independent threads and is power/cost a concern?\n\nYes → Arm candidate, then validate perf/W and perf/$ in a POC"
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#architecture-basics-x86_64-amd-epyc-vs-arm64-ampereone-m",
+    "href": "ampereone_m_vs_amd_epyc.html#architecture-basics-x86_64-amd-epyc-vs-arm64-ampereone-m",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "Architecture basics: x86_64 (AMD EPYC) vs Arm64 (AmpereOne M)",
+    "text": "Architecture basics: x86_64 (AMD EPYC) vs Arm64 (AmpereOne M)\nAt a high level, both are modern 64-bit server CPUs running Linux, but they differ in the instruction set, ecosystem assumptions, and some performance/optimization “defaults”.\n\n1) Instruction set (ISA) and ABI\n\nAMD EPYC runs x86_64 binaries (ELF x86-64).\nAmpereOne M runs AArch64 / arm64 binaries (ELF aarch64).\n\nThis is the root cause of most “doesn’t run on Arm” issues: a prebuilt program compiled for x86_64 cannot execute on Arm64 without recompilation (or emulation, which is usually not acceptable for production performance).\n\n\n2) SIMD / vector extensions (where hidden incompatibilities show up)\nMany “CPU-intensive” libraries rely on vector instruction sets.\n\nx86 often leans on SSE/AVX/AVX2/AVX-512.\nArm commonly uses NEON (and sometimes SVE/SVE2 depending on CPU and build targets).\n\nIf an application (or a dependency) ships x86-only optimized code paths (e.g., AVX-512) and doesn’t provide Arm equivalents, you can see: - “Illegal instruction” crashes (if runtime dispatch is wrong), - or it compiles/runs but performs much worse (falls back to scalar code).\n\n\n3) Threads and scheduling assumptions\n\nYour EPYC nodes use SMT (2 threads/core), so software often sees “more CPUs” than physical cores.\nAmpereOne M cores are positioned as single-threaded cores (1 thread/core).\n\nApplications that were tuned assuming SMT behavior (thread pool sizing, CPU pinning, latency isolation) may need re-tuning on Arm even if they are “supported”.\n\n\n4) Platform model differences\n\nEPYC is a classic server CPU platform (CPU + chipset/IOD, SP5 ecosystem).\nAmpereOne M is more SoC-like in how the platform is built and validated (still standard server components, but a different vendor ecosystem).\n\nPractically, this affects out-of-tree drivers, BIOS/firmware tooling, and vendor-provided management integrations."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#what-kinds-of-applications-might-not-have-support-on-arm",
+    "href": "ampereone_m_vs_amd_epyc.html#what-kinds-of-applications-might-not-have-support-on-arm",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "What kinds of applications might not have support on Arm?",
+    "text": "What kinds of applications might not have support on Arm?\nThe pattern is: anything delivered only as an x86_64 binary (or relying on x86-only kernel/user-space components).\n\n1) Closed-source / proprietary binaries\n\nCommercial software distributed as a single x86_64 build (no Arm download).\n“Appliance-like” stacks where the vendor only certifies x86_64.\nLegacy enterprise software that embeds x86 native components.\n\n\n\n2) Kernel modules and low-level agents\nThese are common early blockers: - Endpoint/security agents (EDR), DLP, vulnerability scanners - Backup agents - Storage/network drivers, RDMA stacks, DPDK variants (depends), special NIC features - GPU/accelerator drivers and management tooling (often works on Arm in some combos, but don’t assume)\nIf the solution requires a kernel module, you need explicit Arm64 support for your kernel + distro combination.\n\n\n3) Language ecosystems with native extensions (it “installs” until it doesn’t)\nEven when your application is “portable” (Go/Java/Python/Node), its dependencies may include native code:\n\nPython: pip packages with native wheels may be missing manylinux_aarch64 wheels, forcing source builds (which may fail due to missing toolchains or incompatible C/ASM).\nNode.js: native addons (node-gyp) may lack arm64 prebuilds.\nJava/JVM: the JVM itself supports arm64 well, but JNI libraries might not.\nRust/C/C++: usually fine if you build from source, but some projects have x86-only assembly.\n\n\n\n4) Applications depending on x86-specific optimizations\nExamples: - Media/codec stacks tuned for x86 intrinsics only - Some HPC/EDA toolchains and proprietary numeric libraries - Any codebase with hand-written x86 assembly\n\n\n5) Virtualization and guest OS constraints\n\nIf you need to run x86_64 guests on the same host, Arm servers can’t do that natively.\nSome virtualization ecosystems (notably VMware) are effectively x86-only in common enterprise deployments."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#fast-ways-to-detect-arm-readiness-before-you-buy-a-lot-of-servers",
+    "href": "ampereone_m_vs_amd_epyc.html#fast-ways-to-detect-arm-readiness-before-you-buy-a-lot-of-servers",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "Fast ways to detect Arm readiness (before you buy a lot of servers)",
+    "text": "Fast ways to detect Arm readiness (before you buy a lot of servers)\n\nContainer images: do they publish linux/arm64?\n\ndocker manifest inspect &lt;image&gt;:&lt;tag&gt; | rg -n \\\"arm64|amd64\\\"\n\nLinux packages: do they ship aarch64/arm64 builds for your distro?\n\nDebian/Ubuntu: check arm64 availability in your repo + vendor repo.\nRHEL-like: check aarch64 RPM availability and kernel module support.\n\nYour own binaries: can you build and run CI for arm64?\n\nuname -m on the target (aarch64 vs x86_64)\nfile &lt;binary&gt; should show aarch64 for Arm targets."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#equivalent-cpu-selection-how-to-map-epyc-95549654-ampereone-m",
+    "href": "ampereone_m_vs_amd_epyc.html#equivalent-cpu-selection-how-to-map-epyc-95549654-ampereone-m",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "“Equivalent” CPU selection: how to map EPYC 9554/9654 → AmpereOne M",
+    "text": "“Equivalent” CPU selection: how to map EPYC 9554/9654 → AmpereOne M\nThere isn’t a single “equivalent”, because AMD cores and Ampere cores are not interchangeable. Pick equivalence based on what you’re trying to preserve:\n\nThread budget equivalence (how many runnable software threads you want per node)\nPower envelope equivalence (stay within a rack/power budget per node)\nMemory bandwidth equivalence (channels × speed, plus workload memory behavior)\nI/O equivalence (PCIe lanes and slot topology)\nSingle-thread / tail-latency equivalence (p99 requirements)\n\n\nPractical mapping shortlist (starting point)\nUse this as a POC shortlist, not a final answer.\n\n\n\n\n\n\n\n\n\nIf you run today…\nWhat you likely value\nAmpereOne M candidates to try\nWhy these are “closest”\n\n\n\n\nEPYC 9554 (64C/128T, 360W)\nhigher per-core perf, moderate core count, still lots of threads\nA96-36M (96C @ 3.6, 331W), A144-33M (144C @ 3.3, 334W), A144-26M (144C @ 2.6, 239W)\nA96-36M is the “fewer cores, higher freq” end; A144 variants test whether more cores improves throughput under similar or lower power\n\n\nEPYC 9654 (96C/192T, 360W)\nhigh thread count / throughput per node\nA192-32M (192C @ 3.2, 348W), A160-28M (160C @ 2.8, 262W), A192-26M (192C @ 2.6, 278W)\nA192-32M matches the thread budget (192) at similar power; A160/A192-26M are “efficiency-first” comparators\n\n\n\n\n\nOne hard constraint: PCIe lane budget\nIf your current EPYC nodes are built around lane-heavy designs (many NVMe drives, multiple NICs, GPUs, DPUs), treat 128 lanes (EPYC) vs 96 lanes (AmpereOne M) as a first-order design constraint. It can change the entire server bill of materials more than the CPU choice itself."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#gigabyte-r1a3-t40-aav1-notes-ampereone-m-platform",
+    "href": "ampereone_m_vs_amd_epyc.html#gigabyte-r1a3-t40-aav1-notes-ampereone-m-platform",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "GIGABYTE R1A3-T40-AAV1 notes (AmpereOne M platform)",
+    "text": "GIGABYTE R1A3-T40-AAV1 notes (AmpereOne M platform)\nFrom the vendor spec page, this platform is a 1U, single-socket AmpereOne M server with:\n\n12 DDR5 RDIMM slots (12-channel per CPU)\n4 front hot-swap bays (Gen5 NVMe / SATA / SAS-4 support)\n2 × FHHL PCIe Gen5 x16 slots + 2 × OCP NIC 3.0 PCIe Gen5 x16 slots\nRedundant power supplies (config shown as Titanium-class)\n\nThis makes it a reasonable evaluation chassis for NIC + accelerator + limited local storage designs; less ideal if you need lots of front NVMe bays in 1U."
+  },
+  {
+    "objectID": "ampereone_m_vs_amd_epyc.html#recommendation-a-minimal-decision-oriented-poc",
+    "href": "ampereone_m_vs_amd_epyc.html#recommendation-a-minimal-decision-oriented-poc",
+    "title": "AmpereOne M vs AMD EPYC 9554/9654",
+    "section": "Recommendation: a minimal, decision-oriented POC",
+    "text": "Recommendation: a minimal, decision-oriented POC\n\nPick one workload per “shape” you run: (a) latency-sensitive service, (b) batch/throughput service, (c) memory-bandwidth-heavy job, (d) IO-heavy node.\nTest 2 Ampere SKUs per AMD SKU (from the shortlist) and keep memory config constant (same capacity per channel).\nCompare: throughput/socket, p99 latency, perf/W, and perf/$ (including any software/license deltas).\nFail fast on compatibility: image build, agents, monitoring, kernel/driver support, and any proprietary binaries."
+  },
+  {
+    "objectID": "arista_switch_health_report.html",
+    "href": "arista_switch_health_report.html",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "",
+    "text": "This page summarizes findings from the health report file healthreport_Arista.txt."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#snapshot",
+    "href": "arista_switch_health_report.html#snapshot",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Snapshot",
+    "text": "Snapshot\n\nReport timestamp: Sat Jan 31 09:41:47 UTC 2026\nModel: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)\nEOS: 4.26.6M\nUptime at capture: ~20 minutes"
+  },
+  {
+    "objectID": "arista_switch_health_report.html#overall-status",
+    "href": "arista_switch_health_report.html#overall-status",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Overall status",
+    "text": "Overall status\nCooling, temperatures, and flash look healthy. The report shows PSU2 offline, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy)."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#key-findings",
+    "href": "arista_switch_health_report.html#key-findings",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Key findings",
+    "text": "Key findings\n\n\n\n\n\n\n\n\nArea\nStatus\nNotes\n\n\n\n\nCooling\nPass\nFans OK and stable; ambient 25°C\n\n\nTemperature\nPass\nAll sensors below alert/critical thresholds\n\n\nPower supplies\nExpected (lab setup)\nPSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected\n\n\nModules/ASIC status\nScript false-fail\nshow module is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself\n\n\nInterfaces\nN/A (bench state)\nAll ports show notconnect / Not Present (no optics/cables); Ma1 also down\n\n\nFlash\nPass\n/mnt/flash 63% used; writable"
+  },
+  {
+    "objectID": "arista_switch_health_report.html#details",
+    "href": "arista_switch_health_report.html#details",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Details",
+    "text": "Details\n\nPower (expected in this test setup)\nshow environment power indicates:\n\nPSU 1: Ok, drawing input current and supplying ~125.5W\nPSU 2: Power Loss Offline, 0.0W (expected when not connected)\n\nThis is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.\n\n\n“Modules are not reporting Active” (likely not real)\nThe report section “MODULE & ASIC STATUS” runs show module, but the output returns:\n\n“Unavailable command (not supported on this hardware platform)”\n\nSo treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#recommended-next-checks",
+    "href": "arista_switch_health_report.html#recommended-next-checks",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Recommended next checks",
+    "text": "Recommended next checks\nTo restore redundancy, connect PSU2 to AC and confirm it transitions to Ok. If it still shows offline:\n\nReseat PSU2 and verify it’s the correct model for the chassis.\nSwap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).\nRe-run these commands and look for state changes:\n\nshow environment power\nshow logging | include PSU|Power|pwr|power-supply\nshow system environment cooling\nshow system environment temperature"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Research",
+    "section": "",
+    "text": "Notes, writeups, and summaries for personal research projects."
+  },
+  {
+    "objectID": "index.html#documents",
+    "href": "index.html#documents",
+    "title": "Research",
+    "section": "Documents",
+    "text": "Documents\n\nHDD comparison and 5-year TCO\nAmpereOne M vs AMD EPYC 9554/9654\nArista switch health report (DCS-7060CX-32S-R)\nRust primer for C++/Java developers"
   }
 ]

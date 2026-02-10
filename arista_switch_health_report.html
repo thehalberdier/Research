@@ -6,8 +6,9 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="dcterms.date" content="2026-01-31">
 
-<title>Research</title>
+<title>Arista Switch Health Report (DCS-7060CX-32S-R) – Research</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -90,7 +91,7 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="./index.html"> 
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
@@ -106,7 +107,7 @@ ul.task-list li input[type="checkbox"] {
 <span class="menu-text">Ampere vs AMD</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./arista_switch_health_report.html"> 
+    <a class="nav-link active" href="./arista_switch_health_report.html" aria-current="page"> 
 <span class="menu-text">Arista Health</span></a>
   </li>  
 </ul>
@@ -125,7 +126,15 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#documents" id="toc-documents" class="nav-link active" data-scroll-target="#documents">Documents</a></li>
+  <li><a href="#snapshot" id="toc-snapshot" class="nav-link active" data-scroll-target="#snapshot">Snapshot</a></li>
+  <li><a href="#overall-status" id="toc-overall-status" class="nav-link" data-scroll-target="#overall-status">Overall status</a></li>
+  <li><a href="#key-findings" id="toc-key-findings" class="nav-link" data-scroll-target="#key-findings">Key findings</a></li>
+  <li><a href="#details" id="toc-details" class="nav-link" data-scroll-target="#details">Details</a>
+  <ul class="collapse">
+  <li><a href="#power-expected-in-this-test-setup" id="toc-power-expected-in-this-test-setup" class="nav-link" data-scroll-target="#power-expected-in-this-test-setup">Power (expected in this test setup)</a></li>
+  <li><a href="#modules-are-not-reporting-active-likely-not-real" id="toc-modules-are-not-reporting-active-likely-not-real" class="nav-link" data-scroll-target="#modules-are-not-reporting-active-likely-not-real">“Modules are not reporting Active” (likely not real)</a></li>
+  </ul></li>
+  <li><a href="#recommended-next-checks" id="toc-recommended-next-checks" class="nav-link" data-scroll-target="#recommended-next-checks">Recommended next checks</a></li>
   </ul>
 </nav>
     </div>
@@ -134,7 +143,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Research</h1>
+<h1 class="title">Arista Switch Health Report (DCS-7060CX-32S-R)</h1>
 </div>
 
 
@@ -142,6 +151,12 @@ ul.task-list li input[type="checkbox"] {
 <div class="quarto-title-meta">
 
     
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">January 31, 2026</p>
+    </div>
+  </div>
   
     
   </div>
@@ -151,15 +166,101 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>Notes, writeups, and summaries for personal research projects.</p>
-<section id="documents" class="level2">
-<h2 class="anchored" data-anchor-id="documents">Documents</h2>
+<p>This page summarizes findings from the health report file <code>healthreport_Arista.txt</code>.</p>
+<section id="snapshot" class="level2">
+<h2 class="anchored" data-anchor-id="snapshot">Snapshot</h2>
 <ul>
-<li><a href="./hdd_tco_summary.html">HDD comparison and 5-year TCO</a></li>
-<li><a href="./ampereone_m_vs_amd_epyc.html">AmpereOne M vs AMD EPYC 9554/9654</a></li>
-<li><a href="./arista_switch_health_report.html">Arista switch health report (DCS-7060CX-32S-R)</a></li>
-<li><a href="./rust_primer.html">Rust primer for C++/Java developers</a></li>
+<li>Report timestamp: Sat Jan 31 09:41:47 UTC 2026</li>
+<li>Model: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)</li>
+<li>EOS: 4.26.6M</li>
+<li>Uptime at capture: ~20 minutes</li>
 </ul>
+</section>
+<section id="overall-status" class="level2">
+<h2 class="anchored" data-anchor-id="overall-status">Overall status</h2>
+<p>Cooling, temperatures, and flash look healthy. The report shows <strong>PSU2 offline</strong>, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy).</p>
+</section>
+<section id="key-findings" class="level2">
+<h2 class="anchored" data-anchor-id="key-findings">Key findings</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Area</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cooling</td>
+<td>Pass</td>
+<td>Fans OK and stable; ambient 25°C</td>
+</tr>
+<tr class="even">
+<td>Temperature</td>
+<td>Pass</td>
+<td>All sensors below alert/critical thresholds</td>
+</tr>
+<tr class="odd">
+<td>Power supplies</td>
+<td>Expected (lab setup)</td>
+<td>PSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected</td>
+</tr>
+<tr class="even">
+<td>Modules/ASIC status</td>
+<td>Script false-fail</td>
+<td><code>show module</code> is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself</td>
+</tr>
+<tr class="odd">
+<td>Interfaces</td>
+<td>N/A (bench state)</td>
+<td>All ports show <code>notconnect</code> / <code>Not Present</code> (no optics/cables); <code>Ma1</code> also down</td>
+</tr>
+<tr class="even">
+<td>Flash</td>
+<td>Pass</td>
+<td><code>/mnt/flash</code> 63% used; writable</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="details" class="level2">
+<h2 class="anchored" data-anchor-id="details">Details</h2>
+<section id="power-expected-in-this-test-setup" class="level3">
+<h3 class="anchored" data-anchor-id="power-expected-in-this-test-setup">Power (expected in this test setup)</h3>
+<p><code>show environment power</code> indicates:</p>
+<ul>
+<li>PSU 1: Ok, drawing input current and supplying ~125.5W</li>
+<li>PSU 2: <strong>Power Loss Offline</strong>, 0.0W (expected when not connected)</li>
+</ul>
+<p>This is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.</p>
+</section>
+<section id="modules-are-not-reporting-active-likely-not-real" class="level3">
+<h3 class="anchored" data-anchor-id="modules-are-not-reporting-active-likely-not-real">“Modules are not reporting Active” (likely not real)</h3>
+<p>The report section “MODULE &amp; ASIC STATUS” runs <code>show module</code>, but the output returns:</p>
+<ul>
+<li>“Unavailable command (not supported on this hardware platform)”</li>
+</ul>
+<p>So treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue.</p>
+</section>
+</section>
+<section id="recommended-next-checks" class="level2">
+<h2 class="anchored" data-anchor-id="recommended-next-checks">Recommended next checks</h2>
+<p>To restore redundancy, connect PSU2 to AC and confirm it transitions to <code>Ok</code>. If it still shows offline:</p>
+<ol type="1">
+<li>Reseat PSU2 and verify it’s the correct model for the chassis.</li>
+<li>Swap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).</li>
+<li>Re-run these commands and look for state changes:</li>
+</ol>
+<pre><code>show environment power
+show logging | include PSU|Power|pwr|power-supply
+show system environment cooling
+show system environment temperature</code></pre>
 
 
 </section>
