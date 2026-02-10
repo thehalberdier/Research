@@ -10,7 +10,7 @@ format:
 ---
 
 > **Goal**: Get you to ~80% of Rust, fast. Assumes you know C++/Java, understand types, pointers, and memory.
-> Skips: unsafe, macros-in-depth, async runtime internals, FFI, advanced lifetime gymnastics.
+> Skips: async runtime internals, FFI, advanced lifetime gymnastics.
 
 ---
 
@@ -899,16 +899,473 @@ let nums = "1,2,3".split(',').collect::<Vec<&str>>();
 
 ---
 
-## 20. What to Learn Next
+## 20. Serde: Serialization & Deserialization
+
+Serde is Rust's de facto serialization framework. It's fast, flexible, and works with JSON, TOML, YAML, MessagePack, and dozens of other formats.
+
+### Basic Setup
+
+```toml
+# Cargo.toml
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"    # for JSON
+toml = "0.8"          # for TOML
+```
+
+### Derive Macros: The 90% Case
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ServerConfig {
+    hostname: String,
+    port: u16,
+    #[serde(default)]                    // use Default::default() if missing
+    enabled: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+    #[serde(rename = "maxConnections")]  // different name in JSON
+    max_connections: u32,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Deserialize from JSON
+    let json = r#"{
+        "hostname": "node-01",
+        "port": 8080,
+        "maxConnections": 1000
+    }"#;
+
+    let config: ServerConfig = serde_json::from_str(json)?;
+    println!("{:?}", config);
+
+    // Serialize to JSON
+    let output = serde_json::to_string_pretty(&config)?;
+    println!("{output}");
+
+    Ok(())
+}
+```
+
+### Common Serde Attributes
+
+| Attribute | Effect |
+|-----------|--------|
+| `#[serde(rename = "name")]` | Use different field name in serialized form |
+| `#[serde(rename_all = "camelCase")]` | Rename all fields (struct-level) |
+| `#[serde(default)]` | Use `Default::default()` if field missing |
+| `#[serde(skip)]` | Don't serialize or deserialize this field |
+| `#[serde(skip_serializing)]` | Only deserialize, not serialize |
+| `#[serde(skip_serializing_if = "Option::is_none")]` | Conditionally skip |
+| `#[serde(flatten)]` | Flatten nested struct into parent |
+| `#[serde(with = "module")]` | Use custom serialize/deserialize functions |
+| `#[serde(untagged)]` | For enums: no tag, tries each variant |
+
+### Enums in Serde
+
+```rust
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "type")]              // "internally tagged"
+enum StorageBackend {
+    #[serde(rename = "local")]
+    Local { path: String },
+    #[serde(rename = "s3")]
+    S3 { bucket: String, region: String },
+}
+
+// Serializes to: {"type": "local", "path": "/data"}
+// vs default (externally tagged): {"Local": {"path": "/data"}}
+```
+
+Enum representations:
+
+- **Externally tagged** (default): `{"Variant": {...}}`
+- **Internally tagged** (`#[serde(tag = "type")]`): `{"type": "Variant", ...}`
+- **Adjacently tagged** (`#[serde(tag = "t", content = "c")]`): `{"t": "Variant", "c": {...}}`
+- **Untagged** (`#[serde(untagged)]`): tries each variant, no tag
+
+### Custom Serialization
+
+```rust
+use serde::{Serializer, Deserializer};
+
+#[derive(Debug)]
+struct Timestamp(i64);
+
+impl Serialize for Timestamp {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        // Serialize as ISO 8601 string instead of raw i64
+        let datetime = chrono::DateTime::from_timestamp(self.0, 0).unwrap();
+        serializer.serialize_str(&datetime.to_rfc3339())
+    }
+}
+```
+
+### Reading Config Files
+
+```rust
+use std::fs;
+
+// TOML config file
+fn load_toml_config(path: &str) -> Result<ServerConfig, Box<dyn std::error::Error>> {
+    let contents = fs::read_to_string(path)?;
+    let config: ServerConfig = toml::from_str(&contents)?;
+    Ok(config)
+}
+
+// JSON config file
+fn load_json_config(path: &str) -> Result<ServerConfig, Box<dyn std::error::Error>> {
+    let contents = fs::read_to_string(path)?;
+    let config: ServerConfig = serde_json::from_str(&contents)?;
+    Ok(config)
+}
+```
+
+**Practical tip**: Use `serde_json::Value` for dynamic/unknown JSON structures:
+
+```rust
+use serde_json::Value;
+
+let v: Value = serde_json::from_str(json)?;
+let hostname = v["hostname"].as_str().unwrap_or("unknown");
+```
+
+---
+
+## 21. Macros
+
+Macros are code that writes code. Rust has two types: declarative macros (`macro_rules!`) and procedural macros.
+
+### Declarative Macros (`macro_rules!`)
+
+These are pattern-matching based. You've already used them: `println!`, `vec!`, `format!`.
+
+```rust
+// Simple macro
+macro_rules! say_hello {
+    () => {
+        println!("Hello!");
+    };
+}
+
+// With arguments
+macro_rules! create_function {
+    ($name:ident) => {
+        fn $name() {
+            println!("Function {:?} was called", stringify!($name));
+        }
+    };
+}
+
+create_function!(foo);  // creates: fn foo() { ... }
+create_function!(bar);  // creates: fn bar() { ... }
+
+fn main() {
+    say_hello!();
+    foo();
+    bar();
+}
+```
+
+### Fragment Types (What You Can Match)
+
+| Fragment | Matches | Example |
+|----------|---------|---------|
+| `$x:ident` | Identifier | `foo`, `my_var` |
+| `$x:expr` | Expression | `1 + 2`, `foo()` |
+| `$x:ty` | Type | `i32`, `Vec<String>` |
+| `$x:path` | Path | `std::collections::HashMap` |
+| `$x:stmt` | Statement | `let x = 1;` |
+| `$x:block` | Block | `{ ... }` |
+| `$x:item` | Item (fn, struct, etc.) | `fn foo() {}` |
+| `$x:pat` | Pattern | `Some(x)`, `_` |
+| `$x:literal` | Literal | `42`, `"hello"` |
+| `$x:tt` | Token tree (anything) | any single token or `(...)`, `[...]`, `{...}` |
+
+### Repetition
+
+```rust
+// The vec! macro (simplified)
+macro_rules! my_vec {
+    // Match zero or more expressions separated by commas
+    ( $( $elem:expr ),* ) => {
+        {
+            let mut v = Vec::new();
+            $( v.push($elem); )*    // repeat the push for each element
+            v
+        }
+    };
+}
+
+let nums = my_vec![1, 2, 3, 4, 5];
+```
+
+Repetition operators:
+- `*` — zero or more
+- `+` — one or more
+- `?` — zero or one
+
+### Practical Example: A Logging Macro
+
+```rust
+macro_rules! log_debug {
+    ($($arg:tt)*) => {
+        #[cfg(debug_assertions)]
+        {
+            eprintln!("[DEBUG {}:{}] {}", file!(), line!(), format!($($arg)*));
+        }
+    };
+}
+
+fn process_data(x: i32) {
+    log_debug!("Processing value: {}", x);
+    // In release builds, this compiles to nothing
+}
+```
+
+### Procedural Macros (Brief Overview)
+
+Proc macros are more powerful but require a separate crate. There are three types:
+
+1. **Derive macros** — `#[derive(MyTrait)]`
+2. **Attribute macros** — `#[my_attribute]`
+3. **Function-like macros** — `my_macro!(...)`
+
+```rust
+// Using a derive macro (you use these all the time)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct MyStruct { ... }
+
+// Using an attribute macro
+#[tokio::main]           // transforms fn main into async runtime setup
+async fn main() { ... }
+
+#[test]                  // marks function as a test
+fn test_something() { ... }
+```
+
+Writing proc macros requires the `proc_macro`, `syn` (parsing), and `quote` (code generation) crates:
+
+```rust
+// In a separate crate with proc-macro = true in Cargo.toml
+use proc_macro::TokenStream;
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput};
+
+#[proc_macro_derive(MyDebug)]
+pub fn my_debug_derive(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+
+    let expanded = quote! {
+        impl std::fmt::Debug for #name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, stringify!(#name))
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
+```
+
+### When to Use Macros
+
+**Use declarative macros** (`macro_rules!`) for:
+- Reducing repetitive code patterns
+- DSLs (domain-specific languages)
+- Compile-time code generation
+- Variadic functions (Rust doesn't have them otherwise)
+
+**Use derive macros** when:
+- You need to implement traits automatically
+- The implementation follows a pattern based on struct/enum structure
+
+**Prefer functions over macros** when:
+- A regular function would work (macros are harder to debug)
+- You don't need compile-time code generation
+
+---
+
+## 22. Unsafe Rust
+
+`unsafe` lets you do five things the compiler can't verify. It doesn't turn off the borrow checker — it just gives you access to low-level operations.
+
+### What Unsafe Allows
+
+1. Dereference raw pointers
+2. Call unsafe functions/methods
+3. Access/modify mutable static variables
+4. Implement unsafe traits
+5. Access fields of `union`s
+
+### Raw Pointers
+
+```rust
+fn main() {
+    let mut x = 10;
+
+    // Creating raw pointers is safe
+    let ptr_immut: *const i32 = &x;       // immutable raw pointer
+    let ptr_mut: *mut i32 = &mut x;       // mutable raw pointer
+
+    // Dereferencing requires unsafe
+    unsafe {
+        println!("Value: {}", *ptr_immut);
+        *ptr_mut = 20;
+        println!("New value: {}", *ptr_mut);
+    }
+}
+```
+
+Raw pointers:
+- Are allowed to be null
+- Don't guarantee they point to valid memory
+- Can have multiple mutable pointers to the same location
+- Don't have lifetimes (no borrow checker enforcement)
+
+### Unsafe Functions
+
+```rust
+// Marked unsafe because caller must ensure preconditions
+unsafe fn dangerous(ptr: *const i32) -> i32 {
+    *ptr    // could crash if ptr is null or invalid
+}
+
+fn main() {
+    let x = 42;
+    let result = unsafe { dangerous(&x) };
+    println!("{result}");
+}
+```
+
+### Safe Abstractions Over Unsafe Code
+
+This is the key pattern: wrap unsafe code in safe interfaces.
+
+```rust
+fn split_at_mut(values: &mut [i32], mid: usize) -> (&mut [i32], &mut [i32]) {
+    let len = values.len();
+    let ptr = values.as_mut_ptr();
+
+    assert!(mid <= len);  // safety check
+
+    unsafe {
+        (
+            std::slice::from_raw_parts_mut(ptr, mid),
+            std::slice::from_raw_parts_mut(ptr.add(mid), len - mid),
+        )
+    }
+}
+
+// The function itself is safe because:
+// 1. We validated mid <= len
+// 2. The two slices don't overlap
+// 3. The lifetimes are correctly tied to the input
+```
+
+### Calling C Functions (FFI)
+
+```rust
+// Link to the C standard library
+extern "C" {
+    fn abs(input: i32) -> i32;
+    fn strlen(s: *const i8) -> usize;
+}
+
+fn main() {
+    unsafe {
+        println!("abs(-5) = {}", abs(-5));
+    }
+}
+```
+
+For proper FFI, use the `libc` crate and consider `bindgen` for generating bindings automatically.
+
+### Mutable Static Variables
+
+```rust
+static mut COUNTER: u32 = 0;
+
+fn increment() {
+    unsafe {
+        COUNTER += 1;
+    }
+}
+
+fn main() {
+    increment();
+    increment();
+    unsafe {
+        println!("COUNTER: {COUNTER}");
+    }
+}
+```
+
+**Avoid mutable statics** — they're a source of data races. Use `AtomicU32`, `Mutex`, or `lazy_static!` / `once_cell` instead.
+
+### When to Use Unsafe
+
+**Legitimate uses:**
+- FFI (calling C libraries)
+- Performance-critical code where you can prove safety but the compiler can't
+- Implementing low-level data structures (linked lists, trees with parent pointers)
+- Interfacing with hardware / OS APIs
+
+**Guidelines:**
+1. Keep `unsafe` blocks as small as possible
+2. Document the invariants you're maintaining
+3. Wrap unsafe code in safe abstractions
+4. Use `#[deny(unsafe_code)]` crate-wide, then allow it explicitly where needed
+
+```rust
+// Good: minimal unsafe, safe wrapper
+pub fn get_unchecked(slice: &[i32], index: usize) -> i32 {
+    // SAFETY: Caller must ensure index < slice.len()
+    unsafe { *slice.get_unchecked(index) }
+}
+
+// Better: don't expose unsafe at all
+pub fn get_or_default(slice: &[i32], index: usize, default: i32) -> i32 {
+    slice.get(index).copied().unwrap_or(default)
+}
+```
+
+### Common Unsafe Patterns to Know
+
+```rust
+// Transmute: reinterpret bytes (very dangerous)
+let x: i32 = unsafe { std::mem::transmute([0u8, 0, 0, 1]) };
+
+// ManuallyDrop: prevent destructor from running
+let mut s = std::mem::ManuallyDrop::new(String::from("hello"));
+// s will NOT be dropped when it goes out of scope
+
+// MaybeUninit: uninitialized memory
+use std::mem::MaybeUninit;
+let mut x = MaybeUninit::<i32>::uninit();
+unsafe {
+    x.as_mut_ptr().write(42);
+    let val = x.assume_init();  // now safe to use
+}
+```
+
+**Bottom line**: Most Rust code is 100% safe. You can write entire applications without a single `unsafe`. But when you need it — for FFI, hardware access, or performance — it's there, and the explicit marking makes it easy to audit.
+
+---
+
+## 23. What to Learn Next
 
 Once you're comfortable with the above, these are the next frontiers:
 
-- **Async Rust in depth**: Tokio runtime, futures, `select!`, streams
-- **Serde**: The serialization framework (JSON, TOML, YAML, etc.)
+- **Async Rust in depth**: Tokio runtime, futures, `select!`, streams, async traits
 - **Error handling patterns**: `thiserror` for libraries, `anyhow` for applications
-- **Macros**: `macro_rules!` for declarative, proc macros for derive
-- **Unsafe Rust**: Raw pointers, FFI with C — you'll rarely need this
-- **Pinning**: Required for self-referential types in async
+- **Pinning**: Required for self-referential types in async code
+- **Advanced FFI**: `bindgen` for auto-generating C bindings, `cbindgen` for exposing Rust to C
+- **Embedded Rust**: `no_std`, bare metal programming
+- **SIMD and performance**: `std::simd`, profiling with `perf`, `criterion` for benchmarks
 - **The `std` docs**: Genuinely excellent — <https://doc.rust-lang.org/std/>
 
 > **Best way to learn**: Pick a small project (a CLI tool, a simple HTTP server with axum/actix, a file processor) and just build. The compiler errors are famously helpful — read them carefully, they usually tell you exactly what to do.
