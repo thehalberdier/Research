@@ -1,0 +1,914 @@
+---
+title: "Rust Primer for C++/Java Developers"
+author: "Research Notes"
+date: "2026-02-10"
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+> **Goal**: Get you to ~80% of Rust, fast. Assumes you know C++/Java, understand types, pointers, and memory.
+> Skips: unsafe, macros-in-depth, async runtime internals, FFI, advanced lifetime gymnastics.
+
+---
+
+## 1. First Things First: Cargo & Project Setup
+
+Cargo is Rust's build system + package manager. Think CMake + Conan + Maven rolled into one, but actually pleasant.
+
+```bash
+cargo new myproject        # creates a new binary project
+cargo new mylib --lib      # creates a library
+cargo build                # compile (debug)
+cargo build --release      # compile (optimized)
+cargo run                  # build + run
+cargo test                 # run tests
+cargo add serde            # add a dependency (like `npm install`)
+```
+
+Project structure:
+```
+myproject/
+├── Cargo.toml             # like pom.xml / CMakeLists.txt
+├── src/
+│   └── main.rs            # entry point (fn main)
+```
+
+`Cargo.toml` declares dependencies:
+```toml
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+```
+
+Crates.io is the package registry (like Maven Central / crates ≈ packages).
+
+---
+
+## 2. The Big Idea: Ownership
+
+This is THE thing that makes Rust different. If you internalize this section, the rest falls into place.
+
+### The Three Rules
+
+1. Every value has exactly **one owner** (a variable).
+2. When the owner goes out of scope, the value is **dropped** (destructor runs, memory freed).
+3. Ownership can be **moved**, but then the old variable is invalid.
+
+```rust
+fn main() {
+    let s1 = String::from("hello");  // s1 owns the String
+    let s2 = s1;                      // ownership MOVED to s2
+    // println!("{}", s1);            // COMPILE ERROR: s1 is no longer valid
+    println!("{}", s2);               // fine
+}
+```
+
+**C++ analogy**: Think `std::unique_ptr`. Assignment = move. But Rust enforces this for ALL types at compile time, not just smart pointers.
+
+**Java comparison**: In Java, `s2 = s1` makes both point to the same object. In Rust, `s1` is dead after the move.
+
+### Stack vs. Heap & Copy Types
+
+Simple scalar types (`i32`, `f64`, `bool`, `char`, tuples of these) implement `Copy` — they're copied on assignment, not moved. Just like in C++.
+
+```rust
+let x = 5;
+let y = x;       // x is copied, both valid
+println!("{x} {y}"); // fine
+```
+
+Heap-allocated types (`String`, `Vec<T>`, `Box<T>`) are moved.
+
+### Clone: Explicit Deep Copy
+
+If you actually want a deep copy, say so:
+
+```rust
+let s1 = String::from("hello");
+let s2 = s1.clone();  // explicit deep copy
+println!("{s1} {s2}"); // both valid
+```
+
+---
+
+## 3. Borrowing & References
+
+You don't always want to move ownership. Borrowing lets you lend access.
+
+```rust
+fn print_length(s: &String) {   // borrows s (immutable reference)
+    println!("len = {}", s.len());
+}
+
+fn main() {
+    let s = String::from("hello");
+    print_length(&s);            // lend s
+    println!("{s}");             // still valid — we only lent it
+}
+```
+
+### The Borrowing Rules
+
+At any given time, you can have **either**:
+- **Any number** of immutable references (`&T`), **OR**
+- **Exactly one** mutable reference (`&mut T`)
+
+Never both at the same time.
+
+```rust
+let mut s = String::from("hello");
+
+let r1 = &s;       // ok
+let r2 = &s;       // ok — multiple immutable refs fine
+// let r3 = &mut s; // COMPILE ERROR: can't borrow mutably while immutable refs exist
+
+println!("{r1} {r2}");
+// r1, r2 no longer used after this point (their lifetime ends)
+
+let r3 = &mut s;   // now ok — no immutable refs alive
+r3.push_str(" world");
+```
+
+**Why**: This is Rust's compile-time data race prevention. No reader-writer conflicts, ever.
+
+**C++ analogy**: Like `const T&` vs `T&`, but the compiler actually enforces that you can't alias a mutable ref.
+
+---
+
+## 4. Lifetimes (The Minimum You Need)
+
+Lifetimes ensure references don't outlive the data they point to. Most of the time, the compiler infers them. You only write them when the compiler can't figure it out — typically in function signatures returning references.
+
+```rust
+// "The returned reference lives as long as BOTH inputs live"
+fn longer<'a>(s1: &'a str, s2: &'a str) -> &'a str {
+    if s1.len() >= s2.len() { s1 } else { s2 }
+}
+```
+
+`'a` is a lifetime parameter. Read it as: "the output reference is valid for at least as long as both input references."
+
+**Practical rule of thumb**: If the compiler says "missing lifetime specifier," add `<'a>` to the function and annotate the references. If you're storing references in a struct, you need lifetimes on the struct too:
+
+```rust
+struct Excerpt<'a> {
+    text: &'a str,   // this struct can't outlive the string it borrows
+}
+```
+
+**Escape hatch**: If lifetimes get painful, just own the data instead (`String` instead of `&str`, `Vec<T>` instead of `&[T]`). Cloning is fine. Don't fight the borrow checker when you're learning.
+
+---
+
+## 5. Types, Structs, Enums
+
+### Primitive Types
+
+```rust
+let x: i32 = 42;        // signed: i8, i16, i32, i64, i128, isize
+let y: u64 = 100;       // unsigned: u8, u16, u32, u64, u128, usize
+let f: f64 = 3.14;      // f32, f64
+let b: bool = true;
+let c: char = '🦀';     // 4 bytes, Unicode scalar value
+```
+
+`usize` / `isize` = pointer-sized integers. Used for indexing.
+
+### Structs (like C++ structs / Java classes, but no inheritance)
+
+```rust
+struct Server {
+    hostname: String,
+    cpu_cores: u32,
+    is_active: bool,
+}
+
+impl Server {
+    // Associated function (like static method). Convention: `new` is the constructor.
+    fn new(hostname: String, cores: u32) -> Self {
+        Server {
+            hostname,          // shorthand when field name == variable name
+            cpu_cores: cores,
+            is_active: true,
+        }
+    }
+
+    // Method: takes &self (immutable borrow of the instance)
+    fn summary(&self) -> String {
+        format!("{}: {} cores", self.hostname, self.cpu_cores)
+    }
+
+    // Mutable method: takes &mut self
+    fn deactivate(&mut self) {
+        self.is_active = false;
+    }
+}
+
+fn main() {
+    let mut srv = Server::new("node-01".to_string(), 64);
+    println!("{}", srv.summary());
+    srv.deactivate();
+}
+```
+
+**No inheritance.** Composition + traits instead (see §7).
+
+### Enums (WAY more powerful than C++/Java enums)
+
+Rust enums are algebraic data types (tagged unions). Each variant can hold data.
+
+```rust
+enum StorageBackend {
+    Local { path: String },
+    Ceph { pool: String, namespace: String },
+    NVMe { device_id: u32 },
+    None,
+}
+
+fn describe(backend: &StorageBackend) {
+    match backend {
+        StorageBackend::Local { path } => println!("Local at {path}"),
+        StorageBackend::Ceph { pool, .. } => println!("Ceph pool: {pool}"),
+        StorageBackend::NVMe { device_id } => println!("NVMe dev {device_id}"),
+        StorageBackend::None => println!("No storage"),
+    }
+}
+```
+
+**C++ analogy**: `std::variant`, but with exhaustive pattern matching enforced by the compiler.
+
+---
+
+## 6. Pattern Matching
+
+`match` is like `switch` on steroids. It's exhaustive — you must handle every case.
+
+```rust
+let x = 42;
+
+match x {
+    0 => println!("zero"),
+    1..=10 => println!("small"),
+    11 | 12 => println!("eleven or twelve"),
+    n if n < 0 => println!("negative: {n}"),   // guard
+    _ => println!("something else"),             // _ = default
+}
+```
+
+### `if let` — when you only care about one variant
+
+```rust
+let maybe_name: Option<String> = Some("venkat".to_string());
+
+if let Some(name) = maybe_name {
+    println!("Got: {name}");
+}
+// Use this instead of a full match when you don't care about the other cases.
+```
+
+### `let ... else` — early return on mismatch (Rust 1.65+)
+
+```rust
+fn process(val: Option<i32>) {
+    let Some(x) = val else {
+        println!("was None, bailing");
+        return;
+    };
+    println!("processing {x}");
+}
+```
+
+---
+
+## 7. Traits (≈ Interfaces + Typeclasses)
+
+Traits define shared behavior. Like Java interfaces, but can have default implementations and can be implemented for types you didn't define.
+
+```rust
+trait Describable {
+    fn describe(&self) -> String;
+
+    // Default implementation (like Java default methods)
+    fn short_desc(&self) -> String {
+        format!("{}...", &self.describe()[..20.min(self.describe().len())])
+    }
+}
+
+impl Describable for Server {
+    fn describe(&self) -> String {
+        format!("Server {} with {} cores", self.hostname, self.cpu_cores)
+    }
+}
+```
+
+### Trait Bounds (= Generics constrained by traits)
+
+```rust
+// Any T that implements Describable
+fn log_item<T: Describable>(item: &T) {
+    println!("[LOG] {}", item.describe());
+}
+
+// Equivalent with `where` clause (cleaner for multiple bounds)
+fn log_item2<T>(item: &T)
+where
+    T: Describable + Clone + std::fmt::Debug,
+{
+    println!("[LOG] {:?} — {}", item, item.describe());
+}
+```
+
+### `impl Trait` syntax (simpler)
+
+```rust
+fn log_item3(item: &impl Describable) {  // same as the generic version above
+    println!("[LOG] {}", item.describe());
+}
+
+fn make_server() -> impl Describable {    // return "some type that is Describable"
+    Server::new("anon".into(), 8)
+}
+```
+
+### Common Standard Library Traits You'll Use Constantly
+
+| Trait | What it does | C++/Java analogy |
+|-------|-------------|-----------------|
+| `Clone` | Explicit deep copy (`.clone()`) | Copy constructor |
+| `Copy` | Implicit bitwise copy | POD types |
+| `Debug` | Format with `{:?}` for debugging | `toString()` for debug |
+| `Display` | Format with `{}` for user-facing output | `toString()` |
+| `PartialEq`, `Eq` | `==` / `!=` | `operator==` / `equals()` |
+| `PartialOrd`, `Ord` | `<`, `>`, sorting | `operator<` / `Comparable` |
+| `Hash` | Hashing for `HashMap` keys | `hashCode()` |
+| `Default` | Default value (`T::default()`) | Default constructor |
+| `From` / `Into` | Type conversion | Conversion constructors |
+| `Iterator` | Iteration protocol | `Iterator<T>` |
+| `Drop` | Destructor | Destructor / `finalize()` |
+
+Most of these can be auto-derived:
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct NodeId {
+    rack: u32,
+    slot: u32,
+}
+```
+
+---
+
+## 8. Error Handling: `Result` and `Option`
+
+No exceptions in Rust. Errors are values.
+
+### `Option<T>` — value might be absent
+
+```rust
+// Option is just: enum Option<T> { Some(T), None }
+
+fn find_server(id: u32) -> Option<Server> {
+    if id == 1 {
+        Some(Server::new("node-01".into(), 64))
+    } else {
+        None
+    }
+}
+
+// Handling:
+match find_server(1) {
+    Some(srv) => println!("{}", srv.summary()),
+    None => println!("not found"),
+}
+
+// Or more concisely:
+let srv = find_server(1).unwrap();             // panics if None (like .get() on null)
+let srv = find_server(1).unwrap_or(default);   // fallback
+let srv = find_server(1).expect("server 1 must exist"); // panic with message
+```
+
+### `Result<T, E>` — operation might fail
+
+```rust
+// Result is just: enum Result<T, E> { Ok(T), Err(E) }
+
+use std::fs;
+use std::io;
+
+fn read_config(path: &str) -> Result<String, io::Error> {
+    fs::read_to_string(path)
+}
+
+fn main() {
+    match read_config("/etc/myapp.conf") {
+        Ok(contents) => println!("Config: {contents}"),
+        Err(e) => eprintln!("Failed: {e}"),
+    }
+}
+```
+
+### The `?` Operator (This Is Huge)
+
+`?` propagates errors upward. If the Result is `Err`, return early with that error. If `Ok`, unwrap the value. This replaces try-catch with zero boilerplate.
+
+```rust
+fn load_and_parse_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
+    let contents = fs::read_to_string(path)?;   // returns Err early if file read fails
+    let config: Config = serde_json::from_str(&contents)?;  // returns Err if parse fails
+    Ok(config)
+}
+```
+
+**C++ analogy**: Like if every function returned `std::expected<T, E>` and you had a concise syntax for early returns.
+
+**Practical advice**: Use `anyhow::Result` (from the `anyhow` crate) for applications and `thiserror` for libraries.
+
+```rust
+// In Cargo.toml: anyhow = "1"
+use anyhow::{Context, Result};
+
+fn load_config(path: &str) -> Result<Config> {
+    let contents = fs::read_to_string(path)
+        .context("failed to read config file")?;    // adds context to error
+    let config = serde_json::from_str(&contents)
+        .context("failed to parse config")?;
+    Ok(config)
+}
+```
+
+---
+
+## 9. Collections & Iterators
+
+### Key Collections
+
+```rust
+use std::collections::HashMap;
+
+// Vec<T> — dynamic array (like std::vector / ArrayList)
+let mut nums: Vec<i32> = vec![1, 2, 3];
+nums.push(4);
+
+// String — owned, growable UTF-8 string
+let mut s = String::from("hello");
+s.push_str(" world");
+
+// &str — string slice (borrowed view into a String or literal)
+let slice: &str = &s[0..5];
+
+// HashMap<K, V> — hash map (like std::unordered_map / HashMap)
+let mut scores: HashMap<String, i32> = HashMap::new();
+scores.insert("node-01".into(), 95);
+
+// VecDeque, BTreeMap, BTreeSet, HashSet also available
+```
+
+### Iterators (Rust's Secret Weapon)
+
+Rust iterators are lazy, zero-cost abstractions. They compile down to the same code as hand-written loops.
+
+```rust
+let nums = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// Chained iterator operations
+let result: Vec<i32> = nums.iter()
+    .filter(|&&x| x % 2 == 0)       // keep evens
+    .map(|&x| x * x)                // square them
+    .collect();                       // collect into Vec
+// result = [4, 16, 36, 64, 100]
+
+// Sum
+let total: i32 = nums.iter().sum();
+
+// Find
+let first_big = nums.iter().find(|&&x| x > 5);  // Option<&i32>
+
+// for loop (uses IntoIterator under the hood)
+for num in &nums {
+    println!("{num}");
+}
+
+// Enumerate (like Python)
+for (i, num) in nums.iter().enumerate() {
+    println!("[{i}] = {num}");
+}
+
+// Iterating over HashMap
+for (key, value) in &scores {
+    println!("{key}: {value}");
+}
+```
+
+**Key iterator methods**: `map`, `filter`, `flat_map`, `fold`, `reduce`, `take`, `skip`, `zip`, `enumerate`, `any`, `all`, `find`, `position`, `collect`, `count`, `sum`, `min`, `max`, `chain`, `peekable`.
+
+`.collect()` can produce different collection types based on the type annotation — it's generic over the output type.
+
+---
+
+## 10. Closures
+
+```rust
+// Type-inferred closure
+let add = |a, b| a + b;
+println!("{}", add(2, 3));
+
+// With explicit types
+let square = |x: i32| -> i32 { x * x };
+
+// Closures capture variables from their environment
+let threshold = 50;
+let above_threshold = |x: &i32| *x > threshold;    // borrows `threshold`
+
+let results: Vec<&i32> = nums.iter().filter(|x| above_threshold(x)).collect();
+
+// Move closure — takes ownership of captured variables
+let name = String::from("venkat");
+let greeting = move || println!("Hello, {name}");    // `name` moved into closure
+// `name` is no longer usable here
+greeting();
+```
+
+Closures implement one or more of: `Fn` (borrows immutably), `FnMut` (borrows mutably), `FnOnce` (takes ownership). The compiler figures this out.
+
+---
+
+## 11. Smart Pointers
+
+| Type | What it does | C++ analogy |
+|------|-------------|-------------|
+| `Box<T>` | Heap allocation, single owner | `std::unique_ptr<T>` |
+| `Rc<T>` | Reference-counted, single thread | `std::shared_ptr<T>` |
+| `Arc<T>` | Reference-counted, thread-safe | `std::shared_ptr<T>` (atomic) |
+| `RefCell<T>` | Interior mutability (runtime borrow checks) | — |
+| `Mutex<T>` | Mutual exclusion with owned data | `std::mutex` + the data it protects |
+| `RwLock<T>` | Reader-writer lock with owned data | `std::shared_mutex` + data |
+
+```rust
+// Box: heap allocation
+let boxed: Box<i32> = Box::new(42);
+
+// Arc + Mutex: shared mutable state across threads
+use std::sync::{Arc, Mutex};
+
+let counter = Arc::new(Mutex::new(0));
+let counter_clone = Arc::clone(&counter);
+
+std::thread::spawn(move || {
+    let mut num = counter_clone.lock().unwrap();
+    *num += 1;
+});
+```
+
+**Key insight**: In Rust, `Mutex<T>` owns the data it protects. You can't access the data without locking. This makes data races structurally impossible.
+
+---
+
+## 12. Concurrency
+
+### Threads
+
+```rust
+use std::thread;
+
+let handle = thread::spawn(|| {
+    println!("hello from thread");
+    42   // return value
+});
+
+let result = handle.join().unwrap();  // wait + get result
+```
+
+### Channels (message passing)
+
+```rust
+use std::sync::mpsc;  // multi-producer, single-consumer
+
+let (tx, rx) = mpsc::channel();
+let tx2 = tx.clone();   // clone sender for multiple producers
+
+thread::spawn(move || { tx.send("from thread 1").unwrap(); });
+thread::spawn(move || { tx2.send("from thread 2").unwrap(); });
+
+for msg in rx {  // blocks until all senders dropped
+    println!("Got: {msg}");
+}
+```
+
+### Async/Await (brief overview)
+
+Rust has async syntax but no built-in runtime. You pick one (usually `tokio`).
+
+```rust
+// Cargo.toml: tokio = { version = "1", features = ["full"] }
+
+#[tokio::main]
+async fn main() {
+    let result = fetch_data().await;
+    println!("{result}");
+}
+
+async fn fetch_data() -> String {
+    // async operations here
+    "data".to_string()
+}
+```
+
+---
+
+## 13. Modules & Visibility
+
+```rust
+// In src/main.rs or src/lib.rs
+
+mod network {                    // inline module
+    pub struct Connection {      // pub = public
+        pub host: String,
+        port: u16,               // private by default
+    }
+
+    impl Connection {
+        pub fn new(host: String, port: u16) -> Self {
+            Connection { host, port }
+        }
+
+        pub fn connect(&self) {
+            println!("Connecting to {}:{}", self.host, self.port);
+        }
+    }
+
+    pub mod dns {                // nested module
+        pub fn resolve(hostname: &str) -> String {
+            format!("192.168.1.1 (resolved {hostname})")
+        }
+    }
+}
+
+fn main() {
+    let conn = network::Connection::new("10.0.0.1".into(), 8080);
+    conn.connect();
+    let ip = network::dns::resolve("node-01");
+}
+```
+
+For file-based modules:
+```
+src/
+├── main.rs         // declares: mod network;
+├── network/
+│   ├── mod.rs      // declares: pub mod dns;
+│   └── dns.rs      // the dns module
+```
+
+Or the newer flat style (Rust 2018+):
+```
+src/
+├── main.rs         // declares: mod network;
+├── network.rs      // the network module, declares: pub mod dns;
+├── network/
+│   └── dns.rs
+```
+
+`use` brings items into scope:
+```rust
+use network::Connection;
+use std::collections::HashMap;
+use std::io::{self, Read, Write};  // multiple imports
+```
+
+---
+
+## 14. Generics
+
+Like C++ templates / Java generics, but with trait bounds instead of SFINAE / concepts.
+
+```rust
+// Generic function
+fn largest<T: PartialOrd>(list: &[T]) -> &T {
+    let mut largest = &list[0];
+    for item in &list[1..] {
+        if item > largest {
+            largest = item;
+        }
+    }
+    largest
+}
+
+// Generic struct
+struct Cache<K, V> {
+    entries: HashMap<K, V>,
+    max_size: usize,
+}
+
+impl<K: Eq + Hash, V> Cache<K, V> {
+    fn new(max_size: usize) -> Self {
+        Cache {
+            entries: HashMap::new(),
+            max_size,
+        }
+    }
+
+    fn get(&self, key: &K) -> Option<&V> {
+        self.entries.get(key)
+    }
+}
+```
+
+### Dynamic Dispatch (`dyn Trait`)
+
+When you need runtime polymorphism (like virtual functions in C++ / interface references in Java):
+
+```rust
+fn log_all(items: &[&dyn Describable]) {
+    for item in items {
+        println!("{}", item.describe());
+    }
+}
+
+// Or with Box for owned trait objects
+fn get_backend(config: &str) -> Box<dyn StorageTrait> {
+    match config {
+        "ceph" => Box::new(CephBackend::new()),
+        "local" => Box::new(LocalBackend::new()),
+        _ => panic!("unknown backend"),
+    }
+}
+```
+
+`dyn Trait` = vtable dispatch (like C++ virtual). `impl Trait` / generics = monomorphization (like C++ templates). Prefer generics for performance; use `dyn` when you need heterogeneous collections or runtime selection.
+
+---
+
+## 15. String Types Cheat Sheet
+
+This trips up every newcomer:
+
+| Type | What | Analogy |
+|------|------|---------|
+| `String` | Owned, heap-allocated, growable | `std::string` |
+| `&str` | Borrowed slice (view into a String or literal) | `std::string_view` / `const char*` |
+
+```rust
+let owned: String = String::from("hello");   // or "hello".to_string()
+let slice: &str = &owned;                     // borrow as slice
+let literal: &str = "hello";                  // string literal (lives in binary, static lifetime)
+
+// Convert between them:
+let s: String = "hello".to_string();          // &str → String
+let s: String = String::from("hello");        // same
+let s: &str = &owned;                         // String → &str (via Deref coercion)
+let s: &str = owned.as_str();                 // explicit
+```
+
+**Rule of thumb**: Functions should take `&str` as input (accepts both) and return `String` if they're creating new string data.
+
+---
+
+## 16. Testing
+
+Tests live right next to the code. No separate test files needed (though you can have them).
+
+```rust
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+#[cfg(test)]                       // only compiled during `cargo test`
+mod tests {
+    use super::*;                  // import from parent module
+
+    #[test]
+    fn test_add() {
+        assert_eq!(add(2, 3), 5);
+    }
+
+    #[test]
+    fn test_add_negative() {
+        assert_eq!(add(-1, 1), 0);
+    }
+
+    #[test]
+    #[should_panic(expected = "overflow")]
+    fn test_overflow() {
+        // test that something panics
+    }
+}
+```
+
+Integration tests go in `tests/` directory at the project root.
+
+---
+
+## 17. Practical Patterns You'll Use Daily
+
+### Builder Pattern (common in Rust APIs)
+
+```rust
+let client = ClientBuilder::new()
+    .timeout(Duration::from_secs(30))
+    .max_retries(3)
+    .base_url("https://api.example.com")
+    .build()?;
+```
+
+### `From` / `Into` Conversions
+
+```rust
+impl From<NodeConfig> for Server {
+    fn from(config: NodeConfig) -> Self {
+        Server::new(config.hostname, config.cores)
+    }
+}
+
+// Now you can do:
+let server: Server = config.into();
+let server = Server::from(config);
+```
+
+### Type Aliases
+
+```rust
+type Result<T> = std::result::Result<T, MyError>;   // common in libraries
+type NodeMap = HashMap<String, Vec<Server>>;
+```
+
+### Destructuring
+
+```rust
+let (x, y, z) = (1, 2, 3);
+
+let Server { hostname, cpu_cores, .. } = &server;   // struct destructuring
+
+if let Ok(config) = load_config("path") {
+    // use config
+}
+```
+
+---
+
+## 18. Key Differences Cheat Sheet
+
+| Concept | C++ | Java | Rust |
+|---------|-----|------|------|
+| Memory | Manual / RAII | GC | Ownership + RAII |
+| Null | `nullptr` | `null` | `Option<T>` (no null) |
+| Errors | Exceptions / error codes | Exceptions | `Result<T, E>` |
+| Inheritance | Class hierarchy | Class hierarchy | **None** (use traits + composition) |
+| Polymorphism | Virtual functions | Interfaces | Traits (`dyn` or generics) |
+| Concurrency safety | "be careful" | "be careful" | Compile-time enforcement |
+| Package manager | ??? | Maven/Gradle | Cargo (it's great) |
+| Strings | `std::string` / `const char*` | `String` | `String` / `&str` |
+| Default mutability | Mutable | Mutable (refs) | **Immutable** |
+
+---
+
+## 19. Quick Syntax Reference
+
+```rust
+// Variables
+let x = 5;                     // immutable
+let mut y = 10;                // mutable
+let z: i64 = 100;             // explicit type
+
+// Functions
+fn add(a: i32, b: i32) -> i32 {
+    a + b                       // no semicolon = return value (expression)
+}
+
+// Conditionals (expressions — they return values)
+let status = if cpu_load > 90 { "critical" } else { "ok" };
+
+// Loops
+for item in &collection { }
+for i in 0..10 { }            // 0 to 9
+for i in 0..=10 { }           // 0 to 10 (inclusive)
+while condition { }
+loop { break value; }          // infinite loop, can return a value
+
+// Printing
+println!("Hello {name}");                      // string interpolation
+println!("Debug: {:?}", some_struct);           // debug format
+println!("Pretty debug: {:#?}", some_struct);   // pretty-printed debug
+eprintln!("Error: {e}");                        // print to stderr
+
+// Turbofish (explicit type for generic functions)
+let nums = "1,2,3".split(',').collect::<Vec<&str>>();
+```
+
+---
+
+## 20. What to Learn Next
+
+Once you're comfortable with the above, these are the next frontiers:
+
+- **Async Rust in depth**: Tokio runtime, futures, `select!`, streams
+- **Serde**: The serialization framework (JSON, TOML, YAML, etc.)
+- **Error handling patterns**: `thiserror` for libraries, `anyhow` for applications
+- **Macros**: `macro_rules!` for declarative, proc macros for derive
+- **Unsafe Rust**: Raw pointers, FFI with C — you'll rarely need this
+- **Pinning**: Required for self-referential types in async
+- **The `std` docs**: Genuinely excellent — <https://doc.rust-lang.org/std/>
+
+> **Best way to learn**: Pick a small project (a CLI tool, a simple HTTP server with axum/actix, a file processor) and just build. The compiler errors are famously helpful — read them carefully, they usually tell you exactly what to do.
