@@ -196,81 +196,60 @@
     "text": "27. What to Learn Next\nOnce you’re comfortable with the above, these are the next frontiers:\n\nAsync Rust in depth: Tokio runtime, futures, select!, streams, async traits\nError handling patterns: thiserror for libraries, anyhow for applications\nPinning: Required for self-referential types in async code\nAdvanced FFI: bindgen for auto-generating C bindings, cbindgen for exposing Rust to C\nEmbedded Rust: no_std, bare metal programming\nSIMD and performance: std::simd, profiling with perf, criterion for benchmarks\nThe std docs: Genuinely excellent — https://doc.rust-lang.org/std/\n\n\nBest way to learn: Pick a small project (a CLI tool, a simple HTTP server with axum/actix, a file processor) and just build. The compiler errors are famously helpful — read them carefully, they usually tell you exactly what to do."
   },
   {
-    "objectID": "hdd_tco_summary.html",
-    "href": "hdd_tco_summary.html",
-    "title": "HDD comparison and 5-year TCO",
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Research",
     "section": "",
-    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
+    "text": "Notes, writeups, and summaries for personal research projects."
   },
   {
-    "objectID": "hdd_tco_summary.html#context",
-    "href": "hdd_tco_summary.html#context",
-    "title": "HDD comparison and 5-year TCO",
+    "objectID": "index.html#documents",
+    "href": "index.html#documents",
+    "title": "Research",
+    "section": "Documents",
+    "text": "Documents\n\nHDD comparison and 5-year TCO\nAmpereOne M vs AMD EPYC 9554/9654\nArista switch health report (DCS-7060CX-32S-R)\nRust primer for C++/Java developers"
+  },
+  {
+    "objectID": "arista_switch_health_report.html",
+    "href": "arista_switch_health_report.html",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
     "section": "",
-    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
+    "text": "This page summarizes findings from the health report file healthreport_Arista.txt."
   },
   {
-    "objectID": "hdd_tco_summary.html#dc-grade-assessment-short",
-    "href": "hdd_tco_summary.html#dc-grade-assessment-short",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "DC-grade assessment (short)",
-    "text": "DC-grade assessment (short)\n\nAll three are data-center/enterprise nearline SKUs on-paper: 24×7 duty class, 5-year warranty, MTBF/AFR class typical of DC drives.\nDifferences are mainly capacity per drive (18TB vs 24TB) and minor interface/power/feature details."
+    "objectID": "arista_switch_health_report.html#snapshot",
+    "href": "arista_switch_health_report.html#snapshot",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Snapshot",
+    "text": "Snapshot\n\nReport timestamp: Sat Jan 31 09:41:47 UTC 2026\nModel: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)\nEOS: 4.26.6M\nUptime at capture: ~20 minutes"
   },
   {
-    "objectID": "hdd_tco_summary.html#inputs-used",
-    "href": "hdd_tco_summary.html#inputs-used",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Inputs used",
-    "text": "Inputs used\n\nTime horizon: 5 years (hours = 43,800)\nServer base idle (excluding disks): 400W/server (assumption; see sensitivity)\nDrive idle watts (from datasheets):\n\nSeagate Exos X24 ST24000NM007H: 6.5W idle; https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): 5.9W idle; https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: 5.8W idle; https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
+    "objectID": "arista_switch_health_report.html#overall-status",
+    "href": "arista_switch_health_report.html#overall-status",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Overall status",
+    "text": "Overall status\nCooling, temperatures, and flash look healthy. The report shows PSU2 offline, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy)."
   },
   {
-    "objectID": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
-    "href": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Drive counts and server counts to reach ≥5,000 TB",
-    "text": "Drive counts and server counts to reach ≥5,000 TB\n\nFormulae:\n\ndrives = ceil(5000 / TB_per_drive)\nservers = ceil(drives / 24)"
+    "objectID": "arista_switch_health_report.html#key-findings",
+    "href": "arista_switch_health_report.html#key-findings",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Key findings",
+    "text": "Key findings\n\n\n\n\n\n\n\n\nArea\nStatus\nNotes\n\n\n\n\nCooling\nPass\nFans OK and stable; ambient 25°C\n\n\nTemperature\nPass\nAll sensors below alert/critical thresholds\n\n\nPower supplies\nExpected (lab setup)\nPSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected\n\n\nModules/ASIC status\nScript false-fail\nshow module is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself\n\n\nInterfaces\nN/A (bench state)\nAll ports show notconnect / Not Present (no optics/cables); Ma1 also down\n\n\nFlash\nPass\n/mnt/flash 63% used; writable"
   },
   {
-    "objectID": "hdd_tco_summary.html#year-cost-model",
-    "href": "hdd_tco_summary.html#year-cost-model",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "5-year cost model",
-    "text": "5-year cost model\n\nElectricity:\n\nkWh = (Watts/1000) * hours\npower_cost = kWh * ₹17\n\n5-year TCO range (server capex ₹8–9L):\n\nTCO = drive_capex + server_capex + drive_power_cost + server_power_cost"
+    "objectID": "arista_switch_health_report.html#details",
+    "href": "arista_switch_health_report.html#details",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Details",
+    "text": "Details\n\nPower (expected in this test setup)\nshow environment power indicates:\n\nPSU 1: Ok, drawing input current and supplying ~125.5W\nPSU 2: Power Loss Offline, 0.0W (expected when not connected)\n\nThis is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.\n\n\n“Modules are not reporting Active” (likely not real)\nThe report section “MODULE & ASIC STATUS” runs show module, but the output returns:\n\n“Unavailable command (not supported on this hardware platform)”\n\nSo treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue."
   },
   {
-    "objectID": "hdd_tco_summary.html#results-5-pb-raw",
-    "href": "hdd_tco_summary.html#results-5-pb-raw",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Results (5 PB raw)",
-    "text": "Results (5 PB raw)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDrive\nTB/drive\nDrives\nServers (24-bay)\nDrive CAPEX\nServer CAPEX\n5y drive power\n5y server power (@400W)\n5y TCO\n₹/TB (drive-only)\n\n\n\n\nSeagate Exos X24 ST24000NM007H\n24\n209\n9\n97.19L\n72.00L–81.00L\n10.12L\n26.81L\n206.11L–215.11L\n1937.5\n\n\nWD Ultrastar DC HC590 24TB (SKU 0F59373)\n24\n209\n9\n96.56L\n72.00L–81.00L\n9.18L\n26.81L\n204.55L–213.55L\n1925.0\n\n\nSeagate Exos X20 ST18000NM000D\n18\n278\n12\n80.62L\n96.00L–108.00L\n12.01L\n35.74L\n224.37L–236.37L\n1611.11"
-  },
-  {
-    "objectID": "hdd_tco_summary.html#findings",
-    "href": "hdd_tco_summary.html#findings",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Findings",
-    "text": "Findings\n\nArchitecture dominates: with ₹8–9L per 24-bay server, the 18TB option requires 12 servers vs 9 servers for 24TB drives.\nThat extra server capex (and base power) outweighs the 18TB drive’s lower ₹/TB.\nBest 5-year value (your constraints): WD Ultrastar DC HC590 24TB.\nThe two 24TB options are close; HC590 wins slightly on your pricing and lower drive idle watts."
-  },
-  {
-    "objectID": "hdd_tco_summary.html#sensitivity-server-idle-power",
-    "href": "hdd_tco_summary.html#sensitivity-server-idle-power",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Sensitivity (server idle power)",
-    "text": "Sensitivity (server idle power)\n\nExtra electricity per +100W per server over 5 years: ₹74,460 (~0.74L).\nFor 9 servers: +100W/server adds ₹670,140 (~6.70L).\nFor 12 servers: +100W/server adds ₹893,520 (~8.94L).\nIf your servers idle significantly above 400W, the penalty for needing more servers increases, which further favors 24TB drives."
-  },
-  {
-    "objectID": "hdd_tco_summary.html#what-this-tco-excludes-important",
-    "href": "hdd_tco_summary.html#what-this-tco-excludes-important",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "What this TCO excludes (important)",
-    "text": "What this TCO excludes (important)\n\nCooling overhead (PUE), rack space cost, networking/HBA costs, spares inventory, and operational labor.\nIf you provide measured wall power per storage server (idle) with disks installed and any PUE target, the power part can be tightened."
-  },
-  {
-    "objectID": "hdd_tco_summary.html#datasheet-links",
-    "href": "hdd_tco_summary.html#datasheet-links",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Datasheet links",
-    "text": "Datasheet links\n\nSeagate Exos X24 ST24000NM007H: https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
+    "objectID": "arista_switch_health_report.html#recommended-next-checks",
+    "href": "arista_switch_health_report.html#recommended-next-checks",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Recommended next checks",
+    "text": "Recommended next checks\nTo restore redundancy, connect PSU2 to AC and confirm it transitions to Ok. If it still shows offline:\n\nReseat PSU2 and verify it’s the correct model for the chassis.\nSwap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).\nRe-run these commands and look for state changes:\n\nshow environment power\nshow logging | include PSU|Power|pwr|power-supply\nshow system environment cooling\nshow system environment temperature"
   },
   {
     "objectID": "ampereone_m_vs_amd_epyc.html",
@@ -364,59 +343,255 @@
     "text": "Recommendation: a minimal, decision-oriented POC\n\nPick one workload per “shape” you run: (a) latency-sensitive service, (b) batch/throughput service, (c) memory-bandwidth-heavy job, (d) IO-heavy node.\nTest 2 Ampere SKUs per AMD SKU (from the shortlist) and keep memory config constant (same capacity per channel).\nCompare: throughput/socket, p99 latency, perf/W, and perf/$ (including any software/license deltas).\nFail fast on compatibility: image build, agents, monitoring, kernel/driver support, and any proprietary binaries."
   },
   {
-    "objectID": "arista_switch_health_report.html",
-    "href": "arista_switch_health_report.html",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "objectID": "hdd_tco_summary.html",
+    "href": "hdd_tco_summary.html",
+    "title": "HDD comparison and 5-year TCO",
     "section": "",
-    "text": "This page summarizes findings from the health report file healthreport_Arista.txt."
+    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
   },
   {
-    "objectID": "arista_switch_health_report.html#snapshot",
-    "href": "arista_switch_health_report.html#snapshot",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Snapshot",
-    "text": "Snapshot\n\nReport timestamp: Sat Jan 31 09:41:47 UTC 2026\nModel: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)\nEOS: 4.26.6M\nUptime at capture: ~20 minutes"
-  },
-  {
-    "objectID": "arista_switch_health_report.html#overall-status",
-    "href": "arista_switch_health_report.html#overall-status",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Overall status",
-    "text": "Overall status\nCooling, temperatures, and flash look healthy. The report shows PSU2 offline, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy)."
-  },
-  {
-    "objectID": "arista_switch_health_report.html#key-findings",
-    "href": "arista_switch_health_report.html#key-findings",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Key findings",
-    "text": "Key findings\n\n\n\n\n\n\n\n\nArea\nStatus\nNotes\n\n\n\n\nCooling\nPass\nFans OK and stable; ambient 25°C\n\n\nTemperature\nPass\nAll sensors below alert/critical thresholds\n\n\nPower supplies\nExpected (lab setup)\nPSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected\n\n\nModules/ASIC status\nScript false-fail\nshow module is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself\n\n\nInterfaces\nN/A (bench state)\nAll ports show notconnect / Not Present (no optics/cables); Ma1 also down\n\n\nFlash\nPass\n/mnt/flash 63% used; writable"
-  },
-  {
-    "objectID": "arista_switch_health_report.html#details",
-    "href": "arista_switch_health_report.html#details",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Details",
-    "text": "Details\n\nPower (expected in this test setup)\nshow environment power indicates:\n\nPSU 1: Ok, drawing input current and supplying ~125.5W\nPSU 2: Power Loss Offline, 0.0W (expected when not connected)\n\nThis is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.\n\n\n“Modules are not reporting Active” (likely not real)\nThe report section “MODULE & ASIC STATUS” runs show module, but the output returns:\n\n“Unavailable command (not supported on this hardware platform)”\n\nSo treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue."
-  },
-  {
-    "objectID": "arista_switch_health_report.html#recommended-next-checks",
-    "href": "arista_switch_health_report.html#recommended-next-checks",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Recommended next checks",
-    "text": "Recommended next checks\nTo restore redundancy, connect PSU2 to AC and confirm it transitions to Ok. If it still shows offline:\n\nReseat PSU2 and verify it’s the correct model for the chassis.\nSwap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).\nRe-run these commands and look for state changes:\n\nshow environment power\nshow logging | include PSU|Power|pwr|power-supply\nshow system environment cooling\nshow system environment temperature"
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Research",
+    "objectID": "hdd_tco_summary.html#context",
+    "href": "hdd_tco_summary.html#context",
+    "title": "HDD comparison and 5-year TCO",
     "section": "",
-    "text": "Notes, writeups, and summaries for personal research projects."
+    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
   },
   {
-    "objectID": "index.html#documents",
-    "href": "index.html#documents",
-    "title": "Research",
-    "section": "Documents",
-    "text": "Documents\n\nHDD comparison and 5-year TCO\nAmpereOne M vs AMD EPYC 9554/9654\nArista switch health report (DCS-7060CX-32S-R)\nRust primer for C++/Java developers"
+    "objectID": "hdd_tco_summary.html#dc-grade-assessment-short",
+    "href": "hdd_tco_summary.html#dc-grade-assessment-short",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "DC-grade assessment (short)",
+    "text": "DC-grade assessment (short)\n\nAll three are data-center/enterprise nearline SKUs on-paper: 24×7 duty class, 5-year warranty, MTBF/AFR class typical of DC drives.\nDifferences are mainly capacity per drive (18TB vs 24TB) and minor interface/power/feature details."
+  },
+  {
+    "objectID": "hdd_tco_summary.html#inputs-used",
+    "href": "hdd_tco_summary.html#inputs-used",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Inputs used",
+    "text": "Inputs used\n\nTime horizon: 5 years (hours = 43,800)\nServer base idle (excluding disks): 400W/server (assumption; see sensitivity)\nDrive idle watts (from datasheets):\n\nSeagate Exos X24 ST24000NM007H: 6.5W idle; https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): 5.9W idle; https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: 5.8W idle; https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
+  },
+  {
+    "objectID": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
+    "href": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Drive counts and server counts to reach ≥5,000 TB",
+    "text": "Drive counts and server counts to reach ≥5,000 TB\n\nFormulae:\n\ndrives = ceil(5000 / TB_per_drive)\nservers = ceil(drives / 24)"
+  },
+  {
+    "objectID": "hdd_tco_summary.html#year-cost-model",
+    "href": "hdd_tco_summary.html#year-cost-model",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "5-year cost model",
+    "text": "5-year cost model\n\nElectricity:\n\nkWh = (Watts/1000) * hours\npower_cost = kWh * ₹17\n\n5-year TCO range (server capex ₹8–9L):\n\nTCO = drive_capex + server_capex + drive_power_cost + server_power_cost"
+  },
+  {
+    "objectID": "hdd_tco_summary.html#results-5-pb-raw",
+    "href": "hdd_tco_summary.html#results-5-pb-raw",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Results (5 PB raw)",
+    "text": "Results (5 PB raw)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDrive\nTB/drive\nDrives\nServers (24-bay)\nDrive CAPEX\nServer CAPEX\n5y drive power\n5y server power (@400W)\n5y TCO\n₹/TB (drive-only)\n\n\n\n\nSeagate Exos X24 ST24000NM007H\n24\n209\n9\n97.19L\n72.00L–81.00L\n10.12L\n26.81L\n206.11L–215.11L\n1937.5\n\n\nWD Ultrastar DC HC590 24TB (SKU 0F59373)\n24\n209\n9\n96.56L\n72.00L–81.00L\n9.18L\n26.81L\n204.55L–213.55L\n1925.0\n\n\nSeagate Exos X20 ST18000NM000D\n18\n278\n12\n80.62L\n96.00L–108.00L\n12.01L\n35.74L\n224.37L–236.37L\n1611.11"
+  },
+  {
+    "objectID": "hdd_tco_summary.html#findings",
+    "href": "hdd_tco_summary.html#findings",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Findings",
+    "text": "Findings\n\nArchitecture dominates: with ₹8–9L per 24-bay server, the 18TB option requires 12 servers vs 9 servers for 24TB drives.\nThat extra server capex (and base power) outweighs the 18TB drive’s lower ₹/TB.\nBest 5-year value (your constraints): WD Ultrastar DC HC590 24TB.\nThe two 24TB options are close; HC590 wins slightly on your pricing and lower drive idle watts."
+  },
+  {
+    "objectID": "hdd_tco_summary.html#sensitivity-server-idle-power",
+    "href": "hdd_tco_summary.html#sensitivity-server-idle-power",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Sensitivity (server idle power)",
+    "text": "Sensitivity (server idle power)\n\nExtra electricity per +100W per server over 5 years: ₹74,460 (~0.74L).\nFor 9 servers: +100W/server adds ₹670,140 (~6.70L).\nFor 12 servers: +100W/server adds ₹893,520 (~8.94L).\nIf your servers idle significantly above 400W, the penalty for needing more servers increases, which further favors 24TB drives."
+  },
+  {
+    "objectID": "hdd_tco_summary.html#what-this-tco-excludes-important",
+    "href": "hdd_tco_summary.html#what-this-tco-excludes-important",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "What this TCO excludes (important)",
+    "text": "What this TCO excludes (important)\n\nCooling overhead (PUE), rack space cost, networking/HBA costs, spares inventory, and operational labor.\nIf you provide measured wall power per storage server (idle) with disks installed and any PUE target, the power part can be tightened."
+  },
+  {
+    "objectID": "hdd_tco_summary.html#datasheet-links",
+    "href": "hdd_tco_summary.html#datasheet-links",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Datasheet links",
+    "text": "Datasheet links\n\nSeagate Exos X24 ST24000NM007H: https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
+  },
+  {
+    "objectID": "kubernetes_primer.html",
+    "href": "kubernetes_primer.html",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "",
+    "text": "Goal: Get you to ~80% of Kubernetes, fast. Assumes you understand Docker/containers, basic networking, and Linux concepts. Skips: Custom operators, service mesh deep-dives, advanced RBAC patterns, multi-cluster federation."
+  },
+  {
+    "objectID": "kubernetes_primer.html#what-is-kubernetes-and-why-does-it-exist",
+    "href": "kubernetes_primer.html#what-is-kubernetes-and-why-does-it-exist",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "1. What is Kubernetes and Why Does It Exist?",
+    "text": "1. What is Kubernetes and Why Does It Exist?\nThe Problem: You have containers. Maybe 5, maybe 500. How do you: - Deploy them across multiple machines? - Restart them when they crash? - Route traffic to them? - Update them without downtime? - Scale them up and down?\nThe Solution: Kubernetes (K8s) is a container orchestration platform. Think of it as an operating system for your datacenter.\nAnalogy: If Docker is like running a single process, Kubernetes is like systemd/supervisor but for a cluster of machines. You declare what you want (declarative), and K8s makes it happen (reconciliation loop)."
+  },
+  {
+    "objectID": "kubernetes_primer.html#core-architecture-control-plane-vs-worker-nodes",
+    "href": "kubernetes_primer.html#core-architecture-control-plane-vs-worker-nodes",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "2. Core Architecture: Control Plane vs Worker Nodes",
+    "text": "2. Core Architecture: Control Plane vs Worker Nodes\n┌─────────────────────────────────────┐\n│      CONTROL PLANE (Master)         │\n│  ┌─────────┐  ┌──────────────────┐ │\n│  │ API     │  │  etcd (database) │ │\n│  │ Server  │  └──────────────────┘ │\n│  └─────────┘                        │\n│  ┌───────────┐  ┌────────────────┐ │\n│  │Scheduler  │  │  Controllers   │ │\n│  └───────────┘  └────────────────┘ │\n└─────────────────────────────────────┘\n           │\n           │ (manages)\n           ↓\n┌──────────────────────────────────────┐\n│        WORKER NODES                  │\n│  ┌─────────────────────────────┐    │\n│  │  Node 1                     │    │\n│  │  ┌──────┐  ┌──────┐        │    │\n│  │  │ Pod  │  │ Pod  │        │    │\n│  │  └──────┘  └──────┘        │    │\n│  │  kubelet + container runtime│    │\n│  └─────────────────────────────┘    │\n│  ... more nodes ...                 │\n└──────────────────────────────────────┘\nControl Plane Components: - API Server: The front door. All communication goes through here (REST API). - etcd: Distributed key-value store. The source of truth for cluster state. - Scheduler: Decides which node runs which pod. - Controllers: Background processes that watch desired state vs actual state and reconcile.\nWorker Node Components: - kubelet: Agent on each node. Ensures containers are running. - kube-proxy: Network proxy. Routes traffic to pods. - Container Runtime: Docker, containerd, CRI-O, etc.\nMental Model: You tell the API server what you want. Controllers and scheduler figure out how to make it happen. Nodes do the actual work."
+  },
+  {
+    "objectID": "kubernetes_primer.html#the-fundamental-building-block-pods",
+    "href": "kubernetes_primer.html#the-fundamental-building-block-pods",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "3. The Fundamental Building Block: Pods",
+    "text": "3. The Fundamental Building Block: Pods\nA Pod is the smallest deployable unit. It’s a wrapper around one or more containers that share: - Network namespace (same IP, can talk via localhost) - Storage volumes - Lifecycle\nAnalogy: A pod is like a logical host. Containers in a pod are like processes on the same machine.\napiVersion: v1\nkind: Pod\nmetadata:\n  name: my-app\nspec:\n  containers:\n  - name: nginx\n    image: nginx:1.21\n    ports:\n    - containerPort: 80\nKey Concepts: - Pods are ephemeral. They can die and be replaced. - Each pod gets its own IP address. - Containers in a pod share localhost (127.0.0.1).\nCommon Pattern: Main container + sidecar\nspec:\n  containers:\n  - name: app\n    image: myapp:v1\n  - name: log-shipper    # sidecar\n    image: fluent-bit\nWhen to use multiple containers in a pod: - Tightly coupled processes (e.g., app + log forwarder) - Helper containers that extend the main container\nDon’t deploy pods directly (usually). Use higher-level abstractions…"
+  },
+  {
+    "objectID": "kubernetes_primer.html#deployments-managing-replicas-and-updates",
+    "href": "kubernetes_primer.html#deployments-managing-replicas-and-updates",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "4. Deployments: Managing Replicas and Updates",
+    "text": "4. Deployments: Managing Replicas and Updates\nDeployment = Pod template + replica count + update strategy\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web-app\nspec:\n  replicas: 3                    # run 3 copies\n  selector:\n    matchLabels:\n      app: web\n  template:                      # pod template\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: nginx\n        image: nginx:1.21\n        ports:\n        - containerPort: 80\nWhat it does: - Ensures 3 pods are always running - If a pod crashes, creates a new one - Handles rolling updates\nRolling Update:\nkubectl set image deployment/web-app nginx=nginx:1.22\nK8s will: 1. Create new pods with new image 2. Wait for them to be ready 3. Terminate old pods 4. No downtime!\nRollback:\nkubectl rollout undo deployment/web-app\nAnalogy: Deployment is like systemd + auto-restart + zero-downtime deploy built-in."
+  },
+  {
+    "objectID": "kubernetes_primer.html#services-stable-networking-for-ephemeral-pods",
+    "href": "kubernetes_primer.html#services-stable-networking-for-ephemeral-pods",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "5. Services: Stable Networking for Ephemeral Pods",
+    "text": "5. Services: Stable Networking for Ephemeral Pods\nProblem: Pods are ephemeral. Their IPs change. How do you connect to them?\nSolution: A Service is a stable virtual IP + DNS name that load-balances to a set of pods.\n\nClusterIP (default)\nInternal load balancer. Only accessible within the cluster.\napiVersion: v1\nkind: Service\nmetadata:\n  name: web-service\nspec:\n  type: ClusterIP\n  selector:\n    app: web              # targets pods with label app=web\n  ports:\n  - port: 80              # service listens on 80\n    targetPort: 80        # forwards to pod port 80\nNow you can connect to web-service:80 or web-service.default.svc.cluster.local:80.\n\n\nNodePort\nExposes service on each node’s IP at a static port (30000-32767).\nspec:\n  type: NodePort\n  ports:\n  - port: 80\n    targetPort: 80\n    nodePort: 30080       # accessible at &lt;any-node-ip&gt;:30080\n\n\nLoadBalancer\nCreates an external load balancer (cloud provider specific).\nspec:\n  type: LoadBalancer\n  ports:\n  - port: 80\n    targetPort: 80\nCloud provider provisions an LB with a public IP.\nAnalogy: - ClusterIP: Internal HAProxy - NodePort: Port forwarding on every machine - LoadBalancer: Cloud LB (ELB, ALB, GCP LB)"
+  },
+  {
+    "objectID": "kubernetes_primer.html#namespaces-virtual-clusters",
+    "href": "kubernetes_primer.html#namespaces-virtual-clusters",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "6. Namespaces: Virtual Clusters",
+    "text": "6. Namespaces: Virtual Clusters\nNamespaces partition a cluster into virtual clusters.\nkubectl create namespace dev\nkubectl create namespace prod\napiVersion: v1\nkind: Pod\nmetadata:\n  name: my-app\n  namespace: dev\nDefault Namespaces: - default: where your stuff goes by default - kube-system: K8s system components - kube-public: public config (rarely used) - kube-node-lease: node heartbeat data\nUse Cases: - Separate environments (dev, staging, prod) - Team isolation - Resource quotas per namespace\nDNS: Services in the same namespace: service-name. Other namespace: service-name.namespace.svc.cluster.local."
+  },
+  {
+    "objectID": "kubernetes_primer.html#configmaps-and-secrets-configuration-management",
+    "href": "kubernetes_primer.html#configmaps-and-secrets-configuration-management",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "7. ConfigMaps and Secrets: Configuration Management",
+    "text": "7. ConfigMaps and Secrets: Configuration Management\n\nConfigMaps\nStore non-sensitive config data.\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: app-config\ndata:\n  DATABASE_URL: \"postgresql://dbhost:5432/mydb\"\n  LOG_LEVEL: \"info\"\nUse in Pod:\nspec:\n  containers:\n  - name: app\n    image: myapp\n    envFrom:\n    - configMapRef:\n        name: app-config\nOr mount as files:\nspec:\n  containers:\n  - name: app\n    volumeMounts:\n    - name: config\n      mountPath: /etc/config\n  volumes:\n  - name: config\n    configMap:\n      name: app-config\n\n\nSecrets\nLike ConfigMaps but for sensitive data (base64 encoded, can be encrypted at rest).\napiVersion: v1\nkind: Secret\nmetadata:\n  name: db-secret\ntype: Opaque\ndata:\n  password: bXlzZWNyZXRwYXNz    # base64: \"mysecretpass\" (example only)\nspec:\n  containers:\n  - name: app\n    env:\n    - name: DB_PASSWORD\n      valueFrom:\n        secretKeyRef:\n          name: db-secret\n          key: password\nImportant: Secrets are not encrypted by default in etcd. Use encryption at rest in production."
+  },
+  {
+    "objectID": "kubernetes_primer.html#persistent-storage-volumes",
+    "href": "kubernetes_primer.html#persistent-storage-volumes",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "8. Persistent Storage: Volumes",
+    "text": "8. Persistent Storage: Volumes\nContainers are stateless by default. For data persistence:\n\nEmptyDir\nTemporary storage. Lives as long as the pod.\nspec:\n  containers:\n  - name: app\n    volumeMounts:\n    - name: cache\n      mountPath: /cache\n  volumes:\n  - name: cache\n    emptyDir: {}\n\n\nPersistentVolume (PV) and PersistentVolumeClaim (PVC)\nPersistentVolume: Actual storage (NFS, cloud disk, etc.) PersistentVolumeClaim: Request for storage\nAnalogy: PV is a physical hard drive. PVC is “I need 10GB of storage”.\n# PVC\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: db-storage\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 10Gi\n# Use in Pod\nspec:\n  containers:\n  - name: postgres\n    volumeMounts:\n    - name: data\n      mountPath: /var/lib/postgresql/data\n  volumes:\n  - name: data\n    persistentVolumeClaim:\n      claimName: db-storage\nAccess Modes: - ReadWriteOnce (RWO): One node, read-write - ReadOnlyMany (ROX): Many nodes, read-only - ReadWriteMany (RWX): Many nodes, read-write (NFS, cloud file systems)\nStorageClass: Defines storage type (SSD, HDD, etc.). Cloud providers auto-provision PVs."
+  },
+  {
+    "objectID": "kubernetes_primer.html#ingress-https-routing",
+    "href": "kubernetes_primer.html#ingress-https-routing",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "9. Ingress: HTTP(S) Routing",
+    "text": "9. Ingress: HTTP(S) Routing\nService gives you L4 load balancing. Ingress gives you L7 (HTTP) routing.\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: app-ingress\nspec:\n  rules:\n  - host: myapp.example.com\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: web-service\n            port:\n              number: 80\n  - host: api.example.com\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: api-service\n            port:\n              number: 8080\nWhat it does: - Routes myapp.example.com → web-service - Routes api.example.com → api-service - Single entry point (load balancer)\nRequires: An Ingress Controller (nginx-ingress, traefik, HAProxy, etc.)\nAnalogy: Ingress is like nginx reverse proxy as a K8s resource."
+  },
+  {
+    "objectID": "kubernetes_primer.html#labels-and-selectors-the-glue",
+    "href": "kubernetes_primer.html#labels-and-selectors-the-glue",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "10. Labels and Selectors: The Glue",
+    "text": "10. Labels and Selectors: The Glue\nLabels are key-value pairs attached to objects.\nmetadata:\n  labels:\n    app: web\n    tier: frontend\n    env: prod\nSelectors query by labels:\nkubectl get pods -l app=web\nkubectl get pods -l tier=frontend,env=prod\nServices use selectors:\nselector:\n  app: web\nWhy it matters: This is how Deployments manage Pods, Services route to Pods, etc.\nBest Practice: - app: Application name - tier: frontend, backend, database - env: dev, staging, prod - version: v1, v2"
+  },
+  {
+    "objectID": "kubernetes_primer.html#health-checks-liveness-and-readiness-probes",
+    "href": "kubernetes_primer.html#health-checks-liveness-and-readiness-probes",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "11. Health Checks: Liveness and Readiness Probes",
+    "text": "11. Health Checks: Liveness and Readiness Probes\nK8s needs to know if your app is healthy.\n\nLiveness Probe\n“Is the app alive?” If it fails, K8s restarts the container.\nspec:\n  containers:\n  - name: app\n    livenessProbe:\n      httpGet:\n        path: /healthz\n        port: 8080\n      initialDelaySeconds: 30\n      periodSeconds: 10\n\n\nReadiness Probe\n“Is the app ready to serve traffic?” If it fails, K8s removes it from Service endpoints.\nspec:\n  containers:\n  - name: app\n    readinessProbe:\n      httpGet:\n        path: /ready\n        port: 8080\n      initialDelaySeconds: 5\n      periodSeconds: 5\nDifference: - Liveness: App is broken → restart - Readiness: App is starting up / overloaded → don’t send traffic yet\n\n\nStartup Probe\nFor slow-starting apps. Disables liveness/readiness checks until app starts.\nstartupProbe:\n  httpGet:\n    path: /healthz\n    port: 8080\n  failureThreshold: 30\n  periodSeconds: 10"
+  },
+  {
+    "objectID": "kubernetes_primer.html#resource-requests-and-limits",
+    "href": "kubernetes_primer.html#resource-requests-and-limits",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "12. Resource Requests and Limits",
+    "text": "12. Resource Requests and Limits\nTell K8s how much CPU/memory your app needs.\nspec:\n  containers:\n  - name: app\n    resources:\n      requests:              # minimum guaranteed\n        memory: \"128Mi\"\n        cpu: \"250m\"          # 0.25 cores\n      limits:                # maximum allowed\n        memory: \"256Mi\"\n        cpu: \"500m\"\nRequests: Used for scheduling. K8s finds a node with enough resources. Limits: Enforced. If exceeded: - Memory: Pod is killed (OOMKilled) - CPU: Throttled\nUnits: - CPU: 1 = 1 core, 500m = 0.5 cores, 100m = 0.1 cores - Memory: 128Mi = 128 MiB, 1Gi = 1 GiB\nBest Practice: Always set requests. Set limits to prevent runaway processes."
+  },
+  {
+    "objectID": "kubernetes_primer.html#statefulsets-for-stateful-applications",
+    "href": "kubernetes_primer.html#statefulsets-for-stateful-applications",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "13. StatefulSets: For Stateful Applications",
+    "text": "13. StatefulSets: For Stateful Applications\nDeployment is for stateless apps. StatefulSet is for stateful apps (databases, queues).\napiVersion: apps/v1\nkind: StatefulSet\nmetadata:\n  name: postgres\nspec:\n  serviceName: postgres\n  replicas: 3\n  selector:\n    matchLabels:\n      app: postgres\n  template:\n    metadata:\n      labels:\n        app: postgres\n    spec:\n      containers:\n      - name: postgres\n        image: postgres:14\n  volumeClaimTemplates:\n  - metadata:\n      name: data\n    spec:\n      accessModes: [ \"ReadWriteOnce\" ]\n      resources:\n        requests:\n          storage: 10Gi\nWhat it provides: - Stable network identity: postgres-0, postgres-1, postgres-2 - Stable storage: Each pod gets its own PVC - Ordered deployment/scaling: Starts 0, then 1, then 2\nDNS: postgres-0.postgres.default.svc.cluster.local\nUse Cases: Databases, message queues, anything that needs stable identity or ordered deployment."
+  },
+  {
+    "objectID": "kubernetes_primer.html#daemonsets-run-on-every-node",
+    "href": "kubernetes_primer.html#daemonsets-run-on-every-node",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "14. DaemonSets: Run on Every Node",
+    "text": "14. DaemonSets: Run on Every Node\nDaemonSet ensures a pod runs on every node (or a subset).\napiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: node-exporter\nspec:\n  selector:\n    matchLabels:\n      app: node-exporter\n  template:\n    metadata:\n      labels:\n        app: node-exporter\n    spec:\n      containers:\n      - name: node-exporter\n        image: prom/node-exporter\nUse Cases: - Log collectors (fluentd) - Monitoring agents (node-exporter) - Storage daemons (ceph, glusterfs) - Network plugins"
+  },
+  {
+    "objectID": "kubernetes_primer.html#jobs-and-cronjobs-batch-processing",
+    "href": "kubernetes_primer.html#jobs-and-cronjobs-batch-processing",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "15. Jobs and CronJobs: Batch Processing",
+    "text": "15. Jobs and CronJobs: Batch Processing\n\nJob\nRun a task to completion.\napiVersion: batch/v1\nkind: Job\nmetadata:\n  name: batch-job\nspec:\n  template:\n    spec:\n      containers:\n      - name: worker\n        image: myworker\n        command: [\"python\", \"process.py\"]\n      restartPolicy: OnFailure\n\n\nCronJob\nRun a job on a schedule.\napiVersion: batch/v1\nkind: CronJob\nmetadata:\n  name: backup\nspec:\n  schedule: \"0 2 * * *\"         # every day at 2 AM\n  jobTemplate:\n    spec:\n      template:\n        spec:\n          containers:\n          - name: backup\n            image: backup-tool\n            command: [\"backup.sh\"]\n          restartPolicy: OnFailure\nCron Syntax: Same as Unix cron (* * * * * = minute hour day month weekday)."
+  },
+  {
+    "objectID": "kubernetes_primer.html#kubectl-your-cli-tool",
+    "href": "kubernetes_primer.html#kubectl-your-cli-tool",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "16. Kubectl: Your CLI Tool",
+    "text": "16. Kubectl: Your CLI Tool\n\nEssential Commands\n# Get resources\nkubectl get pods\nkubectl get services\nkubectl get deployments\nkubectl get all                # all resources\n\n# Describe (detailed info)\nkubectl describe pod my-app\n\n# Logs\nkubectl logs my-app\nkubectl logs my-app -f         # follow\nkubectl logs my-app -c container-name  # specific container\n\n# Execute commands\nkubectl exec -it my-app -- /bin/bash\nkubectl exec my-app -- curl localhost:8080\n\n# Apply configuration\nkubectl apply -f deployment.yaml\nkubectl apply -f ./manifests/  # directory\n\n# Delete\nkubectl delete pod my-app\nkubectl delete -f deployment.yaml\n\n# Port forwarding (access pod locally)\nkubectl port-forward pod/my-app 8080:80\n# now access localhost:8080\n\n# Context and namespace\nkubectl config get-contexts\nkubectl config use-context prod-cluster\nkubectl config set-context --current --namespace=dev\n\n# Scaling\nkubectl scale deployment web-app --replicas=5\n\n# Rolling update\nkubectl set image deployment/web-app nginx=nginx:1.22\nkubectl rollout status deployment/web-app\nkubectl rollout undo deployment/web-app\n\n# Debug\nkubectl get events\nkubectl top nodes              # resource usage\nkubectl top pods\n\n\nUseful Flags\n-n namespace       # specify namespace\n--all-namespaces   # all namespaces\n-o yaml            # output as YAML\n-o json            # output as JSON\n-o wide            # more columns\n-l app=web         # filter by label\n--dry-run=client -o yaml  # generate YAML without creating\n\n\nQuick YAML Generation\n# Generate deployment YAML\nkubectl create deployment web --image=nginx --dry-run=client -o yaml &gt; deployment.yaml\n\n# Generate service YAML\nkubectl expose deployment web --port=80 --dry-run=client -o yaml &gt; service.yaml"
+  },
+  {
+    "objectID": "kubernetes_primer.html#common-patterns-and-best-practices",
+    "href": "kubernetes_primer.html#common-patterns-and-best-practices",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "17. Common Patterns and Best Practices",
+    "text": "17. Common Patterns and Best Practices\n\n12-Factor App Alignment\n\nConfig: Use ConfigMaps/Secrets, not hardcoded values\nLogs: Write to stdout/stderr, let K8s collect them\nProcesses: Stateless containers, state in external stores\nPort binding: Containers listen on ports, Services route to them\n\n\n\nSidecar Pattern\nHelper containers that extend main container.\nExamples: - Log shipper (fluent-bit) - Service mesh proxy (Envoy, Istio) - Secrets sync (vault-agent)\n\n\nInit Containers\nRuns before main container starts.\nspec:\n  initContainers:\n  - name: wait-for-db\n    image: busybox\n    command: ['sh', '-c', 'until nc -z db 5432; do sleep 1; done']\n  containers:\n  - name: app\n    image: myapp\n\n\nMulti-Container Pods Use Cases\n✅ Good: - App + log forwarder - App + proxy (service mesh) - App + secrets fetcher\n❌ Bad: - Frontend + backend (use separate Deployments + Service) - Microservices in one pod (defeats the purpose)\n\n\nResource Management\n# QoS Classes (implicit from requests/limits)\n\n# Guaranteed: requests == limits\nresources:\n  requests:\n    memory: \"256Mi\"\n    cpu: \"500m\"\n  limits:\n    memory: \"256Mi\"\n    cpu: \"500m\"\n\n# Burstable: requests &lt; limits\nresources:\n  requests:\n    memory: \"128Mi\"\n    cpu: \"250m\"\n  limits:\n    memory: \"256Mi\"\n    cpu: \"500m\"\n\n# BestEffort: no requests/limits (evicted first)\n\n\nBlue-Green Deployments\n# Deploy v2 alongside v1\nkubectl apply -f deployment-v2.yaml\n\n# Switch service to v2\nkubectl patch service web-service -p '{\"spec\":{\"selector\":{\"version\":\"v2\"}}}'\n\n# Rollback if needed\nkubectl patch service web-service -p '{\"spec\":{\"selector\":{\"version\":\"v1\"}}}'\n\n\nCanary Deployments\nRun two deployments with different replica counts: - web-app-stable: 9 replicas - web-app-canary: 1 replica\nService selects both via label. 10% traffic goes to canary."
+  },
+  {
+    "objectID": "kubernetes_primer.html#networking-deep-dive",
+    "href": "kubernetes_primer.html#networking-deep-dive",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "18. Networking Deep Dive",
+    "text": "18. Networking Deep Dive\n\nPod-to-Pod Communication\nEvery pod gets a unique IP. Pods can talk to each other directly (no NAT).\nNetwork Model: - All pods can communicate with all other pods without NAT - All nodes can communicate with all pods without NAT - The IP a pod sees itself as is the same IP others see it as\nImplementation: CNI plugins (Calico, Flannel, Cilium, Weave).\n\n\nService Discovery\nDNS: K8s runs CoreDNS. Every service gets a DNS entry.\n\nservice-name (same namespace)\nservice-name.namespace\nservice-name.namespace.svc.cluster.local (fully qualified)\n\nEnvironment Variables: K8s injects env vars for services (legacy, DNS preferred).\n\n\nNetwork Policies\nFirewall rules for pods.\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: deny-all\nspec:\n  podSelector: {}\n  policyTypes:\n  - Ingress\n  - Egress\n# Allow only frontend to talk to backend\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: backend-policy\nspec:\n  podSelector:\n    matchLabels:\n      tier: backend\n  ingress:\n  - from:\n    - podSelector:\n        matchLabels:\n          tier: frontend\n    ports:\n    - protocol: TCP\n      port: 8080\nRequires: CNI plugin that supports NetworkPolicies (Calico, Cilium)."
+  },
+  {
+    "objectID": "kubernetes_primer.html#security-basics",
+    "href": "kubernetes_primer.html#security-basics",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "19. Security Basics",
+    "text": "19. Security Basics\n\nRBAC (Role-Based Access Control)\nControl who can do what.\n# Role: permissions within a namespace\napiVersion: rbac.authorization.k8s.io/v1\nkind: Role\nmetadata:\n  name: pod-reader\nrules:\n- apiGroups: [\"\"]\n  resources: [\"pods\"]\n  verbs: [\"get\", \"list\"]\n# RoleBinding: assign role to user/group/service account\napiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: read-pods\nsubjects:\n- kind: User\n  name: jane\n  apiGroup: rbac.authorization.k8s.io\nroleRef:\n  kind: Role\n  name: pod-reader\n  apiGroup: rbac.authorization.k8s.io\nClusterRole and ClusterRoleBinding: Cluster-wide permissions.\n\n\nService Accounts\nIdentity for pods.\napiVersion: v1\nkind: ServiceAccount\nmetadata:\n  name: my-app-sa\nspec:\n  serviceAccountName: my-app-sa\n  containers:\n  - name: app\n    image: myapp\nApp can now call K8s API with that service account’s permissions.\n\n\nPod Security\nSecurity Context:\nspec:\n  securityContext:\n    runAsNonRoot: true\n    runAsUser: 1000\n    fsGroup: 2000\n  containers:\n  - name: app\n    securityContext:\n      allowPrivilegeEscalation: false\n      readOnlyRootFilesystem: true\n      capabilities:\n        drop:\n        - ALL\nBest Practices: - Run as non-root - Read-only root filesystem - Drop all capabilities - Use PodSecurityPolicies or PodSecurityStandards"
+  },
+  {
+    "objectID": "kubernetes_primer.html#helm-package-manager-for-kubernetes",
+    "href": "kubernetes_primer.html#helm-package-manager-for-kubernetes",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "20. Helm: Package Manager for Kubernetes",
+    "text": "20. Helm: Package Manager for Kubernetes\nHelm is like apt/yum/npm for K8s. Packages are called Charts.\n\nInstall Helm Chart\n# Add repo\nhelm repo add bitnami https://charts.bitnami.com/bitnami\n\n# Search\nhelm search repo postgres\n\n# Install\nhelm install my-postgres bitnami/postgresql\n\n# List releases\nhelm list\n\n# Uninstall\nhelm uninstall my-postgres\n\n\nCustom Values\n# Override defaults\nhelm install my-postgres bitnami/postgresql \\\n  --set auth.postgresPassword=secret \\\n  --set persistence.size=20Gi\nOr use a values file:\n# values.yaml\nauth:\n  postgresPassword: secret\npersistence:\n  size: 20Gi\nhelm install my-postgres bitnami/postgresql -f values.yaml\n\n\nCreate Your Own Chart\nhelm create myapp\nCreates:\nmyapp/\n├── Chart.yaml          # chart metadata\n├── values.yaml         # default config\n└── templates/\n    ├── deployment.yaml\n    ├── service.yaml\n    └── ...\nTemplates use Go templating:\napiVersion: v1\nkind: Service\nmetadata:\n  name: {{ .Release.Name }}-service\nspec:\n  selector:\n    app: {{ .Values.appName }}\n  ports:\n  - port: {{ .Values.servicePort }}"
+  },
+  {
+    "objectID": "kubernetes_primer.html#troubleshooting-checklist",
+    "href": "kubernetes_primer.html#troubleshooting-checklist",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "21. Troubleshooting Checklist",
+    "text": "21. Troubleshooting Checklist\n\nPod Not Starting\n# Check pod status\nkubectl get pod my-app\nkubectl describe pod my-app\n\n# Common issues:\n# - ImagePullBackOff: wrong image name, no access\n# - CrashLoopBackOff: app crashes on start\n# - Pending: not enough resources, no matching node\n\n\nCheck Logs\nkubectl logs my-app\nkubectl logs my-app --previous  # previous instance\n\n\nEvents\nkubectl get events --sort-by='.lastTimestamp'\nkubectl describe pod my-app  # events at the bottom\n\n\nResource Issues\nkubectl top nodes\nkubectl top pods\nkubectl describe node node-1  # see allocatable resources\n\n\nNetwork Issues\n# Test DNS\nkubectl run -it --rm debug --image=busybox --restart=Never -- nslookup web-service\n\n# Test connectivity\nkubectl run -it --rm debug --image=curlimages/curl --restart=Never -- curl http://web-service\n\n# Check service endpoints\nkubectl get endpoints web-service\n\n\nDebug Container\nkubectl debug -it my-app --image=busybox --target=my-app"
+  },
+  {
+    "objectID": "kubernetes_primer.html#production-readiness-checklist",
+    "href": "kubernetes_primer.html#production-readiness-checklist",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "22. Production Readiness Checklist",
+    "text": "22. Production Readiness Checklist\n✅ Deployments: - Health checks (liveness, readiness) - Resource requests and limits - Multiple replicas (3+) - Pod disruption budgets\n✅ Configuration: - ConfigMaps for config - Secrets for sensitive data - External secret management (Vault, AWS Secrets Manager)\n✅ Networking: - Services for stable endpoints - Ingress for HTTP routing - Network policies for security\n✅ Storage: - PersistentVolumes for stateful apps - Backup strategy\n✅ Monitoring: - Prometheus for metrics - Grafana for dashboards - Alertmanager for alerts - Logging (ELK, Loki, Cloud logging)\n✅ Security: - RBAC configured - Service accounts with least privilege - Pod security contexts - Network policies - Secret encryption at rest\n✅ Disaster Recovery: - etcd backups - Application data backups - Multi-zone/multi-region setup"
+  },
+  {
+    "objectID": "kubernetes_primer.html#key-takeaways",
+    "href": "kubernetes_primer.html#key-takeaways",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "23. Key Takeaways",
+    "text": "23. Key Takeaways\n\nDeclarative, not Imperative: You declare desired state (YAML), K8s makes it happen.\nReconciliation Loop: Controllers constantly watch actual vs desired state and reconcile.\nPods are Ephemeral: Don’t rely on pod identity. Use Services, StatefulSets, or external storage.\nLabels are Everything: They connect Services to Pods, Deployments to Pods, etc.\nStart Simple: Pod → Deployment → Service → Ingress. Don’t jump to complex patterns.\nUse Higher-Level Abstractions: Use Deployments, not bare Pods. Use StatefulSets for stateful apps.\nHealth Checks are Critical: Without them, K8s doesn’t know if your app is healthy.\nResource Limits Matter: Prevents noisy neighbors, enables better scheduling.\nConfigMaps/Secrets: Separate config from code.\nHelm: Don’t reinvent the wheel. Use existing charts."
+  },
+  {
+    "objectID": "kubernetes_primer.html#next-steps",
+    "href": "kubernetes_primer.html#next-steps",
+    "title": "Kubernetes Primer: Container Orchestration Essentials",
+    "section": "24. Next Steps",
+    "text": "24. Next Steps\nAfter This Primer: - Hands-on: Deploy a real app (try a 3-tier app: frontend, backend, database) - Networking: Deep dive into Ingress controllers, service mesh (Istio, Linkerd) - Observability: Prometheus, Grafana, Jaeger, OpenTelemetry - GitOps: ArgoCD, Flux (deploy from Git, not kubectl) - Advanced Scheduling: Taints, tolerations, node affinity, pod affinity - Operators: Custom resources and controllers (Operator SDK) - Multi-tenancy: Advanced RBAC, resource quotas, pod security\nResources: - Official docs: https://kubernetes.io/docs/ - Interactive tutorial: https://kubernetes.io/docs/tutorials/kubernetes-basics/ - kubectl cheat sheet: https://kubernetes.io/docs/reference/kubectl/cheatsheet/\n\nYou now know ~80% of Kubernetes. The rest is practice, debugging, and learning from production incidents. Good luck! 🚀"
   }
 ]

@@ -2,22 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://thehalberdier.github.io/Research/rust_primer.html</loc>
-    <lastmod>2026-02-10T12:56:41.819Z</lastmod>
-  </url>
-  <url>
-    <loc>https://thehalberdier.github.io/Research/hdd_tco_summary.html</loc>
-    <lastmod>2026-02-10T12:56:41.818Z</lastmod>
-  </url>
-  <url>
-    <loc>https://thehalberdier.github.io/Research/ampereone_m_vs_amd_epyc.html</loc>
-    <lastmod>2026-02-10T12:56:41.818Z</lastmod>
-  </url>
-  <url>
-    <loc>https://thehalberdier.github.io/Research/arista_switch_health_report.html</loc>
-    <lastmod>2026-02-10T12:56:41.818Z</lastmod>
+    <lastmod>2026-02-21T05:52:58.277Z</lastmod>
   </url>
   <url>
     <loc>https://thehalberdier.github.io/Research/index.html</loc>
-    <lastmod>2026-02-10T12:56:41.818Z</lastmod>
+    <lastmod>2026-02-21T05:52:58.277Z</lastmod>
+  </url>
+  <url>
+    <loc>https://thehalberdier.github.io/Research/arista_switch_health_report.html</loc>
+    <lastmod>2026-02-21T05:52:58.276Z</lastmod>
+  </url>
+  <url>
+    <loc>https://thehalberdier.github.io/Research/ampereone_m_vs_amd_epyc.html</loc>
+    <lastmod>2026-02-21T05:52:58.276Z</lastmod>
+  </url>
+  <url>
+    <loc>https://thehalberdier.github.io/Research/hdd_tco_summary.html</loc>
+    <lastmod>2026-02-21T05:52:58.276Z</lastmod>
+  </url>
+  <url>
+    <loc>https://thehalberdier.github.io/Research/kubernetes_primer.html</loc>
+    <lastmod>2026-02-21T05:52:58.277Z</lastmod>
   </url>
 </urlset>
