@@ -1,0 +1,1227 @@
+---
+title: "Kubernetes Primer: Container Orchestration Essentials"
+author: "Research Notes"
+date: "2026-02-21"
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+> **Goal**: Get you to ~80% of Kubernetes, fast. Assumes you understand Docker/containers, basic networking, and Linux concepts.
+> Skips: Custom operators, service mesh deep-dives, advanced RBAC patterns, multi-cluster federation.
+
+---
+
+## 1. What is Kubernetes and Why Does It Exist?
+
+**The Problem**: You have containers. Maybe 5, maybe 500. How do you:
+- Deploy them across multiple machines?
+- Restart them when they crash?
+- Route traffic to them?
+- Update them without downtime?
+- Scale them up and down?
+
+**The Solution**: Kubernetes (K8s) is a container orchestration platform. Think of it as an **operating system for your datacenter**.
+
+**Analogy**: If Docker is like running a single process, Kubernetes is like systemd/supervisor but for a cluster of machines. You declare what you want (declarative), and K8s makes it happen (reconciliation loop).
+
+---
+
+## 2. Core Architecture: Control Plane vs Worker Nodes
+
+```
+┌─────────────────────────────────────┐
+│      CONTROL PLANE (Master)         │
+│  ┌─────────┐  ┌──────────────────┐ │
+│  │ API     │  │  etcd (database) │ │
+│  │ Server  │  └──────────────────┘ │
+│  └─────────┘                        │
+│  ┌───────────┐  ┌────────────────┐ │
+│  │Scheduler  │  │  Controllers   │ │
+│  └───────────┘  └────────────────┘ │
+└─────────────────────────────────────┘
+           │
+           │ (manages)
+           ↓
+┌──────────────────────────────────────┐
+│        WORKER NODES                  │
+│  ┌─────────────────────────────┐    │
+│  │  Node 1                     │    │
+│  │  ┌──────┐  ┌──────┐        │    │
+│  │  │ Pod  │  │ Pod  │        │    │
+│  │  └──────┘  └──────┘        │    │
+│  │  kubelet + container runtime│    │
+│  └─────────────────────────────┘    │
+│  ... more nodes ...                 │
+└──────────────────────────────────────┘
+```
+
+**Control Plane Components**:
+- **API Server**: The front door. All communication goes through here (REST API).
+- **etcd**: Distributed key-value store. The source of truth for cluster state.
+- **Scheduler**: Decides which node runs which pod.
+- **Controllers**: Background processes that watch desired state vs actual state and reconcile.
+
+**Worker Node Components**:
+- **kubelet**: Agent on each node. Ensures containers are running.
+- **kube-proxy**: Network proxy. Routes traffic to pods.
+- **Container Runtime**: Docker, containerd, CRI-O, etc.
+
+**Mental Model**: You tell the API server what you want. Controllers and scheduler figure out how to make it happen. Nodes do the actual work.
+
+---
+
+## 3. The Fundamental Building Block: Pods
+
+A **Pod** is the smallest deployable unit. It's a wrapper around one or more containers that share:
+- Network namespace (same IP, can talk via localhost)
+- Storage volumes
+- Lifecycle
+
+**Analogy**: A pod is like a logical host. Containers in a pod are like processes on the same machine.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.21
+    ports:
+    - containerPort: 80
+```
+
+**Key Concepts**:
+- Pods are **ephemeral**. They can die and be replaced.
+- Each pod gets its own IP address.
+- Containers in a pod share localhost (127.0.0.1).
+
+**Common Pattern**: Main container + sidecar
+```yaml
+spec:
+  containers:
+  - name: app
+    image: myapp:v1
+  - name: log-shipper    # sidecar
+    image: fluent-bit
+```
+
+**When to use multiple containers in a pod**:
+- Tightly coupled processes (e.g., app + log forwarder)
+- Helper containers that extend the main container
+
+**Don't deploy pods directly** (usually). Use higher-level abstractions...
+
+---
+
+## 4. Deployments: Managing Replicas and Updates
+
+**Deployment** = Pod template + replica count + update strategy
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+spec:
+  replicas: 3                    # run 3 copies
+  selector:
+    matchLabels:
+      app: web
+  template:                      # pod template
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21
+        ports:
+        - containerPort: 80
+```
+
+**What it does**:
+- Ensures 3 pods are always running
+- If a pod crashes, creates a new one
+- Handles rolling updates
+
+**Rolling Update**:
+```bash
+kubectl set image deployment/web-app nginx=nginx:1.22
+```
+
+K8s will:
+1. Create new pods with new image
+2. Wait for them to be ready
+3. Terminate old pods
+4. No downtime!
+
+**Rollback**:
+```bash
+kubectl rollout undo deployment/web-app
+```
+
+**Analogy**: Deployment is like systemd + auto-restart + zero-downtime deploy built-in.
+
+---
+
+## 5. Services: Stable Networking for Ephemeral Pods
+
+**Problem**: Pods are ephemeral. Their IPs change. How do you connect to them?
+
+**Solution**: A **Service** is a stable virtual IP + DNS name that load-balances to a set of pods.
+
+### ClusterIP (default)
+
+Internal load balancer. Only accessible within the cluster.
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  type: ClusterIP
+  selector:
+    app: web              # targets pods with label app=web
+  ports:
+  - port: 80              # service listens on 80
+    targetPort: 80        # forwards to pod port 80
+```
+
+Now you can connect to `web-service:80` or `web-service.default.svc.cluster.local:80`.
+
+### NodePort
+
+Exposes service on each node's IP at a static port (30000-32767).
+
+```yaml
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080       # accessible at <any-node-ip>:30080
+```
+
+### LoadBalancer
+
+Creates an external load balancer (cloud provider specific).
+
+```yaml
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+```
+
+Cloud provider provisions an LB with a public IP.
+
+**Analogy**:
+- **ClusterIP**: Internal HAProxy
+- **NodePort**: Port forwarding on every machine
+- **LoadBalancer**: Cloud LB (ELB, ALB, GCP LB)
+
+---
+
+## 6. Namespaces: Virtual Clusters
+
+Namespaces partition a cluster into virtual clusters.
+
+```bash
+kubectl create namespace dev
+kubectl create namespace prod
+```
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+  namespace: dev
+```
+
+**Default Namespaces**:
+- `default`: where your stuff goes by default
+- `kube-system`: K8s system components
+- `kube-public`: public config (rarely used)
+- `kube-node-lease`: node heartbeat data
+
+**Use Cases**:
+- Separate environments (dev, staging, prod)
+- Team isolation
+- Resource quotas per namespace
+
+**DNS**: Services in the same namespace: `service-name`. Other namespace: `service-name.namespace.svc.cluster.local`.
+
+---
+
+## 7. ConfigMaps and Secrets: Configuration Management
+
+### ConfigMaps
+
+Store non-sensitive config data.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  DATABASE_URL: "postgresql://dbhost:5432/mydb"
+  LOG_LEVEL: "info"
+```
+
+**Use in Pod**:
+
+```yaml
+spec:
+  containers:
+  - name: app
+    image: myapp
+    envFrom:
+    - configMapRef:
+        name: app-config
+```
+
+Or mount as files:
+
+```yaml
+spec:
+  containers:
+  - name: app
+    volumeMounts:
+    - name: config
+      mountPath: /etc/config
+  volumes:
+  - name: config
+    configMap:
+      name: app-config
+```
+
+### Secrets
+
+Like ConfigMaps but for sensitive data (base64 encoded, can be encrypted at rest).
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secret
+type: Opaque
+data:
+  password: bXlzZWNyZXRwYXNz    # base64: "mysecretpass" (example only)
+```
+
+```yaml
+spec:
+  containers:
+  - name: app
+    env:
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+```
+
+**Important**: Secrets are not encrypted by default in etcd. Use encryption at rest in production.
+
+---
+
+## 8. Persistent Storage: Volumes
+
+Containers are stateless by default. For data persistence:
+
+### EmptyDir
+
+Temporary storage. Lives as long as the pod.
+
+```yaml
+spec:
+  containers:
+  - name: app
+    volumeMounts:
+    - name: cache
+      mountPath: /cache
+  volumes:
+  - name: cache
+    emptyDir: {}
+```
+
+### PersistentVolume (PV) and PersistentVolumeClaim (PVC)
+
+**PersistentVolume**: Actual storage (NFS, cloud disk, etc.)
+**PersistentVolumeClaim**: Request for storage
+
+**Analogy**: PV is a physical hard drive. PVC is "I need 10GB of storage".
+
+```yaml
+# PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db-storage
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+```
+
+```yaml
+# Use in Pod
+spec:
+  containers:
+  - name: postgres
+    volumeMounts:
+    - name: data
+      mountPath: /var/lib/postgresql/data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: db-storage
+```
+
+**Access Modes**:
+- `ReadWriteOnce` (RWO): One node, read-write
+- `ReadOnlyMany` (ROX): Many nodes, read-only
+- `ReadWriteMany` (RWX): Many nodes, read-write (NFS, cloud file systems)
+
+**StorageClass**: Defines storage type (SSD, HDD, etc.). Cloud providers auto-provision PVs.
+
+---
+
+## 9. Ingress: HTTP(S) Routing
+
+**Service** gives you L4 load balancing. **Ingress** gives you L7 (HTTP) routing.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+spec:
+  rules:
+  - host: myapp.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service
+            port:
+              number: 80
+  - host: api.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: api-service
+            port:
+              number: 8080
+```
+
+**What it does**:
+- Routes `myapp.example.com` → `web-service`
+- Routes `api.example.com` → `api-service`
+- Single entry point (load balancer)
+
+**Requires**: An Ingress Controller (nginx-ingress, traefik, HAProxy, etc.)
+
+**Analogy**: Ingress is like nginx reverse proxy as a K8s resource.
+
+---
+
+## 10. Labels and Selectors: The Glue
+
+**Labels** are key-value pairs attached to objects.
+
+```yaml
+metadata:
+  labels:
+    app: web
+    tier: frontend
+    env: prod
+```
+
+**Selectors** query by labels:
+
+```bash
+kubectl get pods -l app=web
+kubectl get pods -l tier=frontend,env=prod
+```
+
+**Services use selectors**:
+```yaml
+selector:
+  app: web
+```
+
+**Why it matters**: This is how Deployments manage Pods, Services route to Pods, etc.
+
+**Best Practice**:
+- `app`: Application name
+- `tier`: frontend, backend, database
+- `env`: dev, staging, prod
+- `version`: v1, v2
+
+---
+
+## 11. Health Checks: Liveness and Readiness Probes
+
+K8s needs to know if your app is healthy.
+
+### Liveness Probe
+
+"Is the app alive?" If it fails, K8s restarts the container.
+
+```yaml
+spec:
+  containers:
+  - name: app
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+```
+
+### Readiness Probe
+
+"Is the app ready to serve traffic?" If it fails, K8s removes it from Service endpoints.
+
+```yaml
+spec:
+  containers:
+  - name: app
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+**Difference**:
+- **Liveness**: App is broken → restart
+- **Readiness**: App is starting up / overloaded → don't send traffic yet
+
+### Startup Probe
+
+For slow-starting apps. Disables liveness/readiness checks until app starts.
+
+```yaml
+startupProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  failureThreshold: 30
+  periodSeconds: 10
+```
+
+---
+
+## 12. Resource Requests and Limits
+
+Tell K8s how much CPU/memory your app needs.
+
+```yaml
+spec:
+  containers:
+  - name: app
+    resources:
+      requests:              # minimum guaranteed
+        memory: "128Mi"
+        cpu: "250m"          # 0.25 cores
+      limits:                # maximum allowed
+        memory: "256Mi"
+        cpu: "500m"
+```
+
+**Requests**: Used for scheduling. K8s finds a node with enough resources.
+**Limits**: Enforced. If exceeded:
+- Memory: Pod is killed (OOMKilled)
+- CPU: Throttled
+
+**Units**:
+- CPU: `1` = 1 core, `500m` = 0.5 cores, `100m` = 0.1 cores
+- Memory: `128Mi` = 128 MiB, `1Gi` = 1 GiB
+
+**Best Practice**: Always set requests. Set limits to prevent runaway processes.
+
+---
+
+## 13. StatefulSets: For Stateful Applications
+
+**Deployment** is for stateless apps. **StatefulSet** is for stateful apps (databases, queues).
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:14
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 10Gi
+```
+
+**What it provides**:
+- **Stable network identity**: `postgres-0`, `postgres-1`, `postgres-2`
+- **Stable storage**: Each pod gets its own PVC
+- **Ordered deployment/scaling**: Starts 0, then 1, then 2
+
+**DNS**: `postgres-0.postgres.default.svc.cluster.local`
+
+**Use Cases**: Databases, message queues, anything that needs stable identity or ordered deployment.
+
+---
+
+## 14. DaemonSets: Run on Every Node
+
+**DaemonSet** ensures a pod runs on every node (or a subset).
+
+```yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter
+```
+
+**Use Cases**:
+- Log collectors (fluentd)
+- Monitoring agents (node-exporter)
+- Storage daemons (ceph, glusterfs)
+- Network plugins
+
+---
+
+## 15. Jobs and CronJobs: Batch Processing
+
+### Job
+
+Run a task to completion.
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker
+        image: myworker
+        command: ["python", "process.py"]
+      restartPolicy: OnFailure
+```
+
+### CronJob
+
+Run a job on a schedule.
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup
+spec:
+  schedule: "0 2 * * *"         # every day at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: backup-tool
+            command: ["backup.sh"]
+          restartPolicy: OnFailure
+```
+
+**Cron Syntax**: Same as Unix cron (`* * * * *` = minute hour day month weekday).
+
+---
+
+## 16. Kubectl: Your CLI Tool
+
+### Essential Commands
+
+```bash
+# Get resources
+kubectl get pods
+kubectl get services
+kubectl get deployments
+kubectl get all                # all resources
+
+# Describe (detailed info)
+kubectl describe pod my-app
+
+# Logs
+kubectl logs my-app
+kubectl logs my-app -f         # follow
+kubectl logs my-app -c container-name  # specific container
+
+# Execute commands
+kubectl exec -it my-app -- /bin/bash
+kubectl exec my-app -- curl localhost:8080
+
+# Apply configuration
+kubectl apply -f deployment.yaml
+kubectl apply -f ./manifests/  # directory
+
+# Delete
+kubectl delete pod my-app
+kubectl delete -f deployment.yaml
+
+# Port forwarding (access pod locally)
+kubectl port-forward pod/my-app 8080:80
+# now access localhost:8080
+
+# Context and namespace
+kubectl config get-contexts
+kubectl config use-context prod-cluster
+kubectl config set-context --current --namespace=dev
+
+# Scaling
+kubectl scale deployment web-app --replicas=5
+
+# Rolling update
+kubectl set image deployment/web-app nginx=nginx:1.22
+kubectl rollout status deployment/web-app
+kubectl rollout undo deployment/web-app
+
+# Debug
+kubectl get events
+kubectl top nodes              # resource usage
+kubectl top pods
+```
+
+### Useful Flags
+
+```bash
+-n namespace       # specify namespace
+--all-namespaces   # all namespaces
+-o yaml            # output as YAML
+-o json            # output as JSON
+-o wide            # more columns
+-l app=web         # filter by label
+--dry-run=client -o yaml  # generate YAML without creating
+```
+
+### Quick YAML Generation
+
+```bash
+# Generate deployment YAML
+kubectl create deployment web --image=nginx --dry-run=client -o yaml > deployment.yaml
+
+# Generate service YAML
+kubectl expose deployment web --port=80 --dry-run=client -o yaml > service.yaml
+```
+
+---
+
+## 17. Common Patterns and Best Practices
+
+### 12-Factor App Alignment
+
+- **Config**: Use ConfigMaps/Secrets, not hardcoded values
+- **Logs**: Write to stdout/stderr, let K8s collect them
+- **Processes**: Stateless containers, state in external stores
+- **Port binding**: Containers listen on ports, Services route to them
+
+### Sidecar Pattern
+
+Helper containers that extend main container.
+
+**Examples**:
+- Log shipper (fluent-bit)
+- Service mesh proxy (Envoy, Istio)
+- Secrets sync (vault-agent)
+
+### Init Containers
+
+Runs before main container starts.
+
+```yaml
+spec:
+  initContainers:
+  - name: wait-for-db
+    image: busybox
+    command: ['sh', '-c', 'until nc -z db 5432; do sleep 1; done']
+  containers:
+  - name: app
+    image: myapp
+```
+
+### Multi-Container Pods Use Cases
+
+✅ **Good**:
+- App + log forwarder
+- App + proxy (service mesh)
+- App + secrets fetcher
+
+❌ **Bad**:
+- Frontend + backend (use separate Deployments + Service)
+- Microservices in one pod (defeats the purpose)
+
+### Resource Management
+
+```yaml
+# QoS Classes (implicit from requests/limits)
+
+# Guaranteed: requests == limits
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "500m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
+
+# Burstable: requests < limits
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "250m"
+  limits:
+    memory: "256Mi"
+    cpu: "500m"
+
+# BestEffort: no requests/limits (evicted first)
+```
+
+### Blue-Green Deployments
+
+```bash
+# Deploy v2 alongside v1
+kubectl apply -f deployment-v2.yaml
+
+# Switch service to v2
+kubectl patch service web-service -p '{"spec":{"selector":{"version":"v2"}}}'
+
+# Rollback if needed
+kubectl patch service web-service -p '{"spec":{"selector":{"version":"v1"}}}'
+```
+
+### Canary Deployments
+
+Run two deployments with different replica counts:
+- `web-app-stable`: 9 replicas
+- `web-app-canary`: 1 replica
+
+Service selects both via label. 10% traffic goes to canary.
+
+---
+
+## 18. Networking Deep Dive
+
+### Pod-to-Pod Communication
+
+Every pod gets a unique IP. Pods can talk to each other directly (no NAT).
+
+**Network Model**:
+- All pods can communicate with all other pods without NAT
+- All nodes can communicate with all pods without NAT
+- The IP a pod sees itself as is the same IP others see it as
+
+**Implementation**: CNI plugins (Calico, Flannel, Cilium, Weave).
+
+### Service Discovery
+
+**DNS**: K8s runs CoreDNS. Every service gets a DNS entry.
+
+- `service-name` (same namespace)
+- `service-name.namespace`
+- `service-name.namespace.svc.cluster.local` (fully qualified)
+
+**Environment Variables**: K8s injects env vars for services (legacy, DNS preferred).
+
+### Network Policies
+
+Firewall rules for pods.
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+```
+
+```yaml
+# Allow only frontend to talk to backend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-policy
+spec:
+  podSelector:
+    matchLabels:
+      tier: backend
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          tier: frontend
+    ports:
+    - protocol: TCP
+      port: 8080
+```
+
+**Requires**: CNI plugin that supports NetworkPolicies (Calico, Cilium).
+
+---
+
+## 19. Security Basics
+
+### RBAC (Role-Based Access Control)
+
+Control who can do what.
+
+```yaml
+# Role: permissions within a namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+```
+
+```yaml
+# RoleBinding: assign role to user/group/service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+subjects:
+- kind: User
+  name: jane
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+```
+
+**ClusterRole** and **ClusterRoleBinding**: Cluster-wide permissions.
+
+### Service Accounts
+
+Identity for pods.
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-app-sa
+```
+
+```yaml
+spec:
+  serviceAccountName: my-app-sa
+  containers:
+  - name: app
+    image: myapp
+```
+
+App can now call K8s API with that service account's permissions.
+
+### Pod Security
+
+**Security Context**:
+
+```yaml
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: app
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+```
+
+**Best Practices**:
+- Run as non-root
+- Read-only root filesystem
+- Drop all capabilities
+- Use PodSecurityPolicies or PodSecurityStandards
+
+---
+
+## 20. Helm: Package Manager for Kubernetes
+
+**Helm** is like apt/yum/npm for K8s. Packages are called **Charts**.
+
+### Install Helm Chart
+
+```bash
+# Add repo
+helm repo add bitnami https://charts.bitnami.com/bitnami
+
+# Search
+helm search repo postgres
+
+# Install
+helm install my-postgres bitnami/postgresql
+
+# List releases
+helm list
+
+# Uninstall
+helm uninstall my-postgres
+```
+
+### Custom Values
+
+```bash
+# Override defaults
+helm install my-postgres bitnami/postgresql \
+  --set auth.postgresPassword=secret \
+  --set persistence.size=20Gi
+```
+
+Or use a values file:
+
+```yaml
+# values.yaml
+auth:
+  postgresPassword: secret
+persistence:
+  size: 20Gi
+```
+
+```bash
+helm install my-postgres bitnami/postgresql -f values.yaml
+```
+
+### Create Your Own Chart
+
+```bash
+helm create myapp
+```
+
+Creates:
+```
+myapp/
+├── Chart.yaml          # chart metadata
+├── values.yaml         # default config
+└── templates/
+    ├── deployment.yaml
+    ├── service.yaml
+    └── ...
+```
+
+**Templates** use Go templating:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-service
+spec:
+  selector:
+    app: {{ .Values.appName }}
+  ports:
+  - port: {{ .Values.servicePort }}
+```
+
+---
+
+## 21. Troubleshooting Checklist
+
+### Pod Not Starting
+
+```bash
+# Check pod status
+kubectl get pod my-app
+kubectl describe pod my-app
+
+# Common issues:
+# - ImagePullBackOff: wrong image name, no access
+# - CrashLoopBackOff: app crashes on start
+# - Pending: not enough resources, no matching node
+```
+
+### Check Logs
+
+```bash
+kubectl logs my-app
+kubectl logs my-app --previous  # previous instance
+```
+
+### Events
+
+```bash
+kubectl get events --sort-by='.lastTimestamp'
+kubectl describe pod my-app  # events at the bottom
+```
+
+### Resource Issues
+
+```bash
+kubectl top nodes
+kubectl top pods
+kubectl describe node node-1  # see allocatable resources
+```
+
+### Network Issues
+
+```bash
+# Test DNS
+kubectl run -it --rm debug --image=busybox --restart=Never -- nslookup web-service
+
+# Test connectivity
+kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- curl http://web-service
+
+# Check service endpoints
+kubectl get endpoints web-service
+```
+
+### Debug Container
+
+```bash
+kubectl debug -it my-app --image=busybox --target=my-app
+```
+
+---
+
+## 22. Production Readiness Checklist
+
+✅ **Deployments**:
+- Health checks (liveness, readiness)
+- Resource requests and limits
+- Multiple replicas (3+)
+- Pod disruption budgets
+
+✅ **Configuration**:
+- ConfigMaps for config
+- Secrets for sensitive data
+- External secret management (Vault, AWS Secrets Manager)
+
+✅ **Networking**:
+- Services for stable endpoints
+- Ingress for HTTP routing
+- Network policies for security
+
+✅ **Storage**:
+- PersistentVolumes for stateful apps
+- Backup strategy
+
+✅ **Monitoring**:
+- Prometheus for metrics
+- Grafana for dashboards
+- Alertmanager for alerts
+- Logging (ELK, Loki, Cloud logging)
+
+✅ **Security**:
+- RBAC configured
+- Service accounts with least privilege
+- Pod security contexts
+- Network policies
+- Secret encryption at rest
+
+✅ **Disaster Recovery**:
+- etcd backups
+- Application data backups
+- Multi-zone/multi-region setup
+
+---
+
+## 23. Key Takeaways
+
+1. **Declarative, not Imperative**: You declare desired state (YAML), K8s makes it happen.
+
+2. **Reconciliation Loop**: Controllers constantly watch actual vs desired state and reconcile.
+
+3. **Pods are Ephemeral**: Don't rely on pod identity. Use Services, StatefulSets, or external storage.
+
+4. **Labels are Everything**: They connect Services to Pods, Deployments to Pods, etc.
+
+5. **Start Simple**: Pod → Deployment → Service → Ingress. Don't jump to complex patterns.
+
+6. **Use Higher-Level Abstractions**: Use Deployments, not bare Pods. Use StatefulSets for stateful apps.
+
+7. **Health Checks are Critical**: Without them, K8s doesn't know if your app is healthy.
+
+8. **Resource Limits Matter**: Prevents noisy neighbors, enables better scheduling.
+
+9. **ConfigMaps/Secrets**: Separate config from code.
+
+10. **Helm**: Don't reinvent the wheel. Use existing charts.
+
+---
+
+## 24. Next Steps
+
+**After This Primer**:
+- **Hands-on**: Deploy a real app (try a 3-tier app: frontend, backend, database)
+- **Networking**: Deep dive into Ingress controllers, service mesh (Istio, Linkerd)
+- **Observability**: Prometheus, Grafana, Jaeger, OpenTelemetry
+- **GitOps**: ArgoCD, Flux (deploy from Git, not kubectl)
+- **Advanced Scheduling**: Taints, tolerations, node affinity, pod affinity
+- **Operators**: Custom resources and controllers (Operator SDK)
+- **Multi-tenancy**: Advanced RBAC, resource quotas, pod security
+
+**Resources**:
+- Official docs: https://kubernetes.io/docs/
+- Interactive tutorial: https://kubernetes.io/docs/tutorials/kubernetes-basics/
+- kubectl cheat sheet: https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+
+---
+
+**You now know ~80% of Kubernetes. The rest is practice, debugging, and learning from production incidents. Good luck!** 🚀

@@ -12,6 +12,8 @@ website:
         text: Home
       - href: rust_primer.qmd
         text: Rust Primer
+      - href: kubernetes_primer.qmd
+        text: Kubernetes Primer
       - href: hdd_tco_summary.qmd
         text: HDD TCO
       - href: ampereone_m_vs_amd_epyc.qmd
