@@ -196,60 +196,263 @@
     "text": "27. What to Learn Next\nOnce you’re comfortable with the above, these are the next frontiers:\n\nAsync Rust in depth: Tokio runtime, futures, select!, streams, async traits\nError handling patterns: thiserror for libraries, anyhow for applications\nPinning: Required for self-referential types in async code\nAdvanced FFI: bindgen for auto-generating C bindings, cbindgen for exposing Rust to C\nEmbedded Rust: no_std, bare metal programming\nSIMD and performance: std::simd, profiling with perf, criterion for benchmarks\nThe std docs: Genuinely excellent — https://doc.rust-lang.org/std/\n\n\nBest way to learn: Pick a small project (a CLI tool, a simple HTTP server with axum/actix, a file processor) and just build. The compiler errors are famously helpful — read them carefully, they usually tell you exactly what to do."
   },
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Research",
+    "objectID": "ipsec_primer.html",
+    "href": "ipsec_primer.html",
+    "title": "IPSec Primer: Secure IP Communications",
     "section": "",
-    "text": "Notes, writeups, and summaries for personal research projects."
+    "text": "Goal: Get you to ~80% of IPSec, fast. Assumes you understand TCP/IP, basic networking, and encryption concepts. Skips: Quantum-resistant algorithms, custom IKE implementations, deep cryptographic theory, mobile IPSec (MOBIKE)."
   },
   {
-    "objectID": "index.html#documents",
-    "href": "index.html#documents",
-    "title": "Research",
-    "section": "Documents",
-    "text": "Documents\n\nHDD comparison and 5-year TCO\nAmpereOne M vs AMD EPYC 9554/9654\nArista switch health report (DCS-7060CX-32S-R)\nRust primer for C++/Java developers"
+    "objectID": "ipsec_primer.html#what-is-ipsec-and-why-does-it-exist",
+    "href": "ipsec_primer.html#what-is-ipsec-and-why-does-it-exist",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "1. What is IPSec and Why Does It Exist?",
+    "text": "1. What is IPSec and Why Does It Exist?\nThe Problem: Standard IP packets travel in plaintext. Anyone along the path can: - Read your data (no confidentiality) - Modify packets (no integrity) - Impersonate endpoints (no authentication) - Replay old packets (no replay protection)\nThe Solution: IPSec is a suite of protocols that secures IP communications at the network layer (Layer 3).\nAnalogy: If TLS/SSL is like sending a letter in a locked box (application layer), IPSec is like encrypting everything that goes on the road (network layer). It’s transparent to applications.\nKey Benefits: - Confidentiality: Encryption (AES, ChaCha20) - Integrity: Hashing (SHA-256, SHA-512) - Authentication: Prove who you are (certificates, PSK) - Anti-replay: Sequence numbers prevent replay attacks"
   },
   {
-    "objectID": "arista_switch_health_report.html",
-    "href": "arista_switch_health_report.html",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "objectID": "ipsec_primer.html#the-big-picture-ipsec-architecture",
+    "href": "ipsec_primer.html#the-big-picture-ipsec-architecture",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "2. The Big Picture: IPSec Architecture",
+    "text": "2. The Big Picture: IPSec Architecture\n┌─────────────────────────────────────────┐\n│         IPSec Architecture              │\n│                                         │\n│  ┌──────────────────────────────────┐  │\n│  │  IKE (Control Plane)             │  │\n│  │  - Negotiates parameters         │  │\n│  │  - Establishes Security Assoc.   │  │\n│  │  - Key exchange                  │  │\n│  └──────────────────────────────────┘  │\n│              ↓ creates                  │\n│  ┌──────────────────────────────────┐  │\n│  │  IPSec Protocols (Data Plane)    │  │\n│  │  - AH: Authentication Header     │  │\n│  │  - ESP: Encapsulating Security   │  │\n│  │         Payload                  │  │\n│  └──────────────────────────────────┘  │\n└─────────────────────────────────────────┘\nTwo Main Components:\n\nIKE (Internet Key Exchange): The negotiator\n\nSets up the secure tunnel\nExchanges keys\nAgrees on algorithms\n\nIPSec Protocols: The workers\n\nAH: Authenticates but doesn’t encrypt\nESP: Encrypts AND authenticates (most common)\n\n\nMental Model: IKE is the handshake before a phone call. AH/ESP is the secure phone call itself."
+  },
+  {
+    "objectID": "ipsec_primer.html#ipsec-protocols-ah-vs-esp",
+    "href": "ipsec_primer.html#ipsec-protocols-ah-vs-esp",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "3. IPSec Protocols: AH vs ESP",
+    "text": "3. IPSec Protocols: AH vs ESP\n\nAuthentication Header (AH)\nWhat it does: Provides authentication and integrity, but NOT encryption.\nUse case: When you need to verify the sender and ensure data wasn’t tampered with, but encryption is not required (or handled elsewhere).\nPacket Structure:\n[ IP Header | AH Header | Original Payload ]\n             ↑\n             Authenticates everything\nRarely used today because ESP can do everything AH does plus encryption.\n\n\nEncapsulating Security Payload (ESP)\nWhat it does: Provides encryption, authentication, and integrity.\nThis is what you’ll use 99% of the time.\nPacket Structure:\n[ IP Header | ESP Header | Encrypted Payload | ESP Trailer | ESP Auth ]\n             ↑                                              ↑\n             |-------- Encrypted ---------|                |\n             |------------- Authenticated -----------------|\nESP protects: - Payload (encrypted) - ESP header + payload + trailer (authenticated)\nESP does NOT protect: - Original IP header (that would break routing)"
+  },
+  {
+    "objectID": "ipsec_primer.html#ipsec-modes-transport-vs-tunnel",
+    "href": "ipsec_primer.html#ipsec-modes-transport-vs-tunnel",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "4. IPSec Modes: Transport vs Tunnel",
+    "text": "4. IPSec Modes: Transport vs Tunnel\n\nTransport Mode\nWhat it does: Protects only the payload, keeps original IP headers.\nBefore:\n[ IP Header | TCP/UDP | Data ]\n\nAfter (ESP Transport):\n[ IP Header | ESP Header | TCP/UDP | Data | ESP Trailer | ESP Auth ]\n  ↑ Original                    ↑ Encrypted\nUse case: Host-to-host communication (e.g., server to server in same network).\nAnalogy: Like putting a lock on a package but keeping the shipping label visible.\n\n\nTunnel Mode\nWhat it does: Encrypts the ENTIRE original packet, adds new IP header.\nBefore:\n[ IP Header | TCP/UDP | Data ]\n\nAfter (ESP Tunnel):\n[ New IP Header | ESP Header | Original IP Header | TCP/UDP | Data | ESP Trailer | ESP Auth ]\n                               ↑ Encrypted\nUse case: Site-to-site VPNs, gateway-to-gateway.\nAnalogy: Like putting the entire package (including original label) inside a new box with a new shipping label.\nMost common mode for VPNs."
+  },
+  {
+    "objectID": "ipsec_primer.html#ike-the-negotiation-protocol",
+    "href": "ipsec_primer.html#ike-the-negotiation-protocol",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "5. IKE: The Negotiation Protocol",
+    "text": "5. IKE: The Negotiation Protocol\nIKE sets up IPSec tunnels. There are two versions:\n\nIKEv1 (Legacy)\nTwo phases: - Phase 1: Establish secure channel (ISAKMP SA) - Main Mode (6 messages, more secure) - Aggressive Mode (3 messages, faster but less secure) - Phase 2: Negotiate IPSec parameters (IPSec SA) - Quick Mode\n\n\nIKEv2 (Modern, Preferred)\nSimpler: 4 messages to establish both IKE SA and IPSec SA.\nIKEv2 Advantages: - Faster (fewer round trips) - Built-in NAT traversal (NAT-T) - Mobility support (MOBIKE) - Better error handling - Mandatory certificate support\nAlways use IKEv2 if possible.\n\n\nIKE Exchange (Simplified)\nInitiator                           Responder\n    |                                   |\n    |--- IKE_SA_INIT (proposals) ------&gt;|\n    |&lt;-- IKE_SA_INIT (chosen params) ---|\n    |                                   |\n    |--- IKE_AUTH (authenticate) ------&gt;|\n    |&lt;-- IKE_AUTH (authenticate) -------|\n    |                                   |\n    | IPSec tunnel established!         |\n    |&lt;======= Encrypted traffic =======&gt;|\nWhat’s negotiated: - Encryption algorithm (AES-256, AES-128, etc.) - Hash algorithm (SHA-256, SHA-512, etc.) - Diffie-Hellman group (key exchange strength) - Authentication method (PSK, certificates) - Lifetime (when to rekey)"
+  },
+  {
+    "objectID": "ipsec_primer.html#security-associations-sas",
+    "href": "ipsec_primer.html#security-associations-sas",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "6. Security Associations (SAs)",
+    "text": "6. Security Associations (SAs)\nA Security Association is a one-way agreement on security parameters.\nThink of it as: A contract that says “when sending packets, use AES-256 + SHA-256 with this key.”\n\nKey Points\n\nUnidirectional: Each direction needs its own SA\n\nA → B: One SA\nB → A: Different SA\n\nIdentified by SPI (Security Parameter Index)\n\n32-bit number in ESP/AH header\nReceiver uses SPI to look up which SA to use\n\nTwo types:\n\nIKE SA: For IKE negotiation (Phase 1)\nIPSec SA: For actual data (Phase 2)\n\n\n\n\nSA Database (SAD)\nEach endpoint maintains a database of active SAs:\nSPI: 0x12345678\nProtocol: ESP\nMode: Tunnel\nEncryption: AES-256-GCM\nIntegrity: Built-in (GCM)\nKeys: [encryption key, integrity key]\nSource: 10.1.1.1\nDestination: 10.2.2.2\nLifetime: 3600 seconds"
+  },
+  {
+    "objectID": "ipsec_primer.html#security-policy-database-spd",
+    "href": "ipsec_primer.html#security-policy-database-spd",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "7. Security Policy Database (SPD)",
+    "text": "7. Security Policy Database (SPD)\nSPD defines WHEN to use IPSec.\nRules look like: - Traffic from 10.1.0.0/24 to 10.2.0.0/24 → Use IPSec (tunnel to 203.0.113.1) - Traffic to 8.8.8.8 → Bypass IPSec (allow plaintext) - All other traffic → Drop\nAnalogy: SPD is the firewall rules. SAD is the active connections.\nExample SPD Entry:\nSource: 192.168.1.0/24\nDestination: 192.168.2.0/24\nProtocol: Any\nAction: Protect with IPSec (ESP, Tunnel mode)\nTunnel endpoint: 203.0.113.10"
+  },
+  {
+    "objectID": "ipsec_primer.html#encryption-authentication-algorithms",
+    "href": "ipsec_primer.html#encryption-authentication-algorithms",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "8. Encryption & Authentication Algorithms",
+    "text": "8. Encryption & Authentication Algorithms\n\nEncryption Algorithms\nModern (use these): - AES-GCM-256: Combined encryption + authentication (AEAD) - AES-GCM-128: Faster, still secure - ChaCha20-Poly1305: Great for mobile/ARM devices\nLegacy (avoid): - 3DES: Slow, weak - AES-CBC: Needs separate integrity algorithm\nRecommendation: AES-GCM (128 or 256 bit). It’s fast, secure, and widely supported.\n\n\nHash/Integrity Algorithms\nModern: - SHA-256 - SHA-512 - HMAC-SHA-256\nLegacy (avoid): - MD5: Broken - SHA-1: Deprecated\nNote: With AEAD ciphers like AES-GCM, integrity is built-in.\n\n\nDiffie-Hellman Groups\nUsed for key exchange. Higher number = stronger but slower.\nModern: - Group 14 (2048-bit): Minimum for new deployments - Group 19 (256-bit ECC): Fast and secure - Group 20 (384-bit ECC): Even stronger\nLegacy (avoid): - Group 1, 2, 5: Too weak"
+  },
+  {
+    "objectID": "ipsec_primer.html#authentication-methods",
+    "href": "ipsec_primer.html#authentication-methods",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "9. Authentication Methods",
+    "text": "9. Authentication Methods\n\nPre-Shared Key (PSK)\nWhat: Both sides have the same secret password.\nipsec.conf (Linux strongSwan):\nconn mytunnel\n    authby=secret\n    left=10.1.1.1\n    right=10.2.2.2\n\nipsec.secrets:\n10.1.1.1 10.2.2.2 : PSK \"mysupersecretkey123\"\nPros: Simple to set up Cons: - Doesn’t scale (need different PSK for each peer) - PSK must be shared securely - No identity verification beyond “knows the password”\nUse for: Small deployments, testing\n\n\nCertificates (RSA/ECDSA)\nWhat: Each side has a certificate signed by a trusted CA.\nPros: - Scales well (distribute CA cert, not individual secrets) - Strong identity verification - Can revoke compromised certs (CRL/OCSP)\nCons: More complex setup (PKI infrastructure)\nUse for: Production, large deployments\nCertificate-based flow: 1. Each peer has a private key + certificate 2. Certificates signed by same CA (or trusted CAs) 3. During IKE, peers exchange certificates 4. Each verifies the other’s certificate against CA 5. If valid, authenticate using private key"
+  },
+  {
+    "objectID": "ipsec_primer.html#nat-traversal-nat-t",
+    "href": "ipsec_primer.html#nat-traversal-nat-t",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "10. NAT Traversal (NAT-T)",
+    "text": "10. NAT Traversal (NAT-T)\nProblem: IPSec uses protocol 50 (ESP) and 51 (AH), not TCP/UDP. NAT routers don’t know how to handle them.\nSolution: NAT-T encapsulates ESP in UDP (port 4500).\nWithout NAT-T:\n[ IP | ESP | Payload ]  ← NAT breaks this\n\nWith NAT-T:\n[ IP | UDP (4500) | ESP | Payload ]  ← NAT can handle UDP\nIKEv2 has NAT-T built-in. IKEv1 needs explicit configuration.\nAuto-detection: IKE detects NAT and automatically enables NAT-T."
+  },
+  {
+    "objectID": "ipsec_primer.html#practical-example-site-to-site-vpn",
+    "href": "ipsec_primer.html#practical-example-site-to-site-vpn",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "11. Practical Example: Site-to-Site VPN",
+    "text": "11. Practical Example: Site-to-Site VPN\n\nScenario\nSite A                 Internet               Site B\n10.1.0.0/24  ←→  [GW-A] ←--IPSec--→ [GW-B] ←→  10.2.0.0/24\n                203.0.113.1      203.0.113.2\nGoal: Hosts in Site A can talk to hosts in Site B securely.\n\n\nConfiguration (strongSwan on Linux)\nGateway A (/etc/ipsec.conf):\nconfig setup\n    charondebug=\"ike 2, knl 2, cfg 2\"\n\nconn site-to-site\n    # Connection basics\n    auto=start\n    type=tunnel\n    keyexchange=ikev2\n\n    # Authentication\n    authby=secret\n\n    # Local (Site A)\n    left=203.0.113.1\n    leftsubnet=10.1.0.0/24\n    leftid=@site-a\n\n    # Remote (Site B)\n    right=203.0.113.2\n    rightsubnet=10.2.0.0/24\n    rightid=@site-b\n\n    # IKE (Phase 1) proposal\n    ike=aes256-sha256-modp2048!\n\n    # ESP (Phase 2) proposal\n    esp=aes256gcm16-modp2048!\n\n    # Lifetimes\n    ikelifetime=28800s\n    lifetime=3600s\n\n    # Dead Peer Detection\n    dpdaction=restart\n    dpddelay=30s\nGateway A (/etc/ipsec.secrets):\n@site-a @site-b : PSK \"MySharedSecretKey12345\"\nGateway B: Mirror configuration (swap left/right).\n\n\nExplanation\n\nkeyexchange=ikev2: Use IKEv2 (modern)\ntype=tunnel: Tunnel mode (encrypt entire packet)\nleftsubnet/rightsubnet: Which networks to protect\nike=: Phase 1 algorithms (AES-256, SHA-256, DH group 14)\nesp=: Phase 2 algorithms (AES-256-GCM)\n!: Enforces this proposal (no fallback to weaker)\ndpdaction: Detect and restart dead tunnels\n\n\n\nTesting\n# Start IPSec\nipsec start\n\n# Check status\nipsec status\n\n# From Site A, ping Site B host\nping 10.2.0.1\n\n# Check SAs\nip xfrm state\nip xfrm policy"
+  },
+  {
+    "objectID": "ipsec_primer.html#practical-example-road-warrior-vpn",
+    "href": "ipsec_primer.html#practical-example-road-warrior-vpn",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "12. Practical Example: Road Warrior VPN",
+    "text": "12. Practical Example: Road Warrior VPN\n\nScenario\nRemote user (laptop, phone) connects to corporate network.\nRoad Warrior              Corporate Network\n(Dynamic IP)  ←--IPSec--→  VPN Gateway  ←→  10.0.0.0/8\n                           203.0.113.10\n\n\nServer Configuration (strongSwan)\nconn roadwarrior\n    auto=add\n    type=tunnel\n    keyexchange=ikev2\n\n    # Server side\n    left=203.0.113.10\n    leftsubnet=10.0.0.0/8\n    leftcert=server.crt\n\n    # Client side\n    right=%any\n    rightsourceip=10.255.0.0/16  # IP pool for clients\n\n    # Authentication\n    leftauth=pubkey\n    rightauth=eap-mschapv2  # Username/password\n    eap_identity=%identity\n\n    # Proposals\n    ike=aes256-sha256-modp2048!\n    esp=aes256gcm16!\n\n\nClient Configuration\nLinux/strongSwan:\nconn corporate\n    auto=start\n    right=203.0.113.10\n    rightsubnet=10.0.0.0/8\n    rightid=@vpn.company.com\n\n    # Client auth\n    leftsourceip=%config\n    eap_identity=user@company.com\n\n    ike=aes256-sha256-modp2048!\n    esp=aes256gcm16!\nClient secrets (/etc/ipsec.secrets):\nuser@company.com : EAP \"MyPassword123\"\n\n\nMobile Clients\niOS/macOS: Built-in IKEv2 support Android: strongSwan app or built-in\nConfiguration via profiles or manual setup: - Server: vpn.company.com - Remote ID: @vpn.company.com - Username/password or certificate"
+  },
+  {
+    "objectID": "ipsec_primer.html#perfect-forward-secrecy-pfs",
+    "href": "ipsec_primer.html#perfect-forward-secrecy-pfs",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "13. Perfect Forward Secrecy (PFS)",
+    "text": "13. Perfect Forward Secrecy (PFS)\nProblem: If an attacker records encrypted traffic and later steals the long-term key, they can decrypt all past sessions.\nSolution: PFS uses ephemeral keys for each session. Even if long-term key is compromised, past sessions remain secure.\nHow: Diffie-Hellman key exchange in Phase 2 (not just Phase 1).\nConfiguration:\n# Without PFS\nesp=aes256gcm16!\n\n# With PFS (add DH group)\nesp=aes256gcm16-modp2048!\nTrade-off: Slightly slower (extra DH exchange per rekey).\nRecommendation: Always use PFS in production."
+  },
+  {
+    "objectID": "ipsec_primer.html#dead-peer-detection-dpd",
+    "href": "ipsec_primer.html#dead-peer-detection-dpd",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "14. Dead Peer Detection (DPD)",
+    "text": "14. Dead Peer Detection (DPD)\nProblem: If tunnel endpoint crashes or network fails, the other end doesn’t know. Tunnel appears up but traffic is blackholed.\nSolution: DPD sends periodic keepalives.\ndpdaction=restart      # restart | clear | hold\ndpddelay=30s          # check every 30 seconds\ndpdtimeout=120s       # declare dead after 120s\nActions: - restart: Restart tunnel - clear: Delete tunnel - hold: Keep SA but don’t send traffic"
+  },
+  {
+    "objectID": "ipsec_primer.html#troubleshooting-ipsec",
+    "href": "ipsec_primer.html#troubleshooting-ipsec",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "15. Troubleshooting IPSec",
+    "text": "15. Troubleshooting IPSec\n\nCommon Issues\n\n1. Tunnel Not Establishing\nCheck:\n# View logs\nipsec statusall\njournalctl -u ipsec -f\n\n# Common causes:\n# - Firewall blocking UDP 500, 4500, ESP (protocol 50)\n# - Mismatched proposals (encryption/hash algorithms)\n# - PSK mismatch\n# - Time sync issues (certificates)\nFix: Verify both sides have matching proposals.\n\n\n2. Tunnel Up But No Traffic\nCheck:\n# Verify SAs exist\nip xfrm state\nsetkey -D  # (BSD/macOS)\n\n# Verify policies\nip xfrm policy\n\n# Ping with tcpdump\ntcpdump -i any esp\nCommon causes: - SPD not configured correctly - Routing issues (packets not reaching IPSec gateway) - Firewall on destination blocking traffic\n\n\n3. Tunnel Flapping\nCheck: - DPD too aggressive - Network instability - Rekeying issues\nFix:\n# Increase DPD timers\ndpddelay=60s\ndpdtimeout=300s\n\n# Increase lifetimes\nikelifetime=86400s\nlifetime=28800s\n\n\n4. NAT Issues\nSymptoms: Tunnel works initially, then stops after idle.\nCause: NAT dropping UDP session.\nFix:\n# Enable DPD to keep NAT session alive\ndpddelay=30s\n\n# Or reduce lifetime to force rekey\nlifetime=1800s\n\n\n\nDebug Commands\n# strongSwan\nipsec statusall          # Overall status\nipsec listcerts          # Certificates\nipsec listcacerts        # CA certificates\nipsec listsas            # Security associations\nipsec listpolicies       # Policies\n\n# Linux kernel\nip xfrm state            # SAs\nip xfrm policy           # SPD\nip -s xfrm state         # Stats\n\n# BSD/macOS\nsetkey -D                # SAs\nsetkey -DP               # Policies\n\n# Packet capture\ntcpdump -i any -n esp    # ESP packets\ntcpdump -i any -n udp port 500 or udp port 4500  # IKE\n\n\nWireshark\nDecrypt ESP traffic in Wireshark: 1. Edit → Preferences → Protocols → ESP 2. Add SA: SPI, encryption key, auth key"
+  },
+  {
+    "objectID": "ipsec_primer.html#performance-considerations",
+    "href": "ipsec_primer.html#performance-considerations",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "16. Performance Considerations",
+    "text": "16. Performance Considerations\n\nHardware Acceleration\nModern CPUs have AES-NI (AES instructions).\nCheck:\n# Linux\ngrep aes /proc/cpuinfo\n\n# Enable AES-NI in strongSwan\nipsec pki --gen --type rsa --outform pem &gt; private.key\nPerformance: AES-NI can achieve 10+ Gbps on modern CPUs.\n\n\nAlgorithm Choice\nFastest (with AES-NI): - AES-128-GCM: ~10-20 Gbps - AES-256-GCM: ~7-15 Gbps\nWithout AES-NI: - ChaCha20-Poly1305: Often faster than AES\nSlowest: - 3DES: ~100 Mbps (avoid!)\n\n\nJumbo Frames\nIPSec adds overhead (50-80 bytes). With 1500 MTU, effective payload drops to ~1420.\nSolutions: 1. MSS Clamping: Reduce TCP MSS bash    iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu\n\nIncrease MTU: Use 9000 MTU (jumbo frames) if network supports\nPath MTU Discovery: Let TCP figure it out (can be slow)"
+  },
+  {
+    "objectID": "ipsec_primer.html#security-best-practices",
+    "href": "ipsec_primer.html#security-best-practices",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "17. Security Best Practices",
+    "text": "17. Security Best Practices\n\n✅ Do This\n\nUse IKEv2\n\nFaster, more secure than IKEv1\n\nUse Strong Crypto\nike=aes256gcm16-sha256-modp2048!\nesp=aes256gcm16-modp2048!\nEnable PFS\n\nInclude DH group in ESP proposal\n\nUse Certificates\n\nNot PSK (except for testing/small deployments)\n\nRegular Rekeying\nikelifetime=28800s   # 8 hours\nlifetime=3600s       # 1 hour\nMonitor and Log\n\nEnable logging\nMonitor tunnel status\nAlert on flapping tunnels\n\n\n\n\n❌ Don’t Do This\n\nWeak Algorithms\n\nNo 3DES, MD5, SHA-1\nNo DH group 1, 2, 5\n\nNo PFS\n\nAlways use ephemeral DH in Phase 2\n\nLong Lifetimes\n\nDon’t set lifetime to days/weeks\n\nAggressive Mode (IKEv1)\n\nLeaks identity, vulnerable to dictionary attacks\n\nOverly Permissive SPD\n\nBe specific about what traffic needs IPSec"
+  },
+  {
+    "objectID": "ipsec_primer.html#ipsec-vs-other-vpn-technologies",
+    "href": "ipsec_primer.html#ipsec-vs-other-vpn-technologies",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "18. IPSec vs Other VPN Technologies",
+    "text": "18. IPSec vs Other VPN Technologies\n\nIPSec vs OpenVPN\n\n\n\n\n\n\n\n\nFeature\nIPSec\nOpenVPN\n\n\n\n\nLayer\nLayer 3 (IP)\nLayer 2/3 (TUN/TAP)\n\n\nPerformance\nFaster (kernel space, HW accel)\nSlower (userspace)\n\n\nNAT Traversal\nBuilt-in (NAT-T)\nNatural (uses UDP/TCP)\n\n\nSetup\nComplex\nSimpler\n\n\nFirewall\nHarder (ESP)\nEasier (TCP 443)\n\n\nMobile\nExcellent (native iOS/Android)\nNeeds app\n\n\n\nUse IPSec when: Performance matters, native clients needed, LAN-to-LAN.\nUse OpenVPN when: Firewall restrictions (masquerade as HTTPS), simpler setup.\n\n\nIPSec vs WireGuard\n\n\n\nFeature\nIPSec\nWireGuard\n\n\n\n\nComplexity\nComplex\nSimple\n\n\nCode Size\n400K+ lines\n4K lines\n\n\nPerformance\nFast\nFaster\n\n\nSetup\nMany knobs\nMinimal config\n\n\nCompatibility\nEverywhere\nNewer\n\n\nRoaming\nGood (IKEv2)\nExcellent\n\n\n\nUse IPSec when: Need enterprise features (certificate-based, EAP auth), must use native clients.\nUse WireGuard when: Simplicity and performance matter most, modern OS/kernel."
+  },
+  {
+    "objectID": "ipsec_primer.html#common-use-cases",
+    "href": "ipsec_primer.html#common-use-cases",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "19. Common Use Cases",
+    "text": "19. Common Use Cases\n\n1. Site-to-Site VPN\nScenario: Connect two office networks.\nMode: Tunnel (gateway-to-gateway) Auth: Certificates or PSK Best for: 24/7 persistent tunnels\n\n\n2. Road Warrior VPN\nScenario: Remote employees accessing corporate network.\nMode: Tunnel (client-to-gateway) Auth: Certificates + EAP (username/password) Features: IP pool, split tunneling, DNS push\n\n\n3. Host-to-Host\nScenario: Secure communication between two servers.\nMode: Transport Auth: Certificates Best for: Database server to app server, microservices\n\n\n4. Cloud VPN\nScenario: Connect on-prem to AWS/Azure/GCP.\nProviders: - AWS VPN: IKEv1/v2, route-based or policy-based - Azure VPN Gateway: IKEv2 (v1 deprecated) - GCP Cloud VPN: IKEv2, HA VPN\nGotchas: Cloud provider-specific quirks, BGP for dynamic routing"
+  },
+  {
+    "objectID": "ipsec_primer.html#configuration-examples-by-platform",
+    "href": "ipsec_primer.html#configuration-examples-by-platform",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "20. Configuration Examples by Platform",
+    "text": "20. Configuration Examples by Platform\n\nLinux (strongSwan)\nAlready covered above. Most flexible, widely used.\n\n\nFreeBSD (strongSwan or racoon)\nstrongSwan: Same as Linux racoon (legacy):\n# /usr/local/etc/racoon/racoon.conf\npath pre_shared_key \"/usr/local/etc/racoon/psk.txt\";\n\nremote 203.0.113.2 {\n    exchange_mode main;\n    proposal {\n        encryption_algorithm aes 256;\n        hash_algorithm sha256;\n        authentication_method pre_shared_key;\n        dh_group modp2048;\n    }\n}\n\nsainfo address 10.1.0.0/24 any address 10.2.0.0/24 any {\n    pfs_group modp2048;\n    encryption_algorithm aes 256;\n    authentication_algorithm hmac_sha256;\n    compression_algorithm deflate;\n}\n\n\nCisco IOS\ncrypto isakmp policy 10\n encryption aes 256\n hash sha256\n authentication pre-share\n group 14\n\ncrypto isakmp key MySecretKey address 203.0.113.2\n\ncrypto ipsec transform-set MYSET esp-aes 256 esp-sha256-hmac\n mode tunnel\n\ncrypto map MYMAP 10 ipsec-isakmp\n set peer 203.0.113.2\n set transform-set MYSET\n match address 100\n\ninterface GigabitEthernet0/0\n crypto map MYMAP\n\naccess-list 100 permit ip 10.1.0.0 0.0.0.255 10.2.0.0 0.0.0.255\n\n\nWindows (Built-in)\nPowerShell:\nAdd-VpnConnection -Name \"Corporate\" `\n    -ServerAddress \"vpn.company.com\" `\n    -TunnelType IKEv2 `\n    -AuthenticationMethod EAP `\n    -EncryptionLevel Maximum\n\nSet-VpnConnectionIPsecConfiguration -ConnectionName \"Corporate\" `\n    -AuthenticationTransformConstants SHA256128 `\n    -CipherTransformConstants AES256 `\n    -EncryptionMethod AES256 `\n    -IntegrityCheckMethod SHA256 `\n    -DHGroup Group14 `\n    -PfsGroup PFS2048"
+  },
+  {
+    "objectID": "ipsec_primer.html#advanced-topics-brief-overview",
+    "href": "ipsec_primer.html#advanced-topics-brief-overview",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "21. Advanced Topics (Brief Overview)",
+    "text": "21. Advanced Topics (Brief Overview)\n\nIKEv2 Redirect\nServer can redirect client to different gateway (load balancing, maintenance).\n\n\nMultiple SAs (Child SAs)\nOne IKE SA can have multiple IPSec SAs (different traffic selectors).\n\n\nTraffic Selectors\nFine-grained control over which traffic uses which SA.\n# Site A -&gt; Site B web servers\nleftsubnet=10.1.0.0/24[tcp/1024-65535]\nrightsubnet=10.2.0.0/24[tcp/80]\n\n\nXFRM (Linux)\nLinux kernel’s IPSec stack. Controlled via ip xfrm commands.\nSupports: - Route-based VPN (VTI - Virtual Tunnel Interface) - Policy-based VPN (traditional)\n\n\nVTI (Virtual Tunnel Interface)\nCreates a virtual interface for IPSec tunnel (like OpenVPN’s tun).\nBenefits: - Easier routing - Works with dynamic routing (OSPF, BGP) - Simpler firewall rules\nip tunnel add vti0 mode vti local 203.0.113.1 remote 203.0.113.2 key 42\nip link set vti0 up\nip addr add 169.254.0.1/30 dev vti0\nip route add 10.2.0.0/24 dev vti0"
+  },
+  {
+    "objectID": "ipsec_primer.html#debugging-deep-dive",
+    "href": "ipsec_primer.html#debugging-deep-dive",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "22. Debugging Deep Dive",
+    "text": "22. Debugging Deep Dive\n\nPacket Flow\nOutbound:\n1. Application sends packet\n2. Routing: Should this go through IPSec?\n3. SPD lookup: Match policy?\n4. SAD lookup: Find SA\n5. Encrypt with ESP\n6. Add ESP header\n7. Transmit\n\nInbound:\n1. Receive ESP packet\n2. Extract SPI from ESP header\n3. SAD lookup by SPI\n4. Decrypt and verify\n5. Check replay protection\n6. Remove ESP header\n7. Deliver to application\n\n\nCommon Error Messages\n“no matching SA” - Proposal mismatch (algorithms don’t match) - Fix: Use same proposals on both sides\n“authentication failed” - PSK mismatch - Certificate validation failed (expired, wrong CA)\n“no policy found” - SPD not configured - Traffic selector mismatch\n“invalid ID” - leftid/rightid mismatch - Certificate CN doesn’t match expected ID\n\n\nLog Analysis\nEnable verbose logging:\n# strongSwan\nconfig setup\n    charondebug=\"ike 2, knl 2, cfg 2, net 2\"\nLook for: - Proposal mismatch: Different algorithms - AUTH_FAILED: Wrong PSK or certificate - TS_UNACCEPTABLE: Traffic selector mismatch"
+  },
+  {
+    "objectID": "ipsec_primer.html#quick-reference",
+    "href": "ipsec_primer.html#quick-reference",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "23. Quick Reference",
+    "text": "23. Quick Reference\n\nPorts and Protocols\n\nUDP 500: IKE (Phase 1)\nUDP 4500: NAT-T (IKE + ESP encapsulated)\nProtocol 50: ESP (data plane)\nProtocol 51: AH (data plane, rarely used)\n\n\n\nRecommended Configuration (2026)\n# Modern, secure, fast\nconn modern\n    keyexchange=ikev2\n    ike=aes256gcm16-sha256-modp2048!\n    esp=aes256gcm16-modp2048!\n    ikelifetime=28800s\n    lifetime=3600s\n    dpdaction=restart\n    dpddelay=30s\n    authby=pubkey\n\n\nCommand Cheat Sheet\n# strongSwan\nipsec start/stop/restart\nipsec up &lt;conn&gt;\nipsec down &lt;conn&gt;\nipsec status\nipsec statusall\n\n# Linux XFRM\nip xfrm state [add|del|list]\nip xfrm policy [add|del|list]\n\n# Statistics\nip -s xfrm state\nipsec statusall | grep bytes\n\n# Certificates\nipsec listcerts\nipsec listcacerts\nopenssl x509 -in cert.pem -text -noout"
+  },
+  {
+    "objectID": "ipsec_primer.html#key-takeaways",
+    "href": "ipsec_primer.html#key-takeaways",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "24. Key Takeaways",
+    "text": "24. Key Takeaways\n\nESP in Tunnel Mode: What you’ll use 99% of the time for VPNs.\nIKEv2 &gt; IKEv1: Always use IKEv2 unless forced to use v1.\nAES-GCM: Modern, fast, secure. Combines encryption + authentication.\nPFS is Essential: Always include DH group in ESP proposal.\nCertificates &gt; PSK: Scale better, more secure.\nNAT-T is Automatic: IKEv2 detects NAT and enables NAT-T.\nDPD Keeps Tunnels Alive: Essential for detecting failures.\nTwo Databases: SPD (when to use IPSec) and SAD (how to encrypt).\nMTU Matters: IPSec adds overhead, reduce TCP MSS or increase MTU.\nDebug with Logs: Enable verbose logging, watch for proposal mismatches."
+  },
+  {
+    "objectID": "ipsec_primer.html#next-steps",
+    "href": "ipsec_primer.html#next-steps",
+    "title": "IPSec Primer: Secure IP Communications",
+    "section": "25. Next Steps",
+    "text": "25. Next Steps\nAfter This Primer: - Hands-on: Set up a site-to-site VPN between two VMs - PKI: Learn certificate management (OpenSSL, easy-rsa) - Advanced: VTI, route-based VPNs, BGP over IPSec - Cloud: AWS VPN, Azure VPN Gateway, GCP Cloud VPN - Alternatives: Compare with WireGuard, OpenVPN - Performance: Tuning, hardware acceleration, crypto benchmarks\nResources: - RFC 4301: IPSec Architecture - RFC 7296: IKEv2 - strongSwan documentation: https://docs.strongswan.org/ - LibreSwan: https://libreswan.org/\n\nYou now know ~80% of IPSec. The rest is practice, troubleshooting real-world tunnels, and dealing with vendor quirks. Good luck! 🔐"
+  },
+  {
+    "objectID": "hdd_tco_summary.html",
+    "href": "hdd_tco_summary.html",
+    "title": "HDD comparison and 5-year TCO",
     "section": "",
-    "text": "This page summarizes findings from the health report file healthreport_Arista.txt."
+    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
   },
   {
-    "objectID": "arista_switch_health_report.html#snapshot",
-    "href": "arista_switch_health_report.html#snapshot",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Snapshot",
-    "text": "Snapshot\n\nReport timestamp: Sat Jan 31 09:41:47 UTC 2026\nModel: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)\nEOS: 4.26.6M\nUptime at capture: ~20 minutes"
+    "objectID": "hdd_tco_summary.html#context",
+    "href": "hdd_tco_summary.html#context",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "",
+    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
   },
   {
-    "objectID": "arista_switch_health_report.html#overall-status",
-    "href": "arista_switch_health_report.html#overall-status",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Overall status",
-    "text": "Overall status\nCooling, temperatures, and flash look healthy. The report shows PSU2 offline, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy)."
+    "objectID": "hdd_tco_summary.html#dc-grade-assessment-short",
+    "href": "hdd_tco_summary.html#dc-grade-assessment-short",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "DC-grade assessment (short)",
+    "text": "DC-grade assessment (short)\n\nAll three are data-center/enterprise nearline SKUs on-paper: 24×7 duty class, 5-year warranty, MTBF/AFR class typical of DC drives.\nDifferences are mainly capacity per drive (18TB vs 24TB) and minor interface/power/feature details."
   },
   {
-    "objectID": "arista_switch_health_report.html#key-findings",
-    "href": "arista_switch_health_report.html#key-findings",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Key findings",
-    "text": "Key findings\n\n\n\n\n\n\n\n\nArea\nStatus\nNotes\n\n\n\n\nCooling\nPass\nFans OK and stable; ambient 25°C\n\n\nTemperature\nPass\nAll sensors below alert/critical thresholds\n\n\nPower supplies\nExpected (lab setup)\nPSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected\n\n\nModules/ASIC status\nScript false-fail\nshow module is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself\n\n\nInterfaces\nN/A (bench state)\nAll ports show notconnect / Not Present (no optics/cables); Ma1 also down\n\n\nFlash\nPass\n/mnt/flash 63% used; writable"
+    "objectID": "hdd_tco_summary.html#inputs-used",
+    "href": "hdd_tco_summary.html#inputs-used",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Inputs used",
+    "text": "Inputs used\n\nTime horizon: 5 years (hours = 43,800)\nServer base idle (excluding disks): 400W/server (assumption; see sensitivity)\nDrive idle watts (from datasheets):\n\nSeagate Exos X24 ST24000NM007H: 6.5W idle; https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): 5.9W idle; https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: 5.8W idle; https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
   },
   {
-    "objectID": "arista_switch_health_report.html#details",
-    "href": "arista_switch_health_report.html#details",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Details",
-    "text": "Details\n\nPower (expected in this test setup)\nshow environment power indicates:\n\nPSU 1: Ok, drawing input current and supplying ~125.5W\nPSU 2: Power Loss Offline, 0.0W (expected when not connected)\n\nThis is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.\n\n\n“Modules are not reporting Active” (likely not real)\nThe report section “MODULE & ASIC STATUS” runs show module, but the output returns:\n\n“Unavailable command (not supported on this hardware platform)”\n\nSo treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue."
+    "objectID": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
+    "href": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Drive counts and server counts to reach ≥5,000 TB",
+    "text": "Drive counts and server counts to reach ≥5,000 TB\n\nFormulae:\n\ndrives = ceil(5000 / TB_per_drive)\nservers = ceil(drives / 24)"
   },
   {
-    "objectID": "arista_switch_health_report.html#recommended-next-checks",
-    "href": "arista_switch_health_report.html#recommended-next-checks",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Recommended next checks",
-    "text": "Recommended next checks\nTo restore redundancy, connect PSU2 to AC and confirm it transitions to Ok. If it still shows offline:\n\nReseat PSU2 and verify it’s the correct model for the chassis.\nSwap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).\nRe-run these commands and look for state changes:\n\nshow environment power\nshow logging | include PSU|Power|pwr|power-supply\nshow system environment cooling\nshow system environment temperature"
+    "objectID": "hdd_tco_summary.html#year-cost-model",
+    "href": "hdd_tco_summary.html#year-cost-model",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "5-year cost model",
+    "text": "5-year cost model\n\nElectricity:\n\nkWh = (Watts/1000) * hours\npower_cost = kWh * ₹17\n\n5-year TCO range (server capex ₹8–9L):\n\nTCO = drive_capex + server_capex + drive_power_cost + server_power_cost"
+  },
+  {
+    "objectID": "hdd_tco_summary.html#results-5-pb-raw",
+    "href": "hdd_tco_summary.html#results-5-pb-raw",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Results (5 PB raw)",
+    "text": "Results (5 PB raw)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDrive\nTB/drive\nDrives\nServers (24-bay)\nDrive CAPEX\nServer CAPEX\n5y drive power\n5y server power (@400W)\n5y TCO\n₹/TB (drive-only)\n\n\n\n\nSeagate Exos X24 ST24000NM007H\n24\n209\n9\n97.19L\n72.00L–81.00L\n10.12L\n26.81L\n206.11L–215.11L\n1937.5\n\n\nWD Ultrastar DC HC590 24TB (SKU 0F59373)\n24\n209\n9\n96.56L\n72.00L–81.00L\n9.18L\n26.81L\n204.55L–213.55L\n1925.0\n\n\nSeagate Exos X20 ST18000NM000D\n18\n278\n12\n80.62L\n96.00L–108.00L\n12.01L\n35.74L\n224.37L–236.37L\n1611.11"
+  },
+  {
+    "objectID": "hdd_tco_summary.html#findings",
+    "href": "hdd_tco_summary.html#findings",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Findings",
+    "text": "Findings\n\nArchitecture dominates: with ₹8–9L per 24-bay server, the 18TB option requires 12 servers vs 9 servers for 24TB drives.\nThat extra server capex (and base power) outweighs the 18TB drive’s lower ₹/TB.\nBest 5-year value (your constraints): WD Ultrastar DC HC590 24TB.\nThe two 24TB options are close; HC590 wins slightly on your pricing and lower drive idle watts."
+  },
+  {
+    "objectID": "hdd_tco_summary.html#sensitivity-server-idle-power",
+    "href": "hdd_tco_summary.html#sensitivity-server-idle-power",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Sensitivity (server idle power)",
+    "text": "Sensitivity (server idle power)\n\nExtra electricity per +100W per server over 5 years: ₹74,460 (~0.74L).\nFor 9 servers: +100W/server adds ₹670,140 (~6.70L).\nFor 12 servers: +100W/server adds ₹893,520 (~8.94L).\nIf your servers idle significantly above 400W, the penalty for needing more servers increases, which further favors 24TB drives."
+  },
+  {
+    "objectID": "hdd_tco_summary.html#what-this-tco-excludes-important",
+    "href": "hdd_tco_summary.html#what-this-tco-excludes-important",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "What this TCO excludes (important)",
+    "text": "What this TCO excludes (important)\n\nCooling overhead (PUE), rack space cost, networking/HBA costs, spares inventory, and operational labor.\nIf you provide measured wall power per storage server (idle) with disks installed and any PUE target, the power part can be tightened."
+  },
+  {
+    "objectID": "hdd_tco_summary.html#datasheet-links",
+    "href": "hdd_tco_summary.html#datasheet-links",
+    "title": "HDD comparison and 5-year TCO",
+    "section": "Datasheet links",
+    "text": "Datasheet links\n\nSeagate Exos X24 ST24000NM007H: https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
   },
   {
     "objectID": "ampereone_m_vs_amd_epyc.html",
@@ -343,81 +546,60 @@
     "text": "Recommendation: a minimal, decision-oriented POC\n\nPick one workload per “shape” you run: (a) latency-sensitive service, (b) batch/throughput service, (c) memory-bandwidth-heavy job, (d) IO-heavy node.\nTest 2 Ampere SKUs per AMD SKU (from the shortlist) and keep memory config constant (same capacity per channel).\nCompare: throughput/socket, p99 latency, perf/W, and perf/$ (including any software/license deltas).\nFail fast on compatibility: image build, agents, monitoring, kernel/driver support, and any proprietary binaries."
   },
   {
-    "objectID": "hdd_tco_summary.html",
-    "href": "hdd_tco_summary.html",
-    "title": "HDD comparison and 5-year TCO",
+    "objectID": "arista_switch_health_report.html",
+    "href": "arista_switch_health_report.html",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
     "section": "",
-    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
+    "text": "This page summarizes findings from the health report file healthreport_Arista.txt."
   },
   {
-    "objectID": "hdd_tco_summary.html#context",
-    "href": "hdd_tco_summary.html#context",
-    "title": "HDD comparison and 5-year TCO",
+    "objectID": "arista_switch_health_report.html#snapshot",
+    "href": "arista_switch_health_report.html#snapshot",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Snapshot",
+    "text": "Snapshot\n\nReport timestamp: Sat Jan 31 09:41:47 UTC 2026\nModel: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)\nEOS: 4.26.6M\nUptime at capture: ~20 minutes"
+  },
+  {
+    "objectID": "arista_switch_health_report.html#overall-status",
+    "href": "arista_switch_health_report.html#overall-status",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Overall status",
+    "text": "Overall status\nCooling, temperatures, and flash look healthy. The report shows PSU2 offline, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy)."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#key-findings",
+    "href": "arista_switch_health_report.html#key-findings",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Key findings",
+    "text": "Key findings\n\n\n\n\n\n\n\n\nArea\nStatus\nNotes\n\n\n\n\nCooling\nPass\nFans OK and stable; ambient 25°C\n\n\nTemperature\nPass\nAll sensors below alert/critical thresholds\n\n\nPower supplies\nExpected (lab setup)\nPSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected\n\n\nModules/ASIC status\nScript false-fail\nshow module is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself\n\n\nInterfaces\nN/A (bench state)\nAll ports show notconnect / Not Present (no optics/cables); Ma1 also down\n\n\nFlash\nPass\n/mnt/flash 63% used; writable"
+  },
+  {
+    "objectID": "arista_switch_health_report.html#details",
+    "href": "arista_switch_health_report.html#details",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Details",
+    "text": "Details\n\nPower (expected in this test setup)\nshow environment power indicates:\n\nPSU 1: Ok, drawing input current and supplying ~125.5W\nPSU 2: Power Loss Offline, 0.0W (expected when not connected)\n\nThis is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.\n\n\n“Modules are not reporting Active” (likely not real)\nThe report section “MODULE & ASIC STATUS” runs show module, but the output returns:\n\n“Unavailable command (not supported on this hardware platform)”\n\nSo treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#recommended-next-checks",
+    "href": "arista_switch_health_report.html#recommended-next-checks",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Recommended next checks",
+    "text": "Recommended next checks\nTo restore redundancy, connect PSU2 to AC and confirm it transitions to Ok. If it still shows offline:\n\nReseat PSU2 and verify it’s the correct model for the chassis.\nSwap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).\nRe-run these commands and look for state changes:\n\nshow environment power\nshow logging | include PSU|Power|pwr|power-supply\nshow system environment cooling\nshow system environment temperature"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Research",
     "section": "",
-    "text": "Compare three enterprise nearline HDDs for a storage cluster.\nRequirement: 5 PB (5,000 TB decimal) raw capacity already includes replication/EC overhead.\nStorage servers: 24 bays/server, ₹8–9L capex per server.\nElectricity: ₹17/kWh, 24×7, 5 years.\nTCO includes: drive capex + server capex + electricity (drive idle + server base idle).\nElectricity model uses vendor datasheet idle watts for drives; server base idle is an explicit assumption."
+    "text": "Notes, writeups, and summaries for personal research projects."
   },
   {
-    "objectID": "hdd_tco_summary.html#dc-grade-assessment-short",
-    "href": "hdd_tco_summary.html#dc-grade-assessment-short",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "DC-grade assessment (short)",
-    "text": "DC-grade assessment (short)\n\nAll three are data-center/enterprise nearline SKUs on-paper: 24×7 duty class, 5-year warranty, MTBF/AFR class typical of DC drives.\nDifferences are mainly capacity per drive (18TB vs 24TB) and minor interface/power/feature details."
-  },
-  {
-    "objectID": "hdd_tco_summary.html#inputs-used",
-    "href": "hdd_tco_summary.html#inputs-used",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Inputs used",
-    "text": "Inputs used\n\nTime horizon: 5 years (hours = 43,800)\nServer base idle (excluding disks): 400W/server (assumption; see sensitivity)\nDrive idle watts (from datasheets):\n\nSeagate Exos X24 ST24000NM007H: 6.5W idle; https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): 5.9W idle; https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: 5.8W idle; https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
-  },
-  {
-    "objectID": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
-    "href": "hdd_tco_summary.html#drive-counts-and-server-counts-to-reach-5000-tb",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Drive counts and server counts to reach ≥5,000 TB",
-    "text": "Drive counts and server counts to reach ≥5,000 TB\n\nFormulae:\n\ndrives = ceil(5000 / TB_per_drive)\nservers = ceil(drives / 24)"
-  },
-  {
-    "objectID": "hdd_tco_summary.html#year-cost-model",
-    "href": "hdd_tco_summary.html#year-cost-model",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "5-year cost model",
-    "text": "5-year cost model\n\nElectricity:\n\nkWh = (Watts/1000) * hours\npower_cost = kWh * ₹17\n\n5-year TCO range (server capex ₹8–9L):\n\nTCO = drive_capex + server_capex + drive_power_cost + server_power_cost"
-  },
-  {
-    "objectID": "hdd_tco_summary.html#results-5-pb-raw",
-    "href": "hdd_tco_summary.html#results-5-pb-raw",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Results (5 PB raw)",
-    "text": "Results (5 PB raw)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nDrive\nTB/drive\nDrives\nServers (24-bay)\nDrive CAPEX\nServer CAPEX\n5y drive power\n5y server power (@400W)\n5y TCO\n₹/TB (drive-only)\n\n\n\n\nSeagate Exos X24 ST24000NM007H\n24\n209\n9\n97.19L\n72.00L–81.00L\n10.12L\n26.81L\n206.11L–215.11L\n1937.5\n\n\nWD Ultrastar DC HC590 24TB (SKU 0F59373)\n24\n209\n9\n96.56L\n72.00L–81.00L\n9.18L\n26.81L\n204.55L–213.55L\n1925.0\n\n\nSeagate Exos X20 ST18000NM000D\n18\n278\n12\n80.62L\n96.00L–108.00L\n12.01L\n35.74L\n224.37L–236.37L\n1611.11"
-  },
-  {
-    "objectID": "hdd_tco_summary.html#findings",
-    "href": "hdd_tco_summary.html#findings",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Findings",
-    "text": "Findings\n\nArchitecture dominates: with ₹8–9L per 24-bay server, the 18TB option requires 12 servers vs 9 servers for 24TB drives.\nThat extra server capex (and base power) outweighs the 18TB drive’s lower ₹/TB.\nBest 5-year value (your constraints): WD Ultrastar DC HC590 24TB.\nThe two 24TB options are close; HC590 wins slightly on your pricing and lower drive idle watts."
-  },
-  {
-    "objectID": "hdd_tco_summary.html#sensitivity-server-idle-power",
-    "href": "hdd_tco_summary.html#sensitivity-server-idle-power",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Sensitivity (server idle power)",
-    "text": "Sensitivity (server idle power)\n\nExtra electricity per +100W per server over 5 years: ₹74,460 (~0.74L).\nFor 9 servers: +100W/server adds ₹670,140 (~6.70L).\nFor 12 servers: +100W/server adds ₹893,520 (~8.94L).\nIf your servers idle significantly above 400W, the penalty for needing more servers increases, which further favors 24TB drives."
-  },
-  {
-    "objectID": "hdd_tco_summary.html#what-this-tco-excludes-important",
-    "href": "hdd_tco_summary.html#what-this-tco-excludes-important",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "What this TCO excludes (important)",
-    "text": "What this TCO excludes (important)\n\nCooling overhead (PUE), rack space cost, networking/HBA costs, spares inventory, and operational labor.\nIf you provide measured wall power per storage server (idle) with disks installed and any PUE target, the power part can be tightened."
-  },
-  {
-    "objectID": "hdd_tco_summary.html#datasheet-links",
-    "href": "hdd_tco_summary.html#datasheet-links",
-    "title": "HDD comparison and 5-year TCO",
-    "section": "Datasheet links",
-    "text": "Datasheet links\n\nSeagate Exos X24 ST24000NM007H: https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
+    "objectID": "index.html#documents",
+    "href": "index.html#documents",
+    "title": "Research",
+    "section": "Documents",
+    "text": "Documents\n\nHDD comparison and 5-year TCO\nAmpereOne M vs AMD EPYC 9554/9654\nArista switch health report (DCS-7060CX-32S-R)\nRust primer for C++/Java developers"
   },
   {
     "objectID": "kubernetes_primer.html",

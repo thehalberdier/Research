@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Research Notes">
+<meta name="dcterms.date" content="2026-02-21">
+
+<title>IPSec Primer: Secure IP Communications – Research</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-0b37c64f34216b628666a8dac638b53b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Research</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./rust_primer.html"> 
+<span class="menu-text">Rust Primer</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./kubernetes_primer.html"> 
+<span class="menu-text">Kubernetes Primer</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./ipsec_primer.html" aria-current="page"> 
+<span class="menu-text">IPSec Primer</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./hdd_tco_summary.html"> 
+<span class="menu-text">HDD TCO</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./ampereone_m_vs_amd_epyc.html"> 
+<span class="menu-text">Ampere vs AMD</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./arista_switch_health_report.html"> 
+<span class="menu-text">Arista Health</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-is-ipsec-and-why-does-it-exist" id="toc-what-is-ipsec-and-why-does-it-exist" class="nav-link active" data-scroll-target="#what-is-ipsec-and-why-does-it-exist">1. What is IPSec and Why Does It Exist?</a></li>
+  <li><a href="#the-big-picture-ipsec-architecture" id="toc-the-big-picture-ipsec-architecture" class="nav-link" data-scroll-target="#the-big-picture-ipsec-architecture">2. The Big Picture: IPSec Architecture</a></li>
+  <li><a href="#ipsec-protocols-ah-vs-esp" id="toc-ipsec-protocols-ah-vs-esp" class="nav-link" data-scroll-target="#ipsec-protocols-ah-vs-esp">3. IPSec Protocols: AH vs ESP</a>
+  <ul class="collapse">
+  <li><a href="#authentication-header-ah" id="toc-authentication-header-ah" class="nav-link" data-scroll-target="#authentication-header-ah">Authentication Header (AH)</a></li>
+  <li><a href="#encapsulating-security-payload-esp" id="toc-encapsulating-security-payload-esp" class="nav-link" data-scroll-target="#encapsulating-security-payload-esp">Encapsulating Security Payload (ESP)</a></li>
+  </ul></li>
+  <li><a href="#ipsec-modes-transport-vs-tunnel" id="toc-ipsec-modes-transport-vs-tunnel" class="nav-link" data-scroll-target="#ipsec-modes-transport-vs-tunnel">4. IPSec Modes: Transport vs Tunnel</a>
+  <ul class="collapse">
+  <li><a href="#transport-mode" id="toc-transport-mode" class="nav-link" data-scroll-target="#transport-mode">Transport Mode</a></li>
+  <li><a href="#tunnel-mode" id="toc-tunnel-mode" class="nav-link" data-scroll-target="#tunnel-mode">Tunnel Mode</a></li>
+  </ul></li>
+  <li><a href="#ike-the-negotiation-protocol" id="toc-ike-the-negotiation-protocol" class="nav-link" data-scroll-target="#ike-the-negotiation-protocol">5. IKE: The Negotiation Protocol</a>
+  <ul class="collapse">
+  <li><a href="#ikev1-legacy" id="toc-ikev1-legacy" class="nav-link" data-scroll-target="#ikev1-legacy">IKEv1 (Legacy)</a></li>
+  <li><a href="#ikev2-modern-preferred" id="toc-ikev2-modern-preferred" class="nav-link" data-scroll-target="#ikev2-modern-preferred">IKEv2 (Modern, Preferred)</a></li>
+  <li><a href="#ike-exchange-simplified" id="toc-ike-exchange-simplified" class="nav-link" data-scroll-target="#ike-exchange-simplified">IKE Exchange (Simplified)</a></li>
+  </ul></li>
+  <li><a href="#security-associations-sas" id="toc-security-associations-sas" class="nav-link" data-scroll-target="#security-associations-sas">6. Security Associations (SAs)</a>
+  <ul class="collapse">
+  <li><a href="#key-points" id="toc-key-points" class="nav-link" data-scroll-target="#key-points">Key Points</a></li>
+  <li><a href="#sa-database-sad" id="toc-sa-database-sad" class="nav-link" data-scroll-target="#sa-database-sad">SA Database (SAD)</a></li>
+  </ul></li>
+  <li><a href="#security-policy-database-spd" id="toc-security-policy-database-spd" class="nav-link" data-scroll-target="#security-policy-database-spd">7. Security Policy Database (SPD)</a></li>
+  <li><a href="#encryption-authentication-algorithms" id="toc-encryption-authentication-algorithms" class="nav-link" data-scroll-target="#encryption-authentication-algorithms">8. Encryption &amp; Authentication Algorithms</a>
+  <ul class="collapse">
+  <li><a href="#encryption-algorithms" id="toc-encryption-algorithms" class="nav-link" data-scroll-target="#encryption-algorithms">Encryption Algorithms</a></li>
+  <li><a href="#hashintegrity-algorithms" id="toc-hashintegrity-algorithms" class="nav-link" data-scroll-target="#hashintegrity-algorithms">Hash/Integrity Algorithms</a></li>
+  <li><a href="#diffie-hellman-groups" id="toc-diffie-hellman-groups" class="nav-link" data-scroll-target="#diffie-hellman-groups">Diffie-Hellman Groups</a></li>
+  </ul></li>
+  <li><a href="#authentication-methods" id="toc-authentication-methods" class="nav-link" data-scroll-target="#authentication-methods">9. Authentication Methods</a>
+  <ul class="collapse">
+  <li><a href="#pre-shared-key-psk" id="toc-pre-shared-key-psk" class="nav-link" data-scroll-target="#pre-shared-key-psk">Pre-Shared Key (PSK)</a></li>
+  <li><a href="#certificates-rsaecdsa" id="toc-certificates-rsaecdsa" class="nav-link" data-scroll-target="#certificates-rsaecdsa">Certificates (RSA/ECDSA)</a></li>
+  </ul></li>
+  <li><a href="#nat-traversal-nat-t" id="toc-nat-traversal-nat-t" class="nav-link" data-scroll-target="#nat-traversal-nat-t">10. NAT Traversal (NAT-T)</a></li>
+  <li><a href="#practical-example-site-to-site-vpn" id="toc-practical-example-site-to-site-vpn" class="nav-link" data-scroll-target="#practical-example-site-to-site-vpn">11. Practical Example: Site-to-Site VPN</a>
+  <ul class="collapse">
+  <li><a href="#scenario" id="toc-scenario" class="nav-link" data-scroll-target="#scenario">Scenario</a></li>
+  <li><a href="#configuration-strongswan-on-linux" id="toc-configuration-strongswan-on-linux" class="nav-link" data-scroll-target="#configuration-strongswan-on-linux">Configuration (strongSwan on Linux)</a></li>
+  <li><a href="#explanation" id="toc-explanation" class="nav-link" data-scroll-target="#explanation">Explanation</a></li>
+  <li><a href="#testing" id="toc-testing" class="nav-link" data-scroll-target="#testing">Testing</a></li>
+  </ul></li>
+  <li><a href="#practical-example-road-warrior-vpn" id="toc-practical-example-road-warrior-vpn" class="nav-link" data-scroll-target="#practical-example-road-warrior-vpn">12. Practical Example: Road Warrior VPN</a>
+  <ul class="collapse">
+  <li><a href="#scenario-1" id="toc-scenario-1" class="nav-link" data-scroll-target="#scenario-1">Scenario</a></li>
+  <li><a href="#server-configuration-strongswan" id="toc-server-configuration-strongswan" class="nav-link" data-scroll-target="#server-configuration-strongswan">Server Configuration (strongSwan)</a></li>
+  <li><a href="#client-configuration" id="toc-client-configuration" class="nav-link" data-scroll-target="#client-configuration">Client Configuration</a></li>
+  <li><a href="#mobile-clients" id="toc-mobile-clients" class="nav-link" data-scroll-target="#mobile-clients">Mobile Clients</a></li>
+  </ul></li>
+  <li><a href="#perfect-forward-secrecy-pfs" id="toc-perfect-forward-secrecy-pfs" class="nav-link" data-scroll-target="#perfect-forward-secrecy-pfs">13. Perfect Forward Secrecy (PFS)</a></li>
+  <li><a href="#dead-peer-detection-dpd" id="toc-dead-peer-detection-dpd" class="nav-link" data-scroll-target="#dead-peer-detection-dpd">14. Dead Peer Detection (DPD)</a></li>
+  <li><a href="#troubleshooting-ipsec" id="toc-troubleshooting-ipsec" class="nav-link" data-scroll-target="#troubleshooting-ipsec">15. Troubleshooting IPSec</a>
+  <ul class="collapse">
+  <li><a href="#common-issues" id="toc-common-issues" class="nav-link" data-scroll-target="#common-issues">Common Issues</a></li>
+  <li><a href="#debug-commands" id="toc-debug-commands" class="nav-link" data-scroll-target="#debug-commands">Debug Commands</a></li>
+  <li><a href="#wireshark" id="toc-wireshark" class="nav-link" data-scroll-target="#wireshark">Wireshark</a></li>
+  </ul></li>
+  <li><a href="#performance-considerations" id="toc-performance-considerations" class="nav-link" data-scroll-target="#performance-considerations">16. Performance Considerations</a>
+  <ul class="collapse">
+  <li><a href="#hardware-acceleration" id="toc-hardware-acceleration" class="nav-link" data-scroll-target="#hardware-acceleration">Hardware Acceleration</a></li>
+  <li><a href="#algorithm-choice" id="toc-algorithm-choice" class="nav-link" data-scroll-target="#algorithm-choice">Algorithm Choice</a></li>
+  <li><a href="#jumbo-frames" id="toc-jumbo-frames" class="nav-link" data-scroll-target="#jumbo-frames">Jumbo Frames</a></li>
+  </ul></li>
+  <li><a href="#security-best-practices" id="toc-security-best-practices" class="nav-link" data-scroll-target="#security-best-practices">17. Security Best Practices</a>
+  <ul class="collapse">
+  <li><a href="#do-this" id="toc-do-this" class="nav-link" data-scroll-target="#do-this">✅ Do This</a></li>
+  <li><a href="#dont-do-this" id="toc-dont-do-this" class="nav-link" data-scroll-target="#dont-do-this">❌ Don’t Do This</a></li>
+  </ul></li>
+  <li><a href="#ipsec-vs-other-vpn-technologies" id="toc-ipsec-vs-other-vpn-technologies" class="nav-link" data-scroll-target="#ipsec-vs-other-vpn-technologies">18. IPSec vs Other VPN Technologies</a>
+  <ul class="collapse">
+  <li><a href="#ipsec-vs-openvpn" id="toc-ipsec-vs-openvpn" class="nav-link" data-scroll-target="#ipsec-vs-openvpn">IPSec vs OpenVPN</a></li>
+  <li><a href="#ipsec-vs-wireguard" id="toc-ipsec-vs-wireguard" class="nav-link" data-scroll-target="#ipsec-vs-wireguard">IPSec vs WireGuard</a></li>
+  </ul></li>
+  <li><a href="#common-use-cases" id="toc-common-use-cases" class="nav-link" data-scroll-target="#common-use-cases">19. Common Use Cases</a>
+  <ul class="collapse">
+  <li><a href="#site-to-site-vpn" id="toc-site-to-site-vpn" class="nav-link" data-scroll-target="#site-to-site-vpn">1. Site-to-Site VPN</a></li>
+  <li><a href="#road-warrior-vpn" id="toc-road-warrior-vpn" class="nav-link" data-scroll-target="#road-warrior-vpn">2. Road Warrior VPN</a></li>
+  <li><a href="#host-to-host" id="toc-host-to-host" class="nav-link" data-scroll-target="#host-to-host">3. Host-to-Host</a></li>
+  <li><a href="#cloud-vpn" id="toc-cloud-vpn" class="nav-link" data-scroll-target="#cloud-vpn">4. Cloud VPN</a></li>
+  </ul></li>
+  <li><a href="#configuration-examples-by-platform" id="toc-configuration-examples-by-platform" class="nav-link" data-scroll-target="#configuration-examples-by-platform">20. Configuration Examples by Platform</a>
+  <ul class="collapse">
+  <li><a href="#linux-strongswan" id="toc-linux-strongswan" class="nav-link" data-scroll-target="#linux-strongswan">Linux (strongSwan)</a></li>
+  <li><a href="#freebsd-strongswan-or-racoon" id="toc-freebsd-strongswan-or-racoon" class="nav-link" data-scroll-target="#freebsd-strongswan-or-racoon">FreeBSD (strongSwan or racoon)</a></li>
+  <li><a href="#cisco-ios" id="toc-cisco-ios" class="nav-link" data-scroll-target="#cisco-ios">Cisco IOS</a></li>
+  <li><a href="#windows-built-in" id="toc-windows-built-in" class="nav-link" data-scroll-target="#windows-built-in">Windows (Built-in)</a></li>
+  </ul></li>
+  <li><a href="#advanced-topics-brief-overview" id="toc-advanced-topics-brief-overview" class="nav-link" data-scroll-target="#advanced-topics-brief-overview">21. Advanced Topics (Brief Overview)</a>
+  <ul class="collapse">
+  <li><a href="#ikev2-redirect" id="toc-ikev2-redirect" class="nav-link" data-scroll-target="#ikev2-redirect">IKEv2 Redirect</a></li>
+  <li><a href="#multiple-sas-child-sas" id="toc-multiple-sas-child-sas" class="nav-link" data-scroll-target="#multiple-sas-child-sas">Multiple SAs (Child SAs)</a></li>
+  <li><a href="#traffic-selectors" id="toc-traffic-selectors" class="nav-link" data-scroll-target="#traffic-selectors">Traffic Selectors</a></li>
+  <li><a href="#xfrm-linux" id="toc-xfrm-linux" class="nav-link" data-scroll-target="#xfrm-linux">XFRM (Linux)</a></li>
+  <li><a href="#vti-virtual-tunnel-interface" id="toc-vti-virtual-tunnel-interface" class="nav-link" data-scroll-target="#vti-virtual-tunnel-interface">VTI (Virtual Tunnel Interface)</a></li>
+  </ul></li>
+  <li><a href="#debugging-deep-dive" id="toc-debugging-deep-dive" class="nav-link" data-scroll-target="#debugging-deep-dive">22. Debugging Deep Dive</a>
+  <ul class="collapse">
+  <li><a href="#packet-flow" id="toc-packet-flow" class="nav-link" data-scroll-target="#packet-flow">Packet Flow</a></li>
+  <li><a href="#common-error-messages" id="toc-common-error-messages" class="nav-link" data-scroll-target="#common-error-messages">Common Error Messages</a></li>
+  <li><a href="#log-analysis" id="toc-log-analysis" class="nav-link" data-scroll-target="#log-analysis">Log Analysis</a></li>
+  </ul></li>
+  <li><a href="#quick-reference" id="toc-quick-reference" class="nav-link" data-scroll-target="#quick-reference">23. Quick Reference</a>
+  <ul class="collapse">
+  <li><a href="#ports-and-protocols" id="toc-ports-and-protocols" class="nav-link" data-scroll-target="#ports-and-protocols">Ports and Protocols</a></li>
+  <li><a href="#recommended-configuration-2026" id="toc-recommended-configuration-2026" class="nav-link" data-scroll-target="#recommended-configuration-2026">Recommended Configuration (2026)</a></li>
+  <li><a href="#command-cheat-sheet" id="toc-command-cheat-sheet" class="nav-link" data-scroll-target="#command-cheat-sheet">Command Cheat Sheet</a></li>
+  </ul></li>
+  <li><a href="#key-takeaways" id="toc-key-takeaways" class="nav-link" data-scroll-target="#key-takeaways">24. Key Takeaways</a></li>
+  <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps">25. Next Steps</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">IPSec Primer: Secure IP Communications</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Research Notes </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 21, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<blockquote class="blockquote">
+<p><strong>Goal</strong>: Get you to ~80% of IPSec, fast. Assumes you understand TCP/IP, basic networking, and encryption concepts. Skips: Quantum-resistant algorithms, custom IKE implementations, deep cryptographic theory, mobile IPSec (MOBIKE).</p>
+</blockquote>
+<hr>
+<section id="what-is-ipsec-and-why-does-it-exist" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-ipsec-and-why-does-it-exist">1. What is IPSec and Why Does It Exist?</h2>
+<p><strong>The Problem</strong>: Standard IP packets travel in plaintext. Anyone along the path can: - Read your data (no confidentiality) - Modify packets (no integrity) - Impersonate endpoints (no authentication) - Replay old packets (no replay protection)</p>
+<p><strong>The Solution</strong>: IPSec is a suite of protocols that secures IP communications at the network layer (Layer 3).</p>
+<p><strong>Analogy</strong>: If TLS/SSL is like sending a letter in a locked box (application layer), IPSec is like encrypting everything that goes on the road (network layer). It’s transparent to applications.</p>
+<p><strong>Key Benefits</strong>: - <strong>Confidentiality</strong>: Encryption (AES, ChaCha20) - <strong>Integrity</strong>: Hashing (SHA-256, SHA-512) - <strong>Authentication</strong>: Prove who you are (certificates, PSK) - <strong>Anti-replay</strong>: Sequence numbers prevent replay attacks</p>
+<hr>
+</section>
+<section id="the-big-picture-ipsec-architecture" class="level2">
+<h2 class="anchored" data-anchor-id="the-big-picture-ipsec-architecture">2. The Big Picture: IPSec Architecture</h2>
+<pre><code>┌─────────────────────────────────────────┐
+│         IPSec Architecture              │
+│                                         │
+│  ┌──────────────────────────────────┐  │
+│  │  IKE (Control Plane)             │  │
+│  │  - Negotiates parameters         │  │
+│  │  - Establishes Security Assoc.   │  │
+│  │  - Key exchange                  │  │
+│  └──────────────────────────────────┘  │
+│              ↓ creates                  │
+│  ┌──────────────────────────────────┐  │
+│  │  IPSec Protocols (Data Plane)    │  │
+│  │  - AH: Authentication Header     │  │
+│  │  - ESP: Encapsulating Security   │  │
+│  │         Payload                  │  │
+│  └──────────────────────────────────┘  │
+└─────────────────────────────────────────┘</code></pre>
+<p><strong>Two Main Components</strong>:</p>
+<ol type="1">
+<li><strong>IKE (Internet Key Exchange)</strong>: The negotiator
+<ul>
+<li>Sets up the secure tunnel</li>
+<li>Exchanges keys</li>
+<li>Agrees on algorithms</li>
+</ul></li>
+<li><strong>IPSec Protocols</strong>: The workers
+<ul>
+<li><strong>AH</strong>: Authenticates but doesn’t encrypt</li>
+<li><strong>ESP</strong>: Encrypts AND authenticates (most common)</li>
+</ul></li>
+</ol>
+<p><strong>Mental Model</strong>: IKE is the handshake before a phone call. AH/ESP is the secure phone call itself.</p>
+<hr>
+</section>
+<section id="ipsec-protocols-ah-vs-esp" class="level2">
+<h2 class="anchored" data-anchor-id="ipsec-protocols-ah-vs-esp">3. IPSec Protocols: AH vs ESP</h2>
+<section id="authentication-header-ah" class="level3">
+<h3 class="anchored" data-anchor-id="authentication-header-ah">Authentication Header (AH)</h3>
+<p><strong>What it does</strong>: Provides authentication and integrity, but NOT encryption.</p>
+<p><strong>Use case</strong>: When you need to verify the sender and ensure data wasn’t tampered with, but encryption is not required (or handled elsewhere).</p>
+<p><strong>Packet Structure</strong>:</p>
+<pre><code>[ IP Header | AH Header | Original Payload ]
+             ↑
+             Authenticates everything</code></pre>
+<p><strong>Rarely used today</strong> because ESP can do everything AH does plus encryption.</p>
+</section>
+<section id="encapsulating-security-payload-esp" class="level3">
+<h3 class="anchored" data-anchor-id="encapsulating-security-payload-esp">Encapsulating Security Payload (ESP)</h3>
+<p><strong>What it does</strong>: Provides encryption, authentication, and integrity.</p>
+<p><strong>This is what you’ll use 99% of the time.</strong></p>
+<p><strong>Packet Structure</strong>:</p>
+<pre><code>[ IP Header | ESP Header | Encrypted Payload | ESP Trailer | ESP Auth ]
+             ↑                                              ↑
+             |-------- Encrypted ---------|                |
+             |------------- Authenticated -----------------|</code></pre>
+<p><strong>ESP protects</strong>: - Payload (encrypted) - ESP header + payload + trailer (authenticated)</p>
+<p><strong>ESP does NOT protect</strong>: - Original IP header (that would break routing)</p>
+<hr>
+</section>
+</section>
+<section id="ipsec-modes-transport-vs-tunnel" class="level2">
+<h2 class="anchored" data-anchor-id="ipsec-modes-transport-vs-tunnel">4. IPSec Modes: Transport vs Tunnel</h2>
+<section id="transport-mode" class="level3">
+<h3 class="anchored" data-anchor-id="transport-mode">Transport Mode</h3>
+<p><strong>What it does</strong>: Protects only the payload, keeps original IP headers.</p>
+<pre><code>Before:
+[ IP Header | TCP/UDP | Data ]
+
+After (ESP Transport):
+[ IP Header | ESP Header | TCP/UDP | Data | ESP Trailer | ESP Auth ]
+  ↑ Original                    ↑ Encrypted</code></pre>
+<p><strong>Use case</strong>: Host-to-host communication (e.g., server to server in same network).</p>
+<p><strong>Analogy</strong>: Like putting a lock on a package but keeping the shipping label visible.</p>
+</section>
+<section id="tunnel-mode" class="level3">
+<h3 class="anchored" data-anchor-id="tunnel-mode">Tunnel Mode</h3>
+<p><strong>What it does</strong>: Encrypts the ENTIRE original packet, adds new IP header.</p>
+<pre><code>Before:
+[ IP Header | TCP/UDP | Data ]
+
+After (ESP Tunnel):
+[ New IP Header | ESP Header | Original IP Header | TCP/UDP | Data | ESP Trailer | ESP Auth ]
+                               ↑ Encrypted</code></pre>
+<p><strong>Use case</strong>: Site-to-site VPNs, gateway-to-gateway.</p>
+<p><strong>Analogy</strong>: Like putting the entire package (including original label) inside a new box with a new shipping label.</p>
+<p><strong>Most common mode</strong> for VPNs.</p>
+<hr>
+</section>
+</section>
+<section id="ike-the-negotiation-protocol" class="level2">
+<h2 class="anchored" data-anchor-id="ike-the-negotiation-protocol">5. IKE: The Negotiation Protocol</h2>
+<p>IKE sets up IPSec tunnels. There are two versions:</p>
+<section id="ikev1-legacy" class="level3">
+<h3 class="anchored" data-anchor-id="ikev1-legacy">IKEv1 (Legacy)</h3>
+<p>Two phases: - <strong>Phase 1</strong>: Establish secure channel (ISAKMP SA) - Main Mode (6 messages, more secure) - Aggressive Mode (3 messages, faster but less secure) - <strong>Phase 2</strong>: Negotiate IPSec parameters (IPSec SA) - Quick Mode</p>
+</section>
+<section id="ikev2-modern-preferred" class="level3">
+<h3 class="anchored" data-anchor-id="ikev2-modern-preferred">IKEv2 (Modern, Preferred)</h3>
+<p><strong>Simpler</strong>: 4 messages to establish both IKE SA and IPSec SA.</p>
+<p><strong>IKEv2 Advantages</strong>: - Faster (fewer round trips) - Built-in NAT traversal (NAT-T) - Mobility support (MOBIKE) - Better error handling - Mandatory certificate support</p>
+<p><strong>Always use IKEv2 if possible.</strong></p>
+</section>
+<section id="ike-exchange-simplified" class="level3">
+<h3 class="anchored" data-anchor-id="ike-exchange-simplified">IKE Exchange (Simplified)</h3>
+<pre><code>Initiator                           Responder
+    |                                   |
+    |--- IKE_SA_INIT (proposals) ------&gt;|
+    |&lt;-- IKE_SA_INIT (chosen params) ---|
+    |                                   |
+    |--- IKE_AUTH (authenticate) ------&gt;|
+    |&lt;-- IKE_AUTH (authenticate) -------|
+    |                                   |
+    | IPSec tunnel established!         |
+    |&lt;======= Encrypted traffic =======&gt;|</code></pre>
+<p><strong>What’s negotiated</strong>: - Encryption algorithm (AES-256, AES-128, etc.) - Hash algorithm (SHA-256, SHA-512, etc.) - Diffie-Hellman group (key exchange strength) - Authentication method (PSK, certificates) - Lifetime (when to rekey)</p>
+<hr>
+</section>
+</section>
+<section id="security-associations-sas" class="level2">
+<h2 class="anchored" data-anchor-id="security-associations-sas">6. Security Associations (SAs)</h2>
+<p>A <strong>Security Association</strong> is a one-way agreement on security parameters.</p>
+<p><strong>Think of it as</strong>: A contract that says “when sending packets, use AES-256 + SHA-256 with this key.”</p>
+<section id="key-points" class="level3">
+<h3 class="anchored" data-anchor-id="key-points">Key Points</h3>
+<ol type="1">
+<li><strong>Unidirectional</strong>: Each direction needs its own SA
+<ul>
+<li>A → B: One SA</li>
+<li>B → A: Different SA</li>
+</ul></li>
+<li><strong>Identified by SPI (Security Parameter Index)</strong>
+<ul>
+<li>32-bit number in ESP/AH header</li>
+<li>Receiver uses SPI to look up which SA to use</li>
+</ul></li>
+<li><strong>Two types</strong>:
+<ul>
+<li><strong>IKE SA</strong>: For IKE negotiation (Phase 1)</li>
+<li><strong>IPSec SA</strong>: For actual data (Phase 2)</li>
+</ul></li>
+</ol>
+</section>
+<section id="sa-database-sad" class="level3">
+<h3 class="anchored" data-anchor-id="sa-database-sad">SA Database (SAD)</h3>
+<p>Each endpoint maintains a database of active SAs:</p>
+<pre><code>SPI: 0x12345678
+Protocol: ESP
+Mode: Tunnel
+Encryption: AES-256-GCM
+Integrity: Built-in (GCM)
+Keys: [encryption key, integrity key]
+Source: 10.1.1.1
+Destination: 10.2.2.2
+Lifetime: 3600 seconds</code></pre>
+<hr>
+</section>
+</section>
+<section id="security-policy-database-spd" class="level2">
+<h2 class="anchored" data-anchor-id="security-policy-database-spd">7. Security Policy Database (SPD)</h2>
+<p><strong>SPD</strong> defines WHEN to use IPSec.</p>
+<p><strong>Rules</strong> look like: - Traffic from 10.1.0.0/24 to 10.2.0.0/24 → Use IPSec (tunnel to 203.0.113.1) - Traffic to 8.8.8.8 → Bypass IPSec (allow plaintext) - All other traffic → Drop</p>
+<p><strong>Analogy</strong>: SPD is the firewall rules. SAD is the active connections.</p>
+<pre><code>Example SPD Entry:
+Source: 192.168.1.0/24
+Destination: 192.168.2.0/24
+Protocol: Any
+Action: Protect with IPSec (ESP, Tunnel mode)
+Tunnel endpoint: 203.0.113.10</code></pre>
+<hr>
+</section>
+<section id="encryption-authentication-algorithms" class="level2">
+<h2 class="anchored" data-anchor-id="encryption-authentication-algorithms">8. Encryption &amp; Authentication Algorithms</h2>
+<section id="encryption-algorithms" class="level3">
+<h3 class="anchored" data-anchor-id="encryption-algorithms">Encryption Algorithms</h3>
+<p><strong>Modern (use these)</strong>: - <strong>AES-GCM-256</strong>: Combined encryption + authentication (AEAD) - <strong>AES-GCM-128</strong>: Faster, still secure - <strong>ChaCha20-Poly1305</strong>: Great for mobile/ARM devices</p>
+<p><strong>Legacy (avoid)</strong>: - 3DES: Slow, weak - AES-CBC: Needs separate integrity algorithm</p>
+<p><strong>Recommendation</strong>: AES-GCM (128 or 256 bit). It’s fast, secure, and widely supported.</p>
+</section>
+<section id="hashintegrity-algorithms" class="level3">
+<h3 class="anchored" data-anchor-id="hashintegrity-algorithms">Hash/Integrity Algorithms</h3>
+<p><strong>Modern</strong>: - <strong>SHA-256</strong> - <strong>SHA-512</strong> - <strong>HMAC-SHA-256</strong></p>
+<p><strong>Legacy (avoid)</strong>: - MD5: Broken - SHA-1: Deprecated</p>
+<p><strong>Note</strong>: With AEAD ciphers like AES-GCM, integrity is built-in.</p>
+</section>
+<section id="diffie-hellman-groups" class="level3">
+<h3 class="anchored" data-anchor-id="diffie-hellman-groups">Diffie-Hellman Groups</h3>
+<p>Used for key exchange. Higher number = stronger but slower.</p>
+<p><strong>Modern</strong>: - <strong>Group 14</strong> (2048-bit): Minimum for new deployments - <strong>Group 19</strong> (256-bit ECC): Fast and secure - <strong>Group 20</strong> (384-bit ECC): Even stronger</p>
+<p><strong>Legacy (avoid)</strong>: - Group 1, 2, 5: Too weak</p>
+<hr>
+</section>
+</section>
+<section id="authentication-methods" class="level2">
+<h2 class="anchored" data-anchor-id="authentication-methods">9. Authentication Methods</h2>
+<section id="pre-shared-key-psk" class="level3">
+<h3 class="anchored" data-anchor-id="pre-shared-key-psk">Pre-Shared Key (PSK)</h3>
+<p><strong>What</strong>: Both sides have the same secret password.</p>
+<pre><code>ipsec.conf (Linux strongSwan):
+conn mytunnel
+    authby=secret
+    left=10.1.1.1
+    right=10.2.2.2
+
+ipsec.secrets:
+10.1.1.1 10.2.2.2 : PSK "mysupersecretkey123"</code></pre>
+<p><strong>Pros</strong>: Simple to set up <strong>Cons</strong>: - Doesn’t scale (need different PSK for each peer) - PSK must be shared securely - No identity verification beyond “knows the password”</p>
+<p><strong>Use for</strong>: Small deployments, testing</p>
+</section>
+<section id="certificates-rsaecdsa" class="level3">
+<h3 class="anchored" data-anchor-id="certificates-rsaecdsa">Certificates (RSA/ECDSA)</h3>
+<p><strong>What</strong>: Each side has a certificate signed by a trusted CA.</p>
+<p><strong>Pros</strong>: - Scales well (distribute CA cert, not individual secrets) - Strong identity verification - Can revoke compromised certs (CRL/OCSP)</p>
+<p><strong>Cons</strong>: More complex setup (PKI infrastructure)</p>
+<p><strong>Use for</strong>: Production, large deployments</p>
+<p><strong>Certificate-based flow</strong>: 1. Each peer has a private key + certificate 2. Certificates signed by same CA (or trusted CAs) 3. During IKE, peers exchange certificates 4. Each verifies the other’s certificate against CA 5. If valid, authenticate using private key</p>
+<hr>
+</section>
+</section>
+<section id="nat-traversal-nat-t" class="level2">
+<h2 class="anchored" data-anchor-id="nat-traversal-nat-t">10. NAT Traversal (NAT-T)</h2>
+<p><strong>Problem</strong>: IPSec uses protocol 50 (ESP) and 51 (AH), not TCP/UDP. NAT routers don’t know how to handle them.</p>
+<p><strong>Solution</strong>: NAT-T encapsulates ESP in UDP (port 4500).</p>
+<pre><code>Without NAT-T:
+[ IP | ESP | Payload ]  ← NAT breaks this
+
+With NAT-T:
+[ IP | UDP (4500) | ESP | Payload ]  ← NAT can handle UDP</code></pre>
+<p><strong>IKEv2 has NAT-T built-in</strong>. IKEv1 needs explicit configuration.</p>
+<p><strong>Auto-detection</strong>: IKE detects NAT and automatically enables NAT-T.</p>
+<hr>
+</section>
+<section id="practical-example-site-to-site-vpn" class="level2">
+<h2 class="anchored" data-anchor-id="practical-example-site-to-site-vpn">11. Practical Example: Site-to-Site VPN</h2>
+<section id="scenario" class="level3">
+<h3 class="anchored" data-anchor-id="scenario">Scenario</h3>
+<pre><code>Site A                 Internet               Site B
+10.1.0.0/24  ←→  [GW-A] ←--IPSec--→ [GW-B] ←→  10.2.0.0/24
+                203.0.113.1      203.0.113.2</code></pre>
+<p><strong>Goal</strong>: Hosts in Site A can talk to hosts in Site B securely.</p>
+</section>
+<section id="configuration-strongswan-on-linux" class="level3">
+<h3 class="anchored" data-anchor-id="configuration-strongswan-on-linux">Configuration (strongSwan on Linux)</h3>
+<p><strong>Gateway A</strong> (<code>/etc/ipsec.conf</code>):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">config</span> <span class="dt">setup</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">charondebug</span><span class="op">=</span><span class="st">"ike 2, knl 2, cfg 2"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">conn</span> <span class="dt">site-to-site</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Connection basics</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auto</span><span class="op">=</span><span class="dt">start</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">type</span><span class="op">=</span><span class="dt">tunnel</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">keyexchange</span><span class="op">=</span><span class="dt">ikev2</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Authentication</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">authby</span><span class="op">=</span><span class="dt">secret</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Local (Site A)</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">left</span><span class="op">=</span><span class="fl">203.0</span><span class="dt">.113.1</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">leftsubnet</span><span class="op">=</span><span class="fl">10.1</span><span class="dt">.0.0</span><span class="er">/</span><span class="dt">24</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">leftid</span><span class="op">=</span><span class="er">@</span><span class="dt">site-a</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Remote (Site B)</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="dt">right</span><span class="op">=</span><span class="fl">203.0</span><span class="dt">.113.2</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">rightsubnet</span><span class="op">=</span><span class="fl">10.2</span><span class="dt">.0.0</span><span class="er">/</span><span class="dt">24</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">rightid</span><span class="op">=</span><span class="er">@</span><span class="dt">site-b</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># IKE (Phase 1) proposal</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ike</span><span class="op">=</span><span class="dt">aes256-sha256-modp2048</span><span class="er">!</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ESP (Phase 2) proposal</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="dt">esp</span><span class="op">=</span><span class="dt">aes256gcm16-modp2048</span><span class="er">!</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Lifetimes</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ikelifetime</span><span class="op">=</span><span class="dv">28800</span><span class="dt">s</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    <span class="dt">lifetime</span><span class="op">=</span><span class="dv">3600</span><span class="dt">s</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Dead Peer Detection</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dpdaction</span><span class="op">=</span><span class="dt">restart</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dpddelay</span><span class="op">=</span><span class="dv">30</span><span class="dt">s</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Gateway A</strong> (<code>/etc/ipsec.secrets</code>):</p>
+<pre><code>@site-a @site-b : PSK "MySharedSecretKey12345"</code></pre>
+<p><strong>Gateway B</strong>: Mirror configuration (swap left/right).</p>
+</section>
+<section id="explanation" class="level3">
+<h3 class="anchored" data-anchor-id="explanation">Explanation</h3>
+<ul>
+<li><strong>keyexchange=ikev2</strong>: Use IKEv2 (modern)</li>
+<li><strong>type=tunnel</strong>: Tunnel mode (encrypt entire packet)</li>
+<li><strong>leftsubnet/rightsubnet</strong>: Which networks to protect</li>
+<li><strong>ike=</strong>: Phase 1 algorithms (AES-256, SHA-256, DH group 14)</li>
+<li><strong>esp=</strong>: Phase 2 algorithms (AES-256-GCM)</li>
+<li><strong>!</strong>: Enforces this proposal (no fallback to weaker)</li>
+<li><strong>dpdaction</strong>: Detect and restart dead tunnels</li>
+</ul>
+</section>
+<section id="testing" class="level3">
+<h3 class="anchored" data-anchor-id="testing">Testing</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Start IPSec</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> start</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check status</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> status</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># From Site A, ping Site B host</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ping</span> 10.2.0.1</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Check SAs</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm state</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm policy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="practical-example-road-warrior-vpn" class="level2">
+<h2 class="anchored" data-anchor-id="practical-example-road-warrior-vpn">12. Practical Example: Road Warrior VPN</h2>
+<section id="scenario-1" class="level3">
+<h3 class="anchored" data-anchor-id="scenario-1">Scenario</h3>
+<p>Remote user (laptop, phone) connects to corporate network.</p>
+<pre><code>Road Warrior              Corporate Network
+(Dynamic IP)  ←--IPSec--→  VPN Gateway  ←→  10.0.0.0/8
+                           203.0.113.10</code></pre>
+</section>
+<section id="server-configuration-strongswan" class="level3">
+<h3 class="anchored" data-anchor-id="server-configuration-strongswan">Server Configuration (strongSwan)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">conn</span> <span class="dt">roadwarrior</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auto</span><span class="op">=</span><span class="dt">add</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">type</span><span class="op">=</span><span class="dt">tunnel</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">keyexchange</span><span class="op">=</span><span class="dt">ikev2</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Server side</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">left</span><span class="op">=</span><span class="fl">203.0</span><span class="dt">.113.10</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">leftsubnet</span><span class="op">=</span><span class="fl">10.0</span><span class="dt">.0.0</span><span class="er">/</span><span class="dt">8</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">leftcert</span><span class="op">=</span><span class="dt">server.crt</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Client side</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">right</span><span class="op">=</span><span class="er">%</span><span class="dt">any</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">rightsourceip</span><span class="op">=</span><span class="fl">10.255</span><span class="dt">.0.0</span><span class="er">/</span><span class="dt">16</span>  <span class="co"># IP pool for clients</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Authentication</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">leftauth</span><span class="op">=</span><span class="dt">pubkey</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">rightauth</span><span class="op">=</span><span class="dt">eap-mschapv2</span>  <span class="co"># Username/password</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">eap_identity</span><span class="op">=</span><span class="er">%</span><span class="dt">identity</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Proposals</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ike</span><span class="op">=</span><span class="dt">aes256-sha256-modp2048</span><span class="er">!</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">esp</span><span class="op">=</span><span class="dt">aes256gcm16</span><span class="er">!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="client-configuration" class="level3">
+<h3 class="anchored" data-anchor-id="client-configuration">Client Configuration</h3>
+<p><strong>Linux/strongSwan</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">conn</span> <span class="dt">corporate</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">auto</span><span class="op">=</span><span class="dt">start</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">right</span><span class="op">=</span><span class="fl">203.0</span><span class="dt">.113.10</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">rightsubnet</span><span class="op">=</span><span class="fl">10.0</span><span class="dt">.0.0</span><span class="er">/</span><span class="dt">8</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">rightid</span><span class="op">=</span><span class="er">@</span><span class="dt">vpn.company.com</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Client auth</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">leftsourceip</span><span class="op">=</span><span class="er">%</span><span class="dt">config</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">eap_identity</span><span class="op">=</span><span class="dt">user</span><span class="er">@</span><span class="dt">company.com</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ike</span><span class="op">=</span><span class="dt">aes256-sha256-modp2048</span><span class="er">!</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">esp</span><span class="op">=</span><span class="dt">aes256gcm16</span><span class="er">!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Client secrets</strong> (<code>/etc/ipsec.secrets</code>):</p>
+<pre><code>user@company.com : EAP "MyPassword123"</code></pre>
+</section>
+<section id="mobile-clients" class="level3">
+<h3 class="anchored" data-anchor-id="mobile-clients">Mobile Clients</h3>
+<p><strong>iOS/macOS</strong>: Built-in IKEv2 support <strong>Android</strong>: strongSwan app or built-in</p>
+<p>Configuration via profiles or manual setup: - Server: vpn.company.com - Remote ID: <span class="citation" data-cites="vpn.company.com">@vpn.company.com</span> - Username/password or certificate</p>
+<hr>
+</section>
+</section>
+<section id="perfect-forward-secrecy-pfs" class="level2">
+<h2 class="anchored" data-anchor-id="perfect-forward-secrecy-pfs">13. Perfect Forward Secrecy (PFS)</h2>
+<p><strong>Problem</strong>: If an attacker records encrypted traffic and later steals the long-term key, they can decrypt all past sessions.</p>
+<p><strong>Solution</strong>: PFS uses ephemeral keys for each session. Even if long-term key is compromised, past sessions remain secure.</p>
+<p><strong>How</strong>: Diffie-Hellman key exchange in Phase 2 (not just Phase 1).</p>
+<p><strong>Configuration</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Without PFS</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="dt">esp</span><span class="op">=</span><span class="dt">aes256gcm16</span><span class="er">!</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># With PFS (add DH group)</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="dt">esp</span><span class="op">=</span><span class="dt">aes256gcm16-modp2048</span><span class="er">!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Trade-off</strong>: Slightly slower (extra DH exchange per rekey).</p>
+<p><strong>Recommendation</strong>: Always use PFS in production.</p>
+<hr>
+</section>
+<section id="dead-peer-detection-dpd" class="level2">
+<h2 class="anchored" data-anchor-id="dead-peer-detection-dpd">14. Dead Peer Detection (DPD)</h2>
+<p><strong>Problem</strong>: If tunnel endpoint crashes or network fails, the other end doesn’t know. Tunnel appears up but traffic is blackholed.</p>
+<p><strong>Solution</strong>: DPD sends periodic keepalives.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">dpdaction</span><span class="op">=</span><span class="dt">restart</span>      <span class="co"># restart | clear | hold</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="dt">dpddelay</span><span class="op">=</span><span class="dv">30</span><span class="dt">s</span>          <span class="co"># check every 30 seconds</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="dt">dpdtimeout</span><span class="op">=</span><span class="dv">120</span><span class="dt">s</span>       <span class="co"># declare dead after 120s</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Actions</strong>: - <strong>restart</strong>: Restart tunnel - <strong>clear</strong>: Delete tunnel - <strong>hold</strong>: Keep SA but don’t send traffic</p>
+<hr>
+</section>
+<section id="troubleshooting-ipsec" class="level2">
+<h2 class="anchored" data-anchor-id="troubleshooting-ipsec">15. Troubleshooting IPSec</h2>
+<section id="common-issues" class="level3">
+<h3 class="anchored" data-anchor-id="common-issues">Common Issues</h3>
+<section id="tunnel-not-establishing" class="level4">
+<h4 class="anchored" data-anchor-id="tunnel-not-establishing">1. Tunnel Not Establishing</h4>
+<p><strong>Check</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View logs</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> statusall</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ex">journalctl</span> <span class="at">-u</span> ipsec <span class="at">-f</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Common causes:</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co"># - Firewall blocking UDP 500, 4500, ESP (protocol 50)</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># - Mismatched proposals (encryption/hash algorithms)</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># - PSK mismatch</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># - Time sync issues (certificates)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Fix</strong>: Verify both sides have matching proposals.</p>
+</section>
+<section id="tunnel-up-but-no-traffic" class="level4">
+<h4 class="anchored" data-anchor-id="tunnel-up-but-no-traffic">2. Tunnel Up But No Traffic</h4>
+<p><strong>Check</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify SAs exist</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm state</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="ex">setkey</span> <span class="at">-D</span>  <span class="co"># (BSD/macOS)</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify policies</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm policy</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Ping with tcpdump</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> any esp</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Common causes</strong>: - SPD not configured correctly - Routing issues (packets not reaching IPSec gateway) - Firewall on destination blocking traffic</p>
+</section>
+<section id="tunnel-flapping" class="level4">
+<h4 class="anchored" data-anchor-id="tunnel-flapping">3. Tunnel Flapping</h4>
+<p><strong>Check</strong>: - DPD too aggressive - Network instability - Rekeying issues</p>
+<p><strong>Fix</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Increase DPD timers</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="dt">dpddelay</span><span class="op">=</span><span class="dv">60</span><span class="dt">s</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="dt">dpdtimeout</span><span class="op">=</span><span class="dv">300</span><span class="dt">s</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Increase lifetimes</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="dt">ikelifetime</span><span class="op">=</span><span class="dv">86400</span><span class="dt">s</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="dt">lifetime</span><span class="op">=</span><span class="dv">28800</span><span class="dt">s</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="nat-issues" class="level4">
+<h4 class="anchored" data-anchor-id="nat-issues">4. NAT Issues</h4>
+<p><strong>Symptoms</strong>: Tunnel works initially, then stops after idle.</p>
+<p><strong>Cause</strong>: NAT dropping UDP session.</p>
+<p><strong>Fix</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable DPD to keep NAT session alive</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="dt">dpddelay</span><span class="op">=</span><span class="dv">30</span><span class="dt">s</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Or reduce lifetime to force rekey</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="dt">lifetime</span><span class="op">=</span><span class="dv">1800</span><span class="dt">s</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="debug-commands" class="level3">
+<h3 class="anchored" data-anchor-id="debug-commands">Debug Commands</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># strongSwan</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> statusall          <span class="co"># Overall status</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> listcerts          <span class="co"># Certificates</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> listcacerts        <span class="co"># CA certificates</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> listsas            <span class="co"># Security associations</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> listpolicies       <span class="co"># Policies</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux kernel</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm state            <span class="co"># SAs</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm policy           <span class="co"># SPD</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> <span class="at">-s</span> xfrm state         <span class="co"># Stats</span></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="co"># BSD/macOS</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a><span class="ex">setkey</span> <span class="at">-D</span>                <span class="co"># SAs</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="ex">setkey</span> <span class="at">-DP</span>               <span class="co"># Policies</span></span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Packet capture</span></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> any <span class="at">-n</span> esp    <span class="co"># ESP packets</span></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a><span class="ex">tcpdump</span> <span class="at">-i</span> any <span class="at">-n</span> udp port 500 or udp port 4500  <span class="co"># IKE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="wireshark" class="level3">
+<h3 class="anchored" data-anchor-id="wireshark">Wireshark</h3>
+<p>Decrypt ESP traffic in Wireshark: 1. Edit → Preferences → Protocols → ESP 2. Add SA: SPI, encryption key, auth key</p>
+<hr>
+</section>
+</section>
+<section id="performance-considerations" class="level2">
+<h2 class="anchored" data-anchor-id="performance-considerations">16. Performance Considerations</h2>
+<section id="hardware-acceleration" class="level3">
+<h3 class="anchored" data-anchor-id="hardware-acceleration">Hardware Acceleration</h3>
+<p>Modern CPUs have AES-NI (AES instructions).</p>
+<p><strong>Check</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> aes /proc/cpuinfo</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable AES-NI in strongSwan</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> pki <span class="at">--gen</span> <span class="at">--type</span> rsa <span class="at">--outform</span> pem <span class="op">&gt;</span> private.key</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Performance</strong>: AES-NI can achieve 10+ Gbps on modern CPUs.</p>
+</section>
+<section id="algorithm-choice" class="level3">
+<h3 class="anchored" data-anchor-id="algorithm-choice">Algorithm Choice</h3>
+<p><strong>Fastest</strong> (with AES-NI): - AES-128-GCM: ~10-20 Gbps - AES-256-GCM: ~7-15 Gbps</p>
+<p><strong>Without AES-NI</strong>: - ChaCha20-Poly1305: Often faster than AES</p>
+<p><strong>Slowest</strong>: - 3DES: ~100 Mbps (avoid!)</p>
+</section>
+<section id="jumbo-frames" class="level3">
+<h3 class="anchored" data-anchor-id="jumbo-frames">Jumbo Frames</h3>
+<p>IPSec adds overhead (50-80 bytes). With 1500 MTU, effective payload drops to ~1420.</p>
+<p><strong>Solutions</strong>: 1. <strong>MSS Clamping</strong>: Reduce TCP MSS <code>bash    iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu</code></p>
+<ol start="2" type="1">
+<li><p><strong>Increase MTU</strong>: Use 9000 MTU (jumbo frames) if network supports</p></li>
+<li><p><strong>Path MTU Discovery</strong>: Let TCP figure it out (can be slow)</p></li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="security-best-practices" class="level2">
+<h2 class="anchored" data-anchor-id="security-best-practices">17. Security Best Practices</h2>
+<section id="do-this" class="level3">
+<h3 class="anchored" data-anchor-id="do-this">✅ Do This</h3>
+<ol type="1">
+<li><p><strong>Use IKEv2</strong></p>
+<ul>
+<li>Faster, more secure than IKEv1</li>
+</ul></li>
+<li><p><strong>Use Strong Crypto</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ike</span><span class="op">=</span><span class="dt">aes256gcm16-sha256-modp2048</span><span class="er">!</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="dt">esp</span><span class="op">=</span><span class="dt">aes256gcm16-modp2048</span><span class="er">!</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Enable PFS</strong></p>
+<ul>
+<li>Include DH group in ESP proposal</li>
+</ul></li>
+<li><p><strong>Use Certificates</strong></p>
+<ul>
+<li>Not PSK (except for testing/small deployments)</li>
+</ul></li>
+<li><p><strong>Regular Rekeying</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ikelifetime</span><span class="op">=</span><span class="dv">28800</span><span class="dt">s</span>   <span class="co"># 8 hours</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="dt">lifetime</span><span class="op">=</span><span class="dv">3600</span><span class="dt">s</span>       <span class="co"># 1 hour</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Monitor and Log</strong></p>
+<ul>
+<li>Enable logging</li>
+<li>Monitor tunnel status</li>
+<li>Alert on flapping tunnels</li>
+</ul></li>
+</ol>
+</section>
+<section id="dont-do-this" class="level3">
+<h3 class="anchored" data-anchor-id="dont-do-this">❌ Don’t Do This</h3>
+<ol type="1">
+<li><strong>Weak Algorithms</strong>
+<ul>
+<li>No 3DES, MD5, SHA-1</li>
+<li>No DH group 1, 2, 5</li>
+</ul></li>
+<li><strong>No PFS</strong>
+<ul>
+<li>Always use ephemeral DH in Phase 2</li>
+</ul></li>
+<li><strong>Long Lifetimes</strong>
+<ul>
+<li>Don’t set lifetime to days/weeks</li>
+</ul></li>
+<li><strong>Aggressive Mode (IKEv1)</strong>
+<ul>
+<li>Leaks identity, vulnerable to dictionary attacks</li>
+</ul></li>
+<li><strong>Overly Permissive SPD</strong>
+<ul>
+<li>Be specific about what traffic needs IPSec</li>
+</ul></li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="ipsec-vs-other-vpn-technologies" class="level2">
+<h2 class="anchored" data-anchor-id="ipsec-vs-other-vpn-technologies">18. IPSec vs Other VPN Technologies</h2>
+<section id="ipsec-vs-openvpn" class="level3">
+<h3 class="anchored" data-anchor-id="ipsec-vs-openvpn">IPSec vs OpenVPN</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 28%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>IPSec</th>
+<th>OpenVPN</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Layer</strong></td>
+<td>Layer 3 (IP)</td>
+<td>Layer 2/3 (TUN/TAP)</td>
+</tr>
+<tr class="even">
+<td><strong>Performance</strong></td>
+<td>Faster (kernel space, HW accel)</td>
+<td>Slower (userspace)</td>
+</tr>
+<tr class="odd">
+<td><strong>NAT Traversal</strong></td>
+<td>Built-in (NAT-T)</td>
+<td>Natural (uses UDP/TCP)</td>
+</tr>
+<tr class="even">
+<td><strong>Setup</strong></td>
+<td>Complex</td>
+<td>Simpler</td>
+</tr>
+<tr class="odd">
+<td><strong>Firewall</strong></td>
+<td>Harder (ESP)</td>
+<td>Easier (TCP 443)</td>
+</tr>
+<tr class="even">
+<td><strong>Mobile</strong></td>
+<td>Excellent (native iOS/Android)</td>
+<td>Needs app</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use IPSec when</strong>: Performance matters, native clients needed, LAN-to-LAN.</p>
+<p><strong>Use OpenVPN when</strong>: Firewall restrictions (masquerade as HTTPS), simpler setup.</p>
+</section>
+<section id="ipsec-vs-wireguard" class="level3">
+<h3 class="anchored" data-anchor-id="ipsec-vs-wireguard">IPSec vs WireGuard</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>IPSec</th>
+<th>WireGuard</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Complexity</strong></td>
+<td>Complex</td>
+<td>Simple</td>
+</tr>
+<tr class="even">
+<td><strong>Code Size</strong></td>
+<td>400K+ lines</td>
+<td>4K lines</td>
+</tr>
+<tr class="odd">
+<td><strong>Performance</strong></td>
+<td>Fast</td>
+<td>Faster</td>
+</tr>
+<tr class="even">
+<td><strong>Setup</strong></td>
+<td>Many knobs</td>
+<td>Minimal config</td>
+</tr>
+<tr class="odd">
+<td><strong>Compatibility</strong></td>
+<td>Everywhere</td>
+<td>Newer</td>
+</tr>
+<tr class="even">
+<td><strong>Roaming</strong></td>
+<td>Good (IKEv2)</td>
+<td>Excellent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Use IPSec when</strong>: Need enterprise features (certificate-based, EAP auth), must use native clients.</p>
+<p><strong>Use WireGuard when</strong>: Simplicity and performance matter most, modern OS/kernel.</p>
+<hr>
+</section>
+</section>
+<section id="common-use-cases" class="level2">
+<h2 class="anchored" data-anchor-id="common-use-cases">19. Common Use Cases</h2>
+<section id="site-to-site-vpn" class="level3">
+<h3 class="anchored" data-anchor-id="site-to-site-vpn">1. Site-to-Site VPN</h3>
+<p><strong>Scenario</strong>: Connect two office networks.</p>
+<p><strong>Mode</strong>: Tunnel (gateway-to-gateway) <strong>Auth</strong>: Certificates or PSK <strong>Best for</strong>: 24/7 persistent tunnels</p>
+</section>
+<section id="road-warrior-vpn" class="level3">
+<h3 class="anchored" data-anchor-id="road-warrior-vpn">2. Road Warrior VPN</h3>
+<p><strong>Scenario</strong>: Remote employees accessing corporate network.</p>
+<p><strong>Mode</strong>: Tunnel (client-to-gateway) <strong>Auth</strong>: Certificates + EAP (username/password) <strong>Features</strong>: IP pool, split tunneling, DNS push</p>
+</section>
+<section id="host-to-host" class="level3">
+<h3 class="anchored" data-anchor-id="host-to-host">3. Host-to-Host</h3>
+<p><strong>Scenario</strong>: Secure communication between two servers.</p>
+<p><strong>Mode</strong>: Transport <strong>Auth</strong>: Certificates <strong>Best for</strong>: Database server to app server, microservices</p>
+</section>
+<section id="cloud-vpn" class="level3">
+<h3 class="anchored" data-anchor-id="cloud-vpn">4. Cloud VPN</h3>
+<p><strong>Scenario</strong>: Connect on-prem to AWS/Azure/GCP.</p>
+<p><strong>Providers</strong>: - AWS VPN: IKEv1/v2, route-based or policy-based - Azure VPN Gateway: IKEv2 (v1 deprecated) - GCP Cloud VPN: IKEv2, HA VPN</p>
+<p><strong>Gotchas</strong>: Cloud provider-specific quirks, BGP for dynamic routing</p>
+<hr>
+</section>
+</section>
+<section id="configuration-examples-by-platform" class="level2">
+<h2 class="anchored" data-anchor-id="configuration-examples-by-platform">20. Configuration Examples by Platform</h2>
+<section id="linux-strongswan" class="level3">
+<h3 class="anchored" data-anchor-id="linux-strongswan">Linux (strongSwan)</h3>
+<p>Already covered above. Most flexible, widely used.</p>
+</section>
+<section id="freebsd-strongswan-or-racoon" class="level3">
+<h3 class="anchored" data-anchor-id="freebsd-strongswan-or-racoon">FreeBSD (strongSwan or racoon)</h3>
+<p><strong>strongSwan</strong>: Same as Linux <strong>racoon</strong> (legacy):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /usr/local/etc/racoon/racoon.conf</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="dt">path</span> <span class="dt">pre_shared_key</span> <span class="dt">"/usr/local/etc/racoon/psk.txt"</span><span class="er">;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="dt">remote</span> <span class="dt">203.0.113.2</span> <span class="er">{</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">exchange_mode</span> <span class="dt">main</span><span class="er">;</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">proposal</span> <span class="er">{</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">encryption_algorithm</span> <span class="dt">aes</span> <span class="dt">256</span><span class="er">;</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">hash_algorithm</span> <span class="dt">sha256</span><span class="er">;</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>        <span class="dt">authentication_method</span> <span class="dt">pre_shared_key</span><span class="er">;</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">dh_group</span> <span class="dt">modp2048</span><span class="er">;</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="dt">sainfo</span> <span class="dt">address</span> <span class="dt">10.1.0.0</span><span class="er">/</span><span class="dt">24</span> <span class="dt">any</span> <span class="dt">address</span> <span class="dt">10.2.0.0</span><span class="er">/</span><span class="dt">24</span> <span class="dt">any</span> <span class="er">{</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">pfs_group</span> <span class="dt">modp2048</span><span class="er">;</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">encryption_algorithm</span> <span class="dt">aes</span> <span class="dt">256</span><span class="er">;</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">authentication_algorithm</span> <span class="dt">hmac_sha256</span><span class="er">;</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>    <span class="dt">compression_algorithm</span> <span class="dt">deflate</span><span class="er">;</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cisco-ios" class="level3">
+<h3 class="anchored" data-anchor-id="cisco-ios">Cisco IOS</h3>
+<pre><code>crypto isakmp policy 10
+ encryption aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+
+crypto isakmp key MySecretKey address 203.0.113.2
+
+crypto ipsec transform-set MYSET esp-aes 256 esp-sha256-hmac
+ mode tunnel
+
+crypto map MYMAP 10 ipsec-isakmp
+ set peer 203.0.113.2
+ set transform-set MYSET
+ match address 100
+
+interface GigabitEthernet0/0
+ crypto map MYMAP
+
+access-list 100 permit ip 10.1.0.0 0.0.0.255 10.2.0.0 0.0.0.255</code></pre>
+</section>
+<section id="windows-built-in" class="level3">
+<h3 class="anchored" data-anchor-id="windows-built-in">Windows (Built-in)</h3>
+<p>PowerShell:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>Add-VpnConnection <span class="op">-</span>Name <span class="st">"Corporate"</span> `</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>ServerAddress <span class="st">"vpn.company.com"</span> `</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>TunnelType IKEv2 `</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>AuthenticationMethod EAP `</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>EncryptionLevel Maximum</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>Set-VpnConnectionIPsecConfiguration <span class="op">-</span>ConnectionName <span class="st">"Corporate"</span> `</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>AuthenticationTransformConstants SHA256128 `</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>CipherTransformConstants AES256 `</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>EncryptionMethod AES256 `</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>IntegrityCheckMethod SHA256 `</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>DHGroup Group14 `</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">-</span>PfsGroup PFS2048</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="advanced-topics-brief-overview" class="level2">
+<h2 class="anchored" data-anchor-id="advanced-topics-brief-overview">21. Advanced Topics (Brief Overview)</h2>
+<section id="ikev2-redirect" class="level3">
+<h3 class="anchored" data-anchor-id="ikev2-redirect">IKEv2 Redirect</h3>
+<p>Server can redirect client to different gateway (load balancing, maintenance).</p>
+</section>
+<section id="multiple-sas-child-sas" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-sas-child-sas">Multiple SAs (Child SAs)</h3>
+<p>One IKE SA can have multiple IPSec SAs (different traffic selectors).</p>
+</section>
+<section id="traffic-selectors" class="level3">
+<h3 class="anchored" data-anchor-id="traffic-selectors">Traffic Selectors</h3>
+<p>Fine-grained control over which traffic uses which SA.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Site A -&gt; Site B web servers</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="dt">leftsubnet</span><span class="op">=</span><span class="fl">10.1</span><span class="dt">.0.0</span><span class="er">/</span><span class="dt">24</span><span class="kw">[tcp</span><span class="er">/</span><span class="dt">1024-65535</span><span class="er">]</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="dt">rightsubnet</span><span class="op">=</span><span class="fl">10.2</span><span class="dt">.0.0</span><span class="er">/</span><span class="dt">24</span><span class="kw">[tcp</span><span class="er">/</span><span class="dt">80</span><span class="er">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="xfrm-linux" class="level3">
+<h3 class="anchored" data-anchor-id="xfrm-linux">XFRM (Linux)</h3>
+<p>Linux kernel’s IPSec stack. Controlled via <code>ip xfrm</code> commands.</p>
+<p>Supports: - Route-based VPN (VTI - Virtual Tunnel Interface) - Policy-based VPN (traditional)</p>
+</section>
+<section id="vti-virtual-tunnel-interface" class="level3">
+<h3 class="anchored" data-anchor-id="vti-virtual-tunnel-interface">VTI (Virtual Tunnel Interface)</h3>
+<p>Creates a virtual interface for IPSec tunnel (like OpenVPN’s tun).</p>
+<p><strong>Benefits</strong>: - Easier routing - Works with dynamic routing (OSPF, BGP) - Simpler firewall rules</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> tunnel add vti0 mode vti local 203.0.113.1 remote 203.0.113.2 key 42</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> link set vti0 up</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> addr add 169.254.0.1/30 dev vti0</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> route add 10.2.0.0/24 dev vti0</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="debugging-deep-dive" class="level2">
+<h2 class="anchored" data-anchor-id="debugging-deep-dive">22. Debugging Deep Dive</h2>
+<section id="packet-flow" class="level3">
+<h3 class="anchored" data-anchor-id="packet-flow">Packet Flow</h3>
+<pre><code>Outbound:
+1. Application sends packet
+2. Routing: Should this go through IPSec?
+3. SPD lookup: Match policy?
+4. SAD lookup: Find SA
+5. Encrypt with ESP
+6. Add ESP header
+7. Transmit
+
+Inbound:
+1. Receive ESP packet
+2. Extract SPI from ESP header
+3. SAD lookup by SPI
+4. Decrypt and verify
+5. Check replay protection
+6. Remove ESP header
+7. Deliver to application</code></pre>
+</section>
+<section id="common-error-messages" class="level3">
+<h3 class="anchored" data-anchor-id="common-error-messages">Common Error Messages</h3>
+<p><strong>“no matching SA”</strong> - Proposal mismatch (algorithms don’t match) - Fix: Use same proposals on both sides</p>
+<p><strong>“authentication failed”</strong> - PSK mismatch - Certificate validation failed (expired, wrong CA)</p>
+<p><strong>“no policy found”</strong> - SPD not configured - Traffic selector mismatch</p>
+<p><strong>“invalid ID”</strong> - leftid/rightid mismatch - Certificate CN doesn’t match expected ID</p>
+</section>
+<section id="log-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="log-analysis">Log Analysis</h3>
+<p>Enable verbose logging:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># strongSwan</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="dt">config</span> <span class="dt">setup</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">charondebug</span><span class="op">=</span><span class="st">"ike 2, knl 2, cfg 2, net 2"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Look for</strong>: - Proposal mismatch: Different algorithms - AUTH_FAILED: Wrong PSK or certificate - TS_UNACCEPTABLE: Traffic selector mismatch</p>
+<hr>
+</section>
+</section>
+<section id="quick-reference" class="level2">
+<h2 class="anchored" data-anchor-id="quick-reference">23. Quick Reference</h2>
+<section id="ports-and-protocols" class="level3">
+<h3 class="anchored" data-anchor-id="ports-and-protocols">Ports and Protocols</h3>
+<ul>
+<li><strong>UDP 500</strong>: IKE (Phase 1)</li>
+<li><strong>UDP 4500</strong>: NAT-T (IKE + ESP encapsulated)</li>
+<li><strong>Protocol 50</strong>: ESP (data plane)</li>
+<li><strong>Protocol 51</strong>: AH (data plane, rarely used)</li>
+</ul>
+</section>
+<section id="recommended-configuration-2026" class="level3">
+<h3 class="anchored" data-anchor-id="recommended-configuration-2026">Recommended Configuration (2026)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode conf code-with-copy"><code class="sourceCode toml"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Modern, secure, fast</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="dt">conn</span> <span class="dt">modern</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">keyexchange</span><span class="op">=</span><span class="dt">ikev2</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ike</span><span class="op">=</span><span class="dt">aes256gcm16-sha256-modp2048</span><span class="er">!</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">esp</span><span class="op">=</span><span class="dt">aes256gcm16-modp2048</span><span class="er">!</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">ikelifetime</span><span class="op">=</span><span class="dv">28800</span><span class="dt">s</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">lifetime</span><span class="op">=</span><span class="dv">3600</span><span class="dt">s</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dpdaction</span><span class="op">=</span><span class="dt">restart</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">dpddelay</span><span class="op">=</span><span class="dv">30</span><span class="dt">s</span></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">authby</span><span class="op">=</span><span class="dt">pubkey</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="command-cheat-sheet" class="level3">
+<h3 class="anchored" data-anchor-id="command-cheat-sheet">Command Cheat Sheet</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># strongSwan</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> start/stop/restart</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> up <span class="op">&lt;</span>conn<span class="op">&gt;</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> down <span class="op">&lt;</span>conn<span class="op">&gt;</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> status</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> statusall</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux XFRM</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm state [add<span class="kw">|</span><span class="ex">del</span><span class="kw">|</span><span class="ex">list]</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> xfrm policy [add<span class="kw">|</span><span class="ex">del</span><span class="kw">|</span><span class="ex">list]</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Statistics</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="ex">ip</span> <span class="at">-s</span> xfrm state</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> statusall <span class="kw">|</span> <span class="fu">grep</span> bytes</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Certificates</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> listcerts</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="ex">ipsec</span> listcacerts</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a><span class="ex">openssl</span> x509 <span class="at">-in</span> cert.pem <span class="at">-text</span> <span class="at">-noout</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="key-takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="key-takeaways">24. Key Takeaways</h2>
+<ol type="1">
+<li><p><strong>ESP in Tunnel Mode</strong>: What you’ll use 99% of the time for VPNs.</p></li>
+<li><p><strong>IKEv2 &gt; IKEv1</strong>: Always use IKEv2 unless forced to use v1.</p></li>
+<li><p><strong>AES-GCM</strong>: Modern, fast, secure. Combines encryption + authentication.</p></li>
+<li><p><strong>PFS is Essential</strong>: Always include DH group in ESP proposal.</p></li>
+<li><p><strong>Certificates &gt; PSK</strong>: Scale better, more secure.</p></li>
+<li><p><strong>NAT-T is Automatic</strong>: IKEv2 detects NAT and enables NAT-T.</p></li>
+<li><p><strong>DPD Keeps Tunnels Alive</strong>: Essential for detecting failures.</p></li>
+<li><p><strong>Two Databases</strong>: SPD (when to use IPSec) and SAD (how to encrypt).</p></li>
+<li><p><strong>MTU Matters</strong>: IPSec adds overhead, reduce TCP MSS or increase MTU.</p></li>
+<li><p><strong>Debug with Logs</strong>: Enable verbose logging, watch for proposal mismatches.</p></li>
+</ol>
+<hr>
+</section>
+<section id="next-steps" class="level2">
+<h2 class="anchored" data-anchor-id="next-steps">25. Next Steps</h2>
+<p><strong>After This Primer</strong>: - <strong>Hands-on</strong>: Set up a site-to-site VPN between two VMs - <strong>PKI</strong>: Learn certificate management (OpenSSL, easy-rsa) - <strong>Advanced</strong>: VTI, route-based VPNs, BGP over IPSec - <strong>Cloud</strong>: AWS VPN, Azure VPN Gateway, GCP Cloud VPN - <strong>Alternatives</strong>: Compare with WireGuard, OpenVPN - <strong>Performance</strong>: Tuning, hardware acceleration, crypto benchmarks</p>
+<p><strong>Resources</strong>: - RFC 4301: IPSec Architecture - RFC 7296: IKEv2 - strongSwan documentation: https://docs.strongswan.org/ - LibreSwan: https://libreswan.org/</p>
+<hr>
+<p><strong>You now know ~80% of IPSec. The rest is practice, troubleshooting real-world tunnels, and dealing with vendor quirks. Good luck!</strong> 🔐</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/thehalberdier\.github\.io\/Research\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
