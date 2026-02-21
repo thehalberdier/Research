@@ -14,6 +14,8 @@ website:
         text: Rust Primer
       - href: kubernetes_primer.qmd
         text: Kubernetes Primer
+      - href: ipsec_primer.qmd
+        text: IPSec Primer
       - href: hdd_tco_summary.qmd
         text: HDD TCO
       - href: ampereone_m_vs_amd_epyc.qmd

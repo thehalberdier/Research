@@ -1,0 +1,1134 @@
+---
+title: "IPSec Primer: Secure IP Communications"
+author: "Research Notes"
+date: "2026-02-21"
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+> **Goal**: Get you to ~80% of IPSec, fast. Assumes you understand TCP/IP, basic networking, and encryption concepts.
+> Skips: Quantum-resistant algorithms, custom IKE implementations, deep cryptographic theory, mobile IPSec (MOBIKE).
+
+---
+
+## 1. What is IPSec and Why Does It Exist?
+
+**The Problem**: Standard IP packets travel in plaintext. Anyone along the path can:
+- Read your data (no confidentiality)
+- Modify packets (no integrity)
+- Impersonate endpoints (no authentication)
+- Replay old packets (no replay protection)
+
+**The Solution**: IPSec is a suite of protocols that secures IP communications at the network layer (Layer 3).
+
+**Analogy**: If TLS/SSL is like sending a letter in a locked box (application layer), IPSec is like encrypting everything that goes on the road (network layer). It's transparent to applications.
+
+**Key Benefits**:
+- **Confidentiality**: Encryption (AES, ChaCha20)
+- **Integrity**: Hashing (SHA-256, SHA-512)
+- **Authentication**: Prove who you are (certificates, PSK)
+- **Anti-replay**: Sequence numbers prevent replay attacks
+
+---
+
+## 2. The Big Picture: IPSec Architecture
+
+```
+┌─────────────────────────────────────────┐
+│         IPSec Architecture              │
+│                                         │
+│  ┌──────────────────────────────────┐  │
+│  │  IKE (Control Plane)             │  │
+│  │  - Negotiates parameters         │  │
+│  │  - Establishes Security Assoc.   │  │
+│  │  - Key exchange                  │  │
+│  └──────────────────────────────────┘  │
+│              ↓ creates                  │
+│  ┌──────────────────────────────────┐  │
+│  │  IPSec Protocols (Data Plane)    │  │
+│  │  - AH: Authentication Header     │  │
+│  │  - ESP: Encapsulating Security   │  │
+│  │         Payload                  │  │
+│  └──────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+**Two Main Components**:
+
+1. **IKE (Internet Key Exchange)**: The negotiator
+   - Sets up the secure tunnel
+   - Exchanges keys
+   - Agrees on algorithms
+
+2. **IPSec Protocols**: The workers
+   - **AH**: Authenticates but doesn't encrypt
+   - **ESP**: Encrypts AND authenticates (most common)
+
+**Mental Model**: IKE is the handshake before a phone call. AH/ESP is the secure phone call itself.
+
+---
+
+## 3. IPSec Protocols: AH vs ESP
+
+### Authentication Header (AH)
+
+**What it does**: Provides authentication and integrity, but NOT encryption.
+
+**Use case**: When you need to verify the sender and ensure data wasn't tampered with, but encryption is not required (or handled elsewhere).
+
+**Packet Structure**:
+```
+[ IP Header | AH Header | Original Payload ]
+             ↑
+             Authenticates everything
+```
+
+**Rarely used today** because ESP can do everything AH does plus encryption.
+
+### Encapsulating Security Payload (ESP)
+
+**What it does**: Provides encryption, authentication, and integrity.
+
+**This is what you'll use 99% of the time.**
+
+**Packet Structure**:
+```
+[ IP Header | ESP Header | Encrypted Payload | ESP Trailer | ESP Auth ]
+             ↑                                              ↑
+             |-------- Encrypted ---------|                |
+             |------------- Authenticated -----------------|
+```
+
+**ESP protects**:
+- Payload (encrypted)
+- ESP header + payload + trailer (authenticated)
+
+**ESP does NOT protect**:
+- Original IP header (that would break routing)
+
+---
+
+## 4. IPSec Modes: Transport vs Tunnel
+
+### Transport Mode
+
+**What it does**: Protects only the payload, keeps original IP headers.
+
+```
+Before:
+[ IP Header | TCP/UDP | Data ]
+
+After (ESP Transport):
+[ IP Header | ESP Header | TCP/UDP | Data | ESP Trailer | ESP Auth ]
+  ↑ Original                    ↑ Encrypted
+```
+
+**Use case**: Host-to-host communication (e.g., server to server in same network).
+
+**Analogy**: Like putting a lock on a package but keeping the shipping label visible.
+
+### Tunnel Mode
+
+**What it does**: Encrypts the ENTIRE original packet, adds new IP header.
+
+```
+Before:
+[ IP Header | TCP/UDP | Data ]
+
+After (ESP Tunnel):
+[ New IP Header | ESP Header | Original IP Header | TCP/UDP | Data | ESP Trailer | ESP Auth ]
+                               ↑ Encrypted
+```
+
+**Use case**: Site-to-site VPNs, gateway-to-gateway.
+
+**Analogy**: Like putting the entire package (including original label) inside a new box with a new shipping label.
+
+**Most common mode** for VPNs.
+
+---
+
+## 5. IKE: The Negotiation Protocol
+
+IKE sets up IPSec tunnels. There are two versions:
+
+### IKEv1 (Legacy)
+
+Two phases:
+- **Phase 1**: Establish secure channel (ISAKMP SA)
+  - Main Mode (6 messages, more secure)
+  - Aggressive Mode (3 messages, faster but less secure)
+- **Phase 2**: Negotiate IPSec parameters (IPSec SA)
+  - Quick Mode
+
+### IKEv2 (Modern, Preferred)
+
+**Simpler**: 4 messages to establish both IKE SA and IPSec SA.
+
+**IKEv2 Advantages**:
+- Faster (fewer round trips)
+- Built-in NAT traversal (NAT-T)
+- Mobility support (MOBIKE)
+- Better error handling
+- Mandatory certificate support
+
+**Always use IKEv2 if possible.**
+
+### IKE Exchange (Simplified)
+
+```
+Initiator                           Responder
+    |                                   |
+    |--- IKE_SA_INIT (proposals) ------>|
+    |<-- IKE_SA_INIT (chosen params) ---|
+    |                                   |
+    |--- IKE_AUTH (authenticate) ------>|
+    |<-- IKE_AUTH (authenticate) -------|
+    |                                   |
+    | IPSec tunnel established!         |
+    |<======= Encrypted traffic =======>|
+```
+
+**What's negotiated**:
+- Encryption algorithm (AES-256, AES-128, etc.)
+- Hash algorithm (SHA-256, SHA-512, etc.)
+- Diffie-Hellman group (key exchange strength)
+- Authentication method (PSK, certificates)
+- Lifetime (when to rekey)
+
+---
+
+## 6. Security Associations (SAs)
+
+A **Security Association** is a one-way agreement on security parameters.
+
+**Think of it as**: A contract that says "when sending packets, use AES-256 + SHA-256 with this key."
+
+### Key Points
+
+1. **Unidirectional**: Each direction needs its own SA
+   - A → B: One SA
+   - B → A: Different SA
+
+2. **Identified by SPI (Security Parameter Index)**
+   - 32-bit number in ESP/AH header
+   - Receiver uses SPI to look up which SA to use
+
+3. **Two types**:
+   - **IKE SA**: For IKE negotiation (Phase 1)
+   - **IPSec SA**: For actual data (Phase 2)
+
+### SA Database (SAD)
+
+Each endpoint maintains a database of active SAs:
+
+```
+SPI: 0x12345678
+Protocol: ESP
+Mode: Tunnel
+Encryption: AES-256-GCM
+Integrity: Built-in (GCM)
+Keys: [encryption key, integrity key]
+Source: 10.1.1.1
+Destination: 10.2.2.2
+Lifetime: 3600 seconds
+```
+
+---
+
+## 7. Security Policy Database (SPD)
+
+**SPD** defines WHEN to use IPSec.
+
+**Rules** look like:
+- Traffic from 10.1.0.0/24 to 10.2.0.0/24 → Use IPSec (tunnel to 203.0.113.1)
+- Traffic to 8.8.8.8 → Bypass IPSec (allow plaintext)
+- All other traffic → Drop
+
+**Analogy**: SPD is the firewall rules. SAD is the active connections.
+
+```
+Example SPD Entry:
+Source: 192.168.1.0/24
+Destination: 192.168.2.0/24
+Protocol: Any
+Action: Protect with IPSec (ESP, Tunnel mode)
+Tunnel endpoint: 203.0.113.10
+```
+
+---
+
+## 8. Encryption & Authentication Algorithms
+
+### Encryption Algorithms
+
+**Modern (use these)**:
+- **AES-GCM-256**: Combined encryption + authentication (AEAD)
+- **AES-GCM-128**: Faster, still secure
+- **ChaCha20-Poly1305**: Great for mobile/ARM devices
+
+**Legacy (avoid)**:
+- 3DES: Slow, weak
+- AES-CBC: Needs separate integrity algorithm
+
+**Recommendation**: AES-GCM (128 or 256 bit). It's fast, secure, and widely supported.
+
+### Hash/Integrity Algorithms
+
+**Modern**:
+- **SHA-256**
+- **SHA-512**
+- **HMAC-SHA-256**
+
+**Legacy (avoid)**:
+- MD5: Broken
+- SHA-1: Deprecated
+
+**Note**: With AEAD ciphers like AES-GCM, integrity is built-in.
+
+### Diffie-Hellman Groups
+
+Used for key exchange. Higher number = stronger but slower.
+
+**Modern**:
+- **Group 14** (2048-bit): Minimum for new deployments
+- **Group 19** (256-bit ECC): Fast and secure
+- **Group 20** (384-bit ECC): Even stronger
+
+**Legacy (avoid)**:
+- Group 1, 2, 5: Too weak
+
+---
+
+## 9. Authentication Methods
+
+### Pre-Shared Key (PSK)
+
+**What**: Both sides have the same secret password.
+
+```
+ipsec.conf (Linux strongSwan):
+conn mytunnel
+    authby=secret
+    left=10.1.1.1
+    right=10.2.2.2
+
+ipsec.secrets:
+10.1.1.1 10.2.2.2 : PSK "mysupersecretkey123"
+```
+
+**Pros**: Simple to set up
+**Cons**:
+- Doesn't scale (need different PSK for each peer)
+- PSK must be shared securely
+- No identity verification beyond "knows the password"
+
+**Use for**: Small deployments, testing
+
+### Certificates (RSA/ECDSA)
+
+**What**: Each side has a certificate signed by a trusted CA.
+
+**Pros**:
+- Scales well (distribute CA cert, not individual secrets)
+- Strong identity verification
+- Can revoke compromised certs (CRL/OCSP)
+
+**Cons**: More complex setup (PKI infrastructure)
+
+**Use for**: Production, large deployments
+
+**Certificate-based flow**:
+1. Each peer has a private key + certificate
+2. Certificates signed by same CA (or trusted CAs)
+3. During IKE, peers exchange certificates
+4. Each verifies the other's certificate against CA
+5. If valid, authenticate using private key
+
+---
+
+## 10. NAT Traversal (NAT-T)
+
+**Problem**: IPSec uses protocol 50 (ESP) and 51 (AH), not TCP/UDP. NAT routers don't know how to handle them.
+
+**Solution**: NAT-T encapsulates ESP in UDP (port 4500).
+
+```
+Without NAT-T:
+[ IP | ESP | Payload ]  ← NAT breaks this
+
+With NAT-T:
+[ IP | UDP (4500) | ESP | Payload ]  ← NAT can handle UDP
+```
+
+**IKEv2 has NAT-T built-in**. IKEv1 needs explicit configuration.
+
+**Auto-detection**: IKE detects NAT and automatically enables NAT-T.
+
+---
+
+## 11. Practical Example: Site-to-Site VPN
+
+### Scenario
+
+```
+Site A                 Internet               Site B
+10.1.0.0/24  ←→  [GW-A] ←--IPSec--→ [GW-B] ←→  10.2.0.0/24
+                203.0.113.1      203.0.113.2
+```
+
+**Goal**: Hosts in Site A can talk to hosts in Site B securely.
+
+### Configuration (strongSwan on Linux)
+
+**Gateway A** (`/etc/ipsec.conf`):
+
+```conf
+config setup
+    charondebug="ike 2, knl 2, cfg 2"
+
+conn site-to-site
+    # Connection basics
+    auto=start
+    type=tunnel
+    keyexchange=ikev2
+
+    # Authentication
+    authby=secret
+
+    # Local (Site A)
+    left=203.0.113.1
+    leftsubnet=10.1.0.0/24
+    leftid=@site-a
+
+    # Remote (Site B)
+    right=203.0.113.2
+    rightsubnet=10.2.0.0/24
+    rightid=@site-b
+
+    # IKE (Phase 1) proposal
+    ike=aes256-sha256-modp2048!
+
+    # ESP (Phase 2) proposal
+    esp=aes256gcm16-modp2048!
+
+    # Lifetimes
+    ikelifetime=28800s
+    lifetime=3600s
+
+    # Dead Peer Detection
+    dpdaction=restart
+    dpddelay=30s
+```
+
+**Gateway A** (`/etc/ipsec.secrets`):
+
+```
+@site-a @site-b : PSK "MySharedSecretKey12345"
+```
+
+**Gateway B**: Mirror configuration (swap left/right).
+
+### Explanation
+
+- **keyexchange=ikev2**: Use IKEv2 (modern)
+- **type=tunnel**: Tunnel mode (encrypt entire packet)
+- **leftsubnet/rightsubnet**: Which networks to protect
+- **ike=**: Phase 1 algorithms (AES-256, SHA-256, DH group 14)
+- **esp=**: Phase 2 algorithms (AES-256-GCM)
+- **!**: Enforces this proposal (no fallback to weaker)
+- **dpdaction**: Detect and restart dead tunnels
+
+### Testing
+
+```bash
+# Start IPSec
+ipsec start
+
+# Check status
+ipsec status
+
+# From Site A, ping Site B host
+ping 10.2.0.1
+
+# Check SAs
+ip xfrm state
+ip xfrm policy
+```
+
+---
+
+## 12. Practical Example: Road Warrior VPN
+
+### Scenario
+
+Remote user (laptop, phone) connects to corporate network.
+
+```
+Road Warrior              Corporate Network
+(Dynamic IP)  ←--IPSec--→  VPN Gateway  ←→  10.0.0.0/8
+                           203.0.113.10
+```
+
+### Server Configuration (strongSwan)
+
+```conf
+conn roadwarrior
+    auto=add
+    type=tunnel
+    keyexchange=ikev2
+
+    # Server side
+    left=203.0.113.10
+    leftsubnet=10.0.0.0/8
+    leftcert=server.crt
+
+    # Client side
+    right=%any
+    rightsourceip=10.255.0.0/16  # IP pool for clients
+
+    # Authentication
+    leftauth=pubkey
+    rightauth=eap-mschapv2  # Username/password
+    eap_identity=%identity
+
+    # Proposals
+    ike=aes256-sha256-modp2048!
+    esp=aes256gcm16!
+```
+
+### Client Configuration
+
+**Linux/strongSwan**:
+
+```conf
+conn corporate
+    auto=start
+    right=203.0.113.10
+    rightsubnet=10.0.0.0/8
+    rightid=@vpn.company.com
+
+    # Client auth
+    leftsourceip=%config
+    eap_identity=user@company.com
+
+    ike=aes256-sha256-modp2048!
+    esp=aes256gcm16!
+```
+
+**Client secrets** (`/etc/ipsec.secrets`):
+
+```
+user@company.com : EAP "MyPassword123"
+```
+
+### Mobile Clients
+
+**iOS/macOS**: Built-in IKEv2 support
+**Android**: strongSwan app or built-in
+
+Configuration via profiles or manual setup:
+- Server: vpn.company.com
+- Remote ID: @vpn.company.com
+- Username/password or certificate
+
+---
+
+## 13. Perfect Forward Secrecy (PFS)
+
+**Problem**: If an attacker records encrypted traffic and later steals the long-term key, they can decrypt all past sessions.
+
+**Solution**: PFS uses ephemeral keys for each session. Even if long-term key is compromised, past sessions remain secure.
+
+**How**: Diffie-Hellman key exchange in Phase 2 (not just Phase 1).
+
+**Configuration**:
+
+```conf
+# Without PFS
+esp=aes256gcm16!
+
+# With PFS (add DH group)
+esp=aes256gcm16-modp2048!
+```
+
+**Trade-off**: Slightly slower (extra DH exchange per rekey).
+
+**Recommendation**: Always use PFS in production.
+
+---
+
+## 14. Dead Peer Detection (DPD)
+
+**Problem**: If tunnel endpoint crashes or network fails, the other end doesn't know. Tunnel appears up but traffic is blackholed.
+
+**Solution**: DPD sends periodic keepalives.
+
+```conf
+dpdaction=restart      # restart | clear | hold
+dpddelay=30s          # check every 30 seconds
+dpdtimeout=120s       # declare dead after 120s
+```
+
+**Actions**:
+- **restart**: Restart tunnel
+- **clear**: Delete tunnel
+- **hold**: Keep SA but don't send traffic
+
+---
+
+## 15. Troubleshooting IPSec
+
+### Common Issues
+
+#### 1. Tunnel Not Establishing
+
+**Check**:
+```bash
+# View logs
+ipsec statusall
+journalctl -u ipsec -f
+
+# Common causes:
+# - Firewall blocking UDP 500, 4500, ESP (protocol 50)
+# - Mismatched proposals (encryption/hash algorithms)
+# - PSK mismatch
+# - Time sync issues (certificates)
+```
+
+**Fix**: Verify both sides have matching proposals.
+
+#### 2. Tunnel Up But No Traffic
+
+**Check**:
+```bash
+# Verify SAs exist
+ip xfrm state
+setkey -D  # (BSD/macOS)
+
+# Verify policies
+ip xfrm policy
+
+# Ping with tcpdump
+tcpdump -i any esp
+```
+
+**Common causes**:
+- SPD not configured correctly
+- Routing issues (packets not reaching IPSec gateway)
+- Firewall on destination blocking traffic
+
+#### 3. Tunnel Flapping
+
+**Check**:
+- DPD too aggressive
+- Network instability
+- Rekeying issues
+
+**Fix**:
+```conf
+# Increase DPD timers
+dpddelay=60s
+dpdtimeout=300s
+
+# Increase lifetimes
+ikelifetime=86400s
+lifetime=28800s
+```
+
+#### 4. NAT Issues
+
+**Symptoms**: Tunnel works initially, then stops after idle.
+
+**Cause**: NAT dropping UDP session.
+
+**Fix**:
+```conf
+# Enable DPD to keep NAT session alive
+dpddelay=30s
+
+# Or reduce lifetime to force rekey
+lifetime=1800s
+```
+
+### Debug Commands
+
+```bash
+# strongSwan
+ipsec statusall          # Overall status
+ipsec listcerts          # Certificates
+ipsec listcacerts        # CA certificates
+ipsec listsas            # Security associations
+ipsec listpolicies       # Policies
+
+# Linux kernel
+ip xfrm state            # SAs
+ip xfrm policy           # SPD
+ip -s xfrm state         # Stats
+
+# BSD/macOS
+setkey -D                # SAs
+setkey -DP               # Policies
+
+# Packet capture
+tcpdump -i any -n esp    # ESP packets
+tcpdump -i any -n udp port 500 or udp port 4500  # IKE
+```
+
+### Wireshark
+
+Decrypt ESP traffic in Wireshark:
+1. Edit → Preferences → Protocols → ESP
+2. Add SA: SPI, encryption key, auth key
+
+---
+
+## 16. Performance Considerations
+
+### Hardware Acceleration
+
+Modern CPUs have AES-NI (AES instructions).
+
+**Check**:
+```bash
+# Linux
+grep aes /proc/cpuinfo
+
+# Enable AES-NI in strongSwan
+ipsec pki --gen --type rsa --outform pem > private.key
+```
+
+**Performance**: AES-NI can achieve 10+ Gbps on modern CPUs.
+
+### Algorithm Choice
+
+**Fastest** (with AES-NI):
+- AES-128-GCM: ~10-20 Gbps
+- AES-256-GCM: ~7-15 Gbps
+
+**Without AES-NI**:
+- ChaCha20-Poly1305: Often faster than AES
+
+**Slowest**:
+- 3DES: ~100 Mbps (avoid!)
+
+### Jumbo Frames
+
+IPSec adds overhead (50-80 bytes). With 1500 MTU, effective payload drops to ~1420.
+
+**Solutions**:
+1. **MSS Clamping**: Reduce TCP MSS
+   ```bash
+   iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+   ```
+
+2. **Increase MTU**: Use 9000 MTU (jumbo frames) if network supports
+
+3. **Path MTU Discovery**: Let TCP figure it out (can be slow)
+
+---
+
+## 17. Security Best Practices
+
+### ✅ Do This
+
+1. **Use IKEv2**
+   - Faster, more secure than IKEv1
+
+2. **Use Strong Crypto**
+   ```conf
+   ike=aes256gcm16-sha256-modp2048!
+   esp=aes256gcm16-modp2048!
+   ```
+
+3. **Enable PFS**
+   - Include DH group in ESP proposal
+
+4. **Use Certificates**
+   - Not PSK (except for testing/small deployments)
+
+5. **Regular Rekeying**
+   ```conf
+   ikelifetime=28800s   # 8 hours
+   lifetime=3600s       # 1 hour
+   ```
+
+6. **Monitor and Log**
+   - Enable logging
+   - Monitor tunnel status
+   - Alert on flapping tunnels
+
+### ❌ Don't Do This
+
+1. **Weak Algorithms**
+   - No 3DES, MD5, SHA-1
+   - No DH group 1, 2, 5
+
+2. **No PFS**
+   - Always use ephemeral DH in Phase 2
+
+3. **Long Lifetimes**
+   - Don't set lifetime to days/weeks
+
+4. **Aggressive Mode (IKEv1)**
+   - Leaks identity, vulnerable to dictionary attacks
+
+5. **Overly Permissive SPD**
+   - Be specific about what traffic needs IPSec
+
+---
+
+## 18. IPSec vs Other VPN Technologies
+
+### IPSec vs OpenVPN
+
+| Feature | IPSec | OpenVPN |
+|---------|-------|---------|
+| **Layer** | Layer 3 (IP) | Layer 2/3 (TUN/TAP) |
+| **Performance** | Faster (kernel space, HW accel) | Slower (userspace) |
+| **NAT Traversal** | Built-in (NAT-T) | Natural (uses UDP/TCP) |
+| **Setup** | Complex | Simpler |
+| **Firewall** | Harder (ESP) | Easier (TCP 443) |
+| **Mobile** | Excellent (native iOS/Android) | Needs app |
+
+**Use IPSec when**: Performance matters, native clients needed, LAN-to-LAN.
+
+**Use OpenVPN when**: Firewall restrictions (masquerade as HTTPS), simpler setup.
+
+### IPSec vs WireGuard
+
+| Feature | IPSec | WireGuard |
+|---------|-------|-----------|
+| **Complexity** | Complex | Simple |
+| **Code Size** | 400K+ lines | 4K lines |
+| **Performance** | Fast | Faster |
+| **Setup** | Many knobs | Minimal config |
+| **Compatibility** | Everywhere | Newer |
+| **Roaming** | Good (IKEv2) | Excellent |
+
+**Use IPSec when**: Need enterprise features (certificate-based, EAP auth), must use native clients.
+
+**Use WireGuard when**: Simplicity and performance matter most, modern OS/kernel.
+
+---
+
+## 19. Common Use Cases
+
+### 1. Site-to-Site VPN
+
+**Scenario**: Connect two office networks.
+
+**Mode**: Tunnel (gateway-to-gateway)
+**Auth**: Certificates or PSK
+**Best for**: 24/7 persistent tunnels
+
+### 2. Road Warrior VPN
+
+**Scenario**: Remote employees accessing corporate network.
+
+**Mode**: Tunnel (client-to-gateway)
+**Auth**: Certificates + EAP (username/password)
+**Features**: IP pool, split tunneling, DNS push
+
+### 3. Host-to-Host
+
+**Scenario**: Secure communication between two servers.
+
+**Mode**: Transport
+**Auth**: Certificates
+**Best for**: Database server to app server, microservices
+
+### 4. Cloud VPN
+
+**Scenario**: Connect on-prem to AWS/Azure/GCP.
+
+**Providers**:
+- AWS VPN: IKEv1/v2, route-based or policy-based
+- Azure VPN Gateway: IKEv2 (v1 deprecated)
+- GCP Cloud VPN: IKEv2, HA VPN
+
+**Gotchas**: Cloud provider-specific quirks, BGP for dynamic routing
+
+---
+
+## 20. Configuration Examples by Platform
+
+### Linux (strongSwan)
+
+Already covered above. Most flexible, widely used.
+
+### FreeBSD (strongSwan or racoon)
+
+**strongSwan**: Same as Linux
+**racoon** (legacy):
+
+```conf
+# /usr/local/etc/racoon/racoon.conf
+path pre_shared_key "/usr/local/etc/racoon/psk.txt";
+
+remote 203.0.113.2 {
+    exchange_mode main;
+    proposal {
+        encryption_algorithm aes 256;
+        hash_algorithm sha256;
+        authentication_method pre_shared_key;
+        dh_group modp2048;
+    }
+}
+
+sainfo address 10.1.0.0/24 any address 10.2.0.0/24 any {
+    pfs_group modp2048;
+    encryption_algorithm aes 256;
+    authentication_algorithm hmac_sha256;
+    compression_algorithm deflate;
+}
+```
+
+### Cisco IOS
+
+```
+crypto isakmp policy 10
+ encryption aes 256
+ hash sha256
+ authentication pre-share
+ group 14
+
+crypto isakmp key MySecretKey address 203.0.113.2
+
+crypto ipsec transform-set MYSET esp-aes 256 esp-sha256-hmac
+ mode tunnel
+
+crypto map MYMAP 10 ipsec-isakmp
+ set peer 203.0.113.2
+ set transform-set MYSET
+ match address 100
+
+interface GigabitEthernet0/0
+ crypto map MYMAP
+
+access-list 100 permit ip 10.1.0.0 0.0.0.255 10.2.0.0 0.0.0.255
+```
+
+### Windows (Built-in)
+
+PowerShell:
+
+```powershell
+Add-VpnConnection -Name "Corporate" `
+    -ServerAddress "vpn.company.com" `
+    -TunnelType IKEv2 `
+    -AuthenticationMethod EAP `
+    -EncryptionLevel Maximum
+
+Set-VpnConnectionIPsecConfiguration -ConnectionName "Corporate" `
+    -AuthenticationTransformConstants SHA256128 `
+    -CipherTransformConstants AES256 `
+    -EncryptionMethod AES256 `
+    -IntegrityCheckMethod SHA256 `
+    -DHGroup Group14 `
+    -PfsGroup PFS2048
+```
+
+---
+
+## 21. Advanced Topics (Brief Overview)
+
+### IKEv2 Redirect
+
+Server can redirect client to different gateway (load balancing, maintenance).
+
+### Multiple SAs (Child SAs)
+
+One IKE SA can have multiple IPSec SAs (different traffic selectors).
+
+### Traffic Selectors
+
+Fine-grained control over which traffic uses which SA.
+
+```conf
+# Site A -> Site B web servers
+leftsubnet=10.1.0.0/24[tcp/1024-65535]
+rightsubnet=10.2.0.0/24[tcp/80]
+```
+
+### XFRM (Linux)
+
+Linux kernel's IPSec stack. Controlled via `ip xfrm` commands.
+
+Supports:
+- Route-based VPN (VTI - Virtual Tunnel Interface)
+- Policy-based VPN (traditional)
+
+### VTI (Virtual Tunnel Interface)
+
+Creates a virtual interface for IPSec tunnel (like OpenVPN's tun).
+
+**Benefits**:
+- Easier routing
+- Works with dynamic routing (OSPF, BGP)
+- Simpler firewall rules
+
+```bash
+ip tunnel add vti0 mode vti local 203.0.113.1 remote 203.0.113.2 key 42
+ip link set vti0 up
+ip addr add 169.254.0.1/30 dev vti0
+ip route add 10.2.0.0/24 dev vti0
+```
+
+---
+
+## 22. Debugging Deep Dive
+
+### Packet Flow
+
+```
+Outbound:
+1. Application sends packet
+2. Routing: Should this go through IPSec?
+3. SPD lookup: Match policy?
+4. SAD lookup: Find SA
+5. Encrypt with ESP
+6. Add ESP header
+7. Transmit
+
+Inbound:
+1. Receive ESP packet
+2. Extract SPI from ESP header
+3. SAD lookup by SPI
+4. Decrypt and verify
+5. Check replay protection
+6. Remove ESP header
+7. Deliver to application
+```
+
+### Common Error Messages
+
+**"no matching SA"**
+- Proposal mismatch (algorithms don't match)
+- Fix: Use same proposals on both sides
+
+**"authentication failed"**
+- PSK mismatch
+- Certificate validation failed (expired, wrong CA)
+
+**"no policy found"**
+- SPD not configured
+- Traffic selector mismatch
+
+**"invalid ID"**
+- leftid/rightid mismatch
+- Certificate CN doesn't match expected ID
+
+### Log Analysis
+
+Enable verbose logging:
+
+```conf
+# strongSwan
+config setup
+    charondebug="ike 2, knl 2, cfg 2, net 2"
+```
+
+**Look for**:
+- Proposal mismatch: Different algorithms
+- AUTH_FAILED: Wrong PSK or certificate
+- TS_UNACCEPTABLE: Traffic selector mismatch
+
+---
+
+## 23. Quick Reference
+
+### Ports and Protocols
+
+- **UDP 500**: IKE (Phase 1)
+- **UDP 4500**: NAT-T (IKE + ESP encapsulated)
+- **Protocol 50**: ESP (data plane)
+- **Protocol 51**: AH (data plane, rarely used)
+
+### Recommended Configuration (2026)
+
+```conf
+# Modern, secure, fast
+conn modern
+    keyexchange=ikev2
+    ike=aes256gcm16-sha256-modp2048!
+    esp=aes256gcm16-modp2048!
+    ikelifetime=28800s
+    lifetime=3600s
+    dpdaction=restart
+    dpddelay=30s
+    authby=pubkey
+```
+
+### Command Cheat Sheet
+
+```bash
+# strongSwan
+ipsec start/stop/restart
+ipsec up <conn>
+ipsec down <conn>
+ipsec status
+ipsec statusall
+
+# Linux XFRM
+ip xfrm state [add|del|list]
+ip xfrm policy [add|del|list]
+
+# Statistics
+ip -s xfrm state
+ipsec statusall | grep bytes
+
+# Certificates
+ipsec listcerts
+ipsec listcacerts
+openssl x509 -in cert.pem -text -noout
+```
+
+---
+
+## 24. Key Takeaways
+
+1. **ESP in Tunnel Mode**: What you'll use 99% of the time for VPNs.
+
+2. **IKEv2 > IKEv1**: Always use IKEv2 unless forced to use v1.
+
+3. **AES-GCM**: Modern, fast, secure. Combines encryption + authentication.
+
+4. **PFS is Essential**: Always include DH group in ESP proposal.
+
+5. **Certificates > PSK**: Scale better, more secure.
+
+6. **NAT-T is Automatic**: IKEv2 detects NAT and enables NAT-T.
+
+7. **DPD Keeps Tunnels Alive**: Essential for detecting failures.
+
+8. **Two Databases**: SPD (when to use IPSec) and SAD (how to encrypt).
+
+9. **MTU Matters**: IPSec adds overhead, reduce TCP MSS or increase MTU.
+
+10. **Debug with Logs**: Enable verbose logging, watch for proposal mismatches.
+
+---
+
+## 25. Next Steps
+
+**After This Primer**:
+- **Hands-on**: Set up a site-to-site VPN between two VMs
+- **PKI**: Learn certificate management (OpenSSL, easy-rsa)
+- **Advanced**: VTI, route-based VPNs, BGP over IPSec
+- **Cloud**: AWS VPN, Azure VPN Gateway, GCP Cloud VPN
+- **Alternatives**: Compare with WireGuard, OpenVPN
+- **Performance**: Tuning, hardware acceleration, crypto benchmarks
+
+**Resources**:
+- RFC 4301: IPSec Architecture
+- RFC 7296: IKEv2
+- strongSwan documentation: https://docs.strongswan.org/
+- LibreSwan: https://libreswan.org/
+
+---
+
+**You now know ~80% of IPSec. The rest is practice, troubleshooting real-world tunnels, and dealing with vendor quirks. Good luck!** 🔐
