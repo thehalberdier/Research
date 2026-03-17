@@ -22,6 +22,8 @@ website:
         text: Ampere vs AMD
       - href: arista_switch_health_report.qmd
         text: Arista Health
+      - href: gpu_primer.qmd
+        text: GPU Primer
 
 format:
   html:

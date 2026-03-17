@@ -1,0 +1,330 @@
+---
+title: "GPU Primer: From Zero to 80%"
+author: "Research Notes"
+date: "2026-03-17"
+format:
+  html:
+    code-fold: false
+    toc: true
+    toc-depth: 3
+---
+
+> **Goal**: Get you to ~80% of GPUs, fast. No prior hardware knowledge assumed.
+> Covers: GPU fundamentals, data center vs consumer GPUs, key specs, major chips (H200, B200, MI325X), how AI uses GPUs, and a consumer buying guide.
+
+---
+
+## 1. What Even Is a GPU?
+
+A **CPU** (your laptop's main chip) is like a brilliant generalist — it handles a few complex tasks at a time, really fast.
+
+A **GPU** (Graphics Processing Unit) is like an army of interns — thousands of simpler cores doing millions of small tasks *simultaneously*. Originally designed to render pixels on a screen, it turns out this "do everything in parallel" design is *perfect* for:
+
+- Training AI models (billions of matrix multiplications)
+- Running AI inference (serving ChatGPT responses)
+- Scientific simulations
+- Cryptocurrency mining
+- 3D graphics and gaming
+
+The GPU revolution in AI happened because matrix math — the core of neural networks — maps perfectly onto what GPUs are built to do.
+
+---
+
+## 2. The Two Worlds of GPUs
+
+There are two very different GPU markets, and they're easy to confuse:
+
+### 🎮 Consumer / Gaming GPUs
+
+- **Brands:** NVIDIA GeForce (RTX 4090, RTX 5090), AMD Radeon (RX 9070)
+- **Goal:** Render beautiful graphics at high frame rates
+- **Price:** ₹30,000 – ₹2,00,000
+- **VRAM:** 8GB – 24GB
+
+### 🧠 Data Center / AI GPUs
+
+- **Brands:** NVIDIA H100, H200, B200 / AMD Instinct MI300X, MI325X
+- **Goal:** Train and run large AI models (LLMs, image models)
+- **Price:** $20,000 – $100,000+ per card
+- **VRAM:** 80GB – 192GB
+- These are what power ChatGPT, Gemini, Claude
+
+Unless you're building a supercomputer, consumer GPUs are what you'd buy. But understanding data center GPUs helps you understand what's powering the AI tools you use every day.
+
+---
+
+## 3. Key Specs — What Actually Matters
+
+### 🧠 VRAM (Video RAM)
+
+The GPU's own memory. **The most critical spec for AI work.**
+
+- More VRAM = bigger models you can run or train
+- A 7B parameter model needs ~14GB VRAM minimum
+- A 70B model needs ~140GB — which is why you need multiple GPUs or specialized chips
+
+Think of VRAM like your workbench. If the model doesn't fit on the bench, you can't work on it.
+
+### ⚡ Memory Bandwidth
+
+How fast data can move between VRAM and the compute cores. Measured in **GB/s or TB/s**.
+
+- More bandwidth = faster training and inference
+- Often more important than raw compute power for AI workloads
+- The H200 has ~3.35 TB/s — insane for its time
+
+### 🔢 TFLOPS (Tera Floating Point Operations Per Second)
+
+Raw compute power. Higher = more math per second.
+
+- Different precisions matter: FP64 (scientific), FP32 (standard), FP16/BF16 (AI training), INT8/FP8 (AI inference)
+- AI workloads primarily use FP16/BF16 or FP8
+- The H100 does ~3,958 TFLOPS at FP8
+
+### 🔌 TDP (Thermal Design Power)
+
+How much electricity the GPU uses (and heat it generates). In watts.
+
+- Consumer GPU: 150–450W
+- Data center GPU: 300–1,000W
+- Running 8x B200 GPUs = ~8,000W. That's why AI costs so much to run.
+
+### 🔗 Interconnects (NVLink, Infinity Fabric)
+
+How multiple GPUs talk to each other.
+
+- Training large models requires many GPUs working together
+- **NVLink** (NVIDIA): ultra-fast GPU-to-GPU connection, up to 1.8 TB/s between cards
+- **Infinity Fabric** (AMD): AMD's equivalent
+- Slow interconnects are a bottleneck — like having brilliant workers but a slow network
+
+---
+
+## 4. The Major Players
+
+### 🟢 NVIDIA — The Dominant Force
+
+NVIDIA owns ~80%+ of the AI GPU market. Here's why:
+
+- First mover in GPU compute (CUDA platform, 2006)
+- **CUDA** is the programming layer that software is written for. Almost all AI frameworks (PyTorch, TensorFlow) are deeply optimized for CUDA.
+- This software ecosystem moat is enormous — AMD hardware is competitive, but software support still lags
+
+**NVIDIA GPU Families:**
+
+| Family | Era | Use Case |
+|--------|-----|----------|
+| GeForce RTX (3000s, 4000s, 5000s) | Consumer | Gaming, hobbyist AI |
+| V100 | 2017 | First major AI GPU |
+| A100 | 2020 | Trained GPT-3 era models |
+| H100 | 2022 | ChatGPT era, still widely used |
+| H200 | 2024 | H100 + HBM3e memory upgrade |
+| B100 / B200 | 2024–25 | Blackwell architecture, next-gen |
+| GB200 | 2025 | CPU+GPU combo, for AI clusters |
+
+### 🔴 AMD — The Challenger
+
+- Consumer: AMD Radeon competes well with NVIDIA GeForce on price/performance
+- Data center: AMD Instinct MI-series (MI250, MI300X, MI325X, MI350X)
+- AMD's big advantage: higher VRAM on some chips (MI300X has 192GB)
+- Big disadvantage: ROCm (AMD's CUDA equivalent) is less mature; software support still catching up
+- Companies like Meta and Microsoft are actively investing in AMD to reduce NVIDIA dependence
+
+### 🔵 Intel — The Newcomer
+
+- Intel Arc: Consumer gaming GPUs (competitive at budget tiers)
+- Gaudi 3: Data center AI GPU — competitive specs on paper, ecosystem is nascent
+- Not a major player in AI yet but investing heavily
+
+### 🇨🇳 Huawei Ascend — The Wildcard
+
+- China's answer to NVIDIA, accelerated by US export controls
+- Ascend 910B/910C — competitive with H100 on some benchmarks
+- Mostly used within China's AI ecosystem
+
+---
+
+## 5. The Big Chips Explained
+
+### NVIDIA H200
+
+- **Released:** Early 2024
+- **Architecture:** Hopper (same as H100)
+- **The upgrade:** Switched from HBM2e to HBM3e memory — 141GB VRAM (up from 80GB) and 3.35 TB/s bandwidth
+- **FP8 compute:** ~3,958 TFLOPS
+- **TDP:** 700W
+- The H200 is essentially an H100 with a memory upgrade. The real architectural leap was H100 → B200 (Blackwell).
+- **Who uses it:** Every major cloud provider (AWS, Azure, Google Cloud), AI labs
+
+### NVIDIA B200 (Blackwell)
+
+- **Released:** 2024–2025
+- **Architecture:** Blackwell — NVIDIA's next major architecture after Hopper
+- **VRAM:** 192GB HBM3e
+- **Bandwidth:** 8 TB/s
+- **FP4 compute:** ~18,000 TFLOPS (new FP4 precision for inference)
+- **TDP:** ~1,000W
+- Key innovation: **NVLink Switch** — connects up to 576 GPUs as one giant brain
+- The **GB200** is a superchip: a Grace CPU + 2x B200 GPUs in one package, designed for AI servers (NVL72 racks)
+- **Who uses it:** Microsoft, Google, Amazon, Meta — spending billions on Blackwell clusters
+
+### AMD MI325X
+
+- **Released:** Late 2024
+- **Architecture:** CDNA 3 (same as MI300X, with memory upgrade)
+- **VRAM:** 256GB HBM3 — the most of any GPU available
+- **Bandwidth:** 6 TB/s
+- **FP8 compute:** ~2,600 TFLOPS
+- **TDP:** 750W
+- **Strength:** Massive VRAM means it can fit the biggest models on a single chip without multi-GPU tricks
+- **Who uses it:** Microsoft Azure, Oracle, some Meta deployments
+
+### Quick Comparison
+
+| GPU | VRAM | Bandwidth | FP8 TFLOPS | Price (est.) | Generation |
+|-----|------|-----------|------------|--------------|------------|
+| NVIDIA H100 | 80GB | 3.35 TB/s | ~3,958 | ~$30,000 | Hopper |
+| NVIDIA H200 | 141GB | 3.35 TB/s | ~3,958 | ~$40,000 | Hopper+ |
+| NVIDIA B200 | 192GB | 8 TB/s | ~18,000 | ~$70,000+ | Blackwell |
+| AMD MI300X | 192GB | 5.3 TB/s | ~2,610 | ~$20,000 | CDNA3 |
+| AMD MI325X | 256GB | 6.0 TB/s | ~2,610 | ~$25,000 | CDNA3+ |
+
+---
+
+## 6. How AI Models Use GPUs
+
+### Training vs. Inference
+
+**Training** = Teaching the model (happens once, very expensive)
+
+- Requires thousands of GPUs for months
+- GPT-4 reportedly cost $100M+ to train
+- Needs massive VRAM and compute
+
+**Inference** = Using the model to answer your questions (happens billions of times)
+
+- Can use fewer/cheaper GPUs
+- Latency matters more than raw throughput
+- Optimized with quantization (FP8, INT4) to fit bigger models on smaller hardware
+
+### Why VRAM is Everything for AI
+
+When you run a model, the entire model must fit in VRAM:
+
+- LLaMA 3 8B: ~16GB VRAM (FP16)
+- LLaMA 3 70B: ~140GB VRAM (FP16), or ~35GB with aggressive quantization
+- GPT-4 class (~1T parameters): needs hundreds of GPUs
+
+This is why data center GPUs have 80–256GB VRAM while your gaming GPU has 8–24GB.
+
+### Model Parallelism
+
+When a model is too big for one GPU, you split it:
+
+- **Tensor Parallelism:** Split individual layers across GPUs
+- **Pipeline Parallelism:** Different GPUs handle different layers
+- **Data Parallelism:** Same model on multiple GPUs, each processing different data batches
+
+This is why fast interconnects (NVLink) matter so much — GPUs are constantly talking to each other.
+
+---
+
+## 7. The GPU Shortage & Economics
+
+### Why GPUs Are So Expensive and Hard to Get
+
+1. **Demand explosion:** ChatGPT's launch triggered a GPU gold rush
+2. **Supply constraints:** GPUs are made on cutting-edge nodes (TSMC's 4nm/3nm). Capacity is limited.
+3. **Export controls:** US restricted NVIDIA GPU exports to China (China gets limited H20 chips instead of full H100s)
+4. **Long lead times:** Major cloud orders take 6–12 months to fulfil
+
+### The Power Problem
+
+A single rack of 8x H100s uses ~40,000 watts. A data center with thousands of GPUs consumes as much electricity as a small city. This is why:
+
+- AI companies are building their own power plants
+- Nuclear energy is getting renewed interest (Microsoft, Google)
+- "AI electricity cost" is now a major factor in model pricing
+
+---
+
+## 8. Consumer GPU Guide
+
+### NVIDIA GeForce RTX 5000 Series (2025)
+
+| GPU | VRAM | Best For | Price (India est.) |
+|-----|------|----------|--------------------|
+| RTX 5060 Ti | 16GB | 1080p gaming, hobbyist AI | ₹45,000–55,000 |
+| RTX 5070 | 12GB | 1440p gaming | ₹55,000–70,000 |
+| RTX 5070 Ti | 16GB | 1440p/4K gaming | ₹75,000–90,000 |
+| RTX 5080 | 16GB | 4K gaming, serious AI | ₹1,10,000–1,30,000 |
+| RTX 5090 | 32GB | Everything, overkill | ₹2,00,000+ |
+
+### AMD Radeon RX 9000 Series
+
+| GPU | VRAM | Best For | Price (India est.) |
+|-----|------|----------|--------------------|
+| RX 9070 | 16GB | 1440p gaming, great value | ₹50,000–60,000 |
+| RX 9070 XT | 16GB | 1440p/4K gaming | ₹60,000–75,000 |
+
+**AMD advantage:** More VRAM at lower prices — great for gaming and local LLM hobbyists  
+**NVIDIA advantage:** DLSS (AI upscaling), better driver stability, CUDA for AI work
+
+### If You Want to Run AI Locally
+
+- **Minimum:** 16GB VRAM (run 7B–13B models)
+- **Sweet spot:** 24GB VRAM (run up to 30B models with quantization)
+- **Serious:** 2x 24GB GPUs (64B+ models)
+
+---
+
+## 9. Key Terms Glossary
+
+| Term | Meaning |
+|------|---------|
+| **VRAM** | GPU's own memory — bigger = better for AI |
+| **HBM** | High Bandwidth Memory — stacked memory chips used in data center GPUs (HBM2e → HBM3 → HBM3e) |
+| **GDDR7** | Consumer GPU memory (like RAM but faster) |
+| **CUDA** | NVIDIA's GPU programming platform — the reason NVIDIA dominates AI |
+| **ROCm** | AMD's equivalent to CUDA |
+| **Tensor Cores** | Specialized cores in NVIDIA GPUs for matrix math (AI) |
+| **TFLOPS** | Trillion floating point operations per second — raw compute power |
+| **FP32/FP16/FP8/INT4** | Number precisions — lower = faster and uses less memory, slightly less accurate |
+| **NVLink** | NVIDIA's fast GPU-to-GPU interconnect |
+| **PCIe** | Standard interface connecting GPU to motherboard (slower than NVLink) |
+| **TDP** | Total power draw in watts |
+| **Blackwell** | NVIDIA's current architecture (B100, B200, GB200) |
+| **Hopper** | NVIDIA's previous architecture (H100, H200) |
+| **CDNA** | AMD's data center GPU architecture |
+| **RDNA** | AMD's consumer/gaming GPU architecture |
+| **SXM** | NVIDIA's high-performance server GPU form factor (vs PCIe) |
+
+---
+
+## 10. The Landscape at a Glance
+
+```
+CONSUMER (Gaming + Hobbyist AI)
+   NVIDIA GeForce RTX 4000/5000   ←→   AMD Radeon RX 7000/9000
+        16–32GB VRAM                        16GB VRAM
+        ₹40,000 – ₹2,00,000                ₹45,000 – ₹75,000
+
+DATA CENTER (AI Training + Inference)
+   NVIDIA H100/H200 (Hopper)         — workhorse of the current AI era
+   NVIDIA B100/B200/GB200 (Blackwell) — next-gen, dominant
+   AMD MI300X/MI325X (CDNA3)         — challenger, best VRAM per chip
+   Intel Gaudi 3                      — niche
+   Huawei Ascend 910                  — China-only
+
+   $20,000 – $100,000+ per GPU
+   Powers ChatGPT, Gemini, Claude, Midjourney...
+```
+
+---
+
+## 11. What to Read Next
+
+- **[Tim Dettmers' blog](https://timdettmers.com/2023/01/30/which-gpu-for-deep-learning/)** — practical guide to GPUs for deep learning
+- **[Semianalysis](https://semianalysis.com)** — deep technical breakdowns of AI chips (paid but excellent)
+- **NVIDIA GTC keynotes** — Jensen Huang explains new chips every year
+- **"Making Deep Learning Go Brrrr From First Principles"** — viral blog post on GPU optimization
