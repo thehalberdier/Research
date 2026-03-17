@@ -455,6 +455,48 @@
     "text": "Datasheet links\n\nSeagate Exos X24 ST24000NM007H: https://www.seagate.com/content/dam/seagate/en/content-fragments/products/datasheets/exos-x24/exos-x24-DS2080-2307US-en_US.pdf\nWD Ultrastar DC HC590 24TB (SKU 0F59373): https://documents.westerndigital.com/content/dam/doc-library/en_us/assets/public/western-digital/product/data-center-drives/ultrastar-dc-hc500-series/data-sheet-ultrastar-dc-hc590.pdf\nSeagate Exos X20 ST18000NM000D: https://www.seagate.com/files/www-content/datasheets/pdfs/exos-x20-channel-DS2080-2111GB-en_EM.pdf"
   },
   {
+    "objectID": "arista_switch_health_report.html",
+    "href": "arista_switch_health_report.html",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "",
+    "text": "This page summarizes findings from the health report file healthreport_Arista.txt."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#snapshot",
+    "href": "arista_switch_health_report.html#snapshot",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Snapshot",
+    "text": "Snapshot\n\nReport timestamp: Sat Jan 31 09:41:47 UTC 2026\nModel: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)\nEOS: 4.26.6M\nUptime at capture: ~20 minutes"
+  },
+  {
+    "objectID": "arista_switch_health_report.html#overall-status",
+    "href": "arista_switch_health_report.html#overall-status",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Overall status",
+    "text": "Overall status\nCooling, temperatures, and flash look healthy. The report shows PSU2 offline, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy)."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#key-findings",
+    "href": "arista_switch_health_report.html#key-findings",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Key findings",
+    "text": "Key findings\n\n\n\n\n\n\n\n\nArea\nStatus\nNotes\n\n\n\n\nCooling\nPass\nFans OK and stable; ambient 25°C\n\n\nTemperature\nPass\nAll sensors below alert/critical thresholds\n\n\nPower supplies\nExpected (lab setup)\nPSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected\n\n\nModules/ASIC status\nScript false-fail\nshow module is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself\n\n\nInterfaces\nN/A (bench state)\nAll ports show notconnect / Not Present (no optics/cables); Ma1 also down\n\n\nFlash\nPass\n/mnt/flash 63% used; writable"
+  },
+  {
+    "objectID": "arista_switch_health_report.html#details",
+    "href": "arista_switch_health_report.html#details",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Details",
+    "text": "Details\n\nPower (expected in this test setup)\nshow environment power indicates:\n\nPSU 1: Ok, drawing input current and supplying ~125.5W\nPSU 2: Power Loss Offline, 0.0W (expected when not connected)\n\nThis is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.\n\n\n“Modules are not reporting Active” (likely not real)\nThe report section “MODULE & ASIC STATUS” runs show module, but the output returns:\n\n“Unavailable command (not supported on this hardware platform)”\n\nSo treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue."
+  },
+  {
+    "objectID": "arista_switch_health_report.html#recommended-next-checks",
+    "href": "arista_switch_health_report.html#recommended-next-checks",
+    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "section": "Recommended next checks",
+    "text": "Recommended next checks\nTo restore redundancy, connect PSU2 to AC and confirm it transitions to Ok. If it still shows offline:\n\nReseat PSU2 and verify it’s the correct model for the chassis.\nSwap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).\nRe-run these commands and look for state changes:\n\nshow environment power\nshow logging | include PSU|Power|pwr|power-supply\nshow system environment cooling\nshow system environment temperature"
+  },
+  {
     "objectID": "ampereone_m_vs_amd_epyc.html",
     "href": "ampereone_m_vs_amd_epyc.html",
     "title": "AmpereOne M vs AMD EPYC 9554/9654",
@@ -546,46 +588,88 @@
     "text": "Recommendation: a minimal, decision-oriented POC\n\nPick one workload per “shape” you run: (a) latency-sensitive service, (b) batch/throughput service, (c) memory-bandwidth-heavy job, (d) IO-heavy node.\nTest 2 Ampere SKUs per AMD SKU (from the shortlist) and keep memory config constant (same capacity per channel).\nCompare: throughput/socket, p99 latency, perf/W, and perf/$ (including any software/license deltas).\nFail fast on compatibility: image build, agents, monitoring, kernel/driver support, and any proprietary binaries."
   },
   {
-    "objectID": "arista_switch_health_report.html",
-    "href": "arista_switch_health_report.html",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
+    "objectID": "gpu_primer.html",
+    "href": "gpu_primer.html",
+    "title": "GPU Primer: From Zero to 80%",
     "section": "",
-    "text": "This page summarizes findings from the health report file healthreport_Arista.txt."
+    "text": "Goal: Get you to ~80% of GPUs, fast. No prior hardware knowledge assumed. Covers: GPU fundamentals, data center vs consumer GPUs, key specs, major chips (H200, B200, MI325X), how AI uses GPUs, and a consumer buying guide."
   },
   {
-    "objectID": "arista_switch_health_report.html#snapshot",
-    "href": "arista_switch_health_report.html#snapshot",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Snapshot",
-    "text": "Snapshot\n\nReport timestamp: Sat Jan 31 09:41:47 UTC 2026\nModel: Arista DCS-7060CX-32S-R (HW v01.00, Mfg date 2016-04-21)\nEOS: 4.26.6M\nUptime at capture: ~20 minutes"
+    "objectID": "gpu_primer.html#what-even-is-a-gpu",
+    "href": "gpu_primer.html#what-even-is-a-gpu",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "1. What Even Is a GPU?",
+    "text": "1. What Even Is a GPU?\nA CPU (your laptop’s main chip) is like a brilliant generalist — it handles a few complex tasks at a time, really fast.\nA GPU (Graphics Processing Unit) is like an army of interns — thousands of simpler cores doing millions of small tasks simultaneously. Originally designed to render pixels on a screen, it turns out this “do everything in parallel” design is perfect for:\n\nTraining AI models (billions of matrix multiplications)\nRunning AI inference (serving ChatGPT responses)\nScientific simulations\nCryptocurrency mining\n3D graphics and gaming\n\nThe GPU revolution in AI happened because matrix math — the core of neural networks — maps perfectly onto what GPUs are built to do."
   },
   {
-    "objectID": "arista_switch_health_report.html#overall-status",
-    "href": "arista_switch_health_report.html#overall-status",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Overall status",
-    "text": "Overall status\nCooling, temperatures, and flash look healthy. The report shows PSU2 offline, but in this test setup that was expected because PSU2 was not connected to power (so the system was running without redundancy)."
+    "objectID": "gpu_primer.html#the-two-worlds-of-gpus",
+    "href": "gpu_primer.html#the-two-worlds-of-gpus",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "2. The Two Worlds of GPUs",
+    "text": "2. The Two Worlds of GPUs\nThere are two very different GPU markets, and they’re easy to confuse:\n\n🎮 Consumer / Gaming GPUs\n\nBrands: NVIDIA GeForce (RTX 4090, RTX 5090), AMD Radeon (RX 9070)\nGoal: Render beautiful graphics at high frame rates\nPrice: ₹30,000 – ₹2,00,000\nVRAM: 8GB – 24GB\n\n\n\n🧠 Data Center / AI GPUs\n\nBrands: NVIDIA H100, H200, B200 / AMD Instinct MI300X, MI325X\nGoal: Train and run large AI models (LLMs, image models)\nPrice: $20,000 – $100,000+ per card\nVRAM: 80GB – 192GB\nThese are what power ChatGPT, Gemini, Claude\n\nUnless you’re building a supercomputer, consumer GPUs are what you’d buy. But understanding data center GPUs helps you understand what’s powering the AI tools you use every day."
   },
   {
-    "objectID": "arista_switch_health_report.html#key-findings",
-    "href": "arista_switch_health_report.html#key-findings",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Key findings",
-    "text": "Key findings\n\n\n\n\n\n\n\n\nArea\nStatus\nNotes\n\n\n\n\nCooling\nPass\nFans OK and stable; ambient 25°C\n\n\nTemperature\nPass\nAll sensors below alert/critical thresholds\n\n\nPower supplies\nExpected (lab setup)\nPSU1 OK (~125.5W load); PSU2 shows “Power Loss Offline” when not connected\n\n\nModules/ASIC status\nScript false-fail\nshow module is not supported on this platform, so the report’s FAIL here is not a hardware fault by itself\n\n\nInterfaces\nN/A (bench state)\nAll ports show notconnect / Not Present (no optics/cables); Ma1 also down\n\n\nFlash\nPass\n/mnt/flash 63% used; writable"
+    "objectID": "gpu_primer.html#key-specs-what-actually-matters",
+    "href": "gpu_primer.html#key-specs-what-actually-matters",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "3. Key Specs — What Actually Matters",
+    "text": "3. Key Specs — What Actually Matters\n\n🧠 VRAM (Video RAM)\nThe GPU’s own memory. The most critical spec for AI work.\n\nMore VRAM = bigger models you can run or train\nA 7B parameter model needs ~14GB VRAM minimum\nA 70B model needs ~140GB — which is why you need multiple GPUs or specialized chips\n\nThink of VRAM like your workbench. If the model doesn’t fit on the bench, you can’t work on it.\n\n\n⚡ Memory Bandwidth\nHow fast data can move between VRAM and the compute cores. Measured in GB/s or TB/s.\n\nMore bandwidth = faster training and inference\nOften more important than raw compute power for AI workloads\nThe H200 has ~3.35 TB/s — insane for its time\n\n\n\n🔢 TFLOPS (Tera Floating Point Operations Per Second)\nRaw compute power. Higher = more math per second.\n\nDifferent precisions matter: FP64 (scientific), FP32 (standard), FP16/BF16 (AI training), INT8/FP8 (AI inference)\nAI workloads primarily use FP16/BF16 or FP8\nThe H100 does ~3,958 TFLOPS at FP8\n\n\n\n🔌 TDP (Thermal Design Power)\nHow much electricity the GPU uses (and heat it generates). In watts.\n\nConsumer GPU: 150–450W\nData center GPU: 300–1,000W\nRunning 8x B200 GPUs = ~8,000W. That’s why AI costs so much to run.\n\n\n\n🔗 Interconnects (NVLink, Infinity Fabric)\nHow multiple GPUs talk to each other.\n\nTraining large models requires many GPUs working together\nNVLink (NVIDIA): ultra-fast GPU-to-GPU connection, up to 1.8 TB/s between cards\nInfinity Fabric (AMD): AMD’s equivalent\nSlow interconnects are a bottleneck — like having brilliant workers but a slow network"
   },
   {
-    "objectID": "arista_switch_health_report.html#details",
-    "href": "arista_switch_health_report.html#details",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Details",
-    "text": "Details\n\nPower (expected in this test setup)\nshow environment power indicates:\n\nPSU 1: Ok, drawing input current and supplying ~125.5W\nPSU 2: Power Loss Offline, 0.0W (expected when not connected)\n\nThis is fine for lab testing, but it removes redundancy and increases risk if PSU1 or its feed fails.\n\n\n“Modules are not reporting Active” (likely not real)\nThe report section “MODULE & ASIC STATUS” runs show module, but the output returns:\n\n“Unavailable command (not supported on this hardware platform)”\n\nSo treat the report’s FAIL on that section as a limitation of the report script, not necessarily a device health issue."
+    "objectID": "gpu_primer.html#the-major-players",
+    "href": "gpu_primer.html#the-major-players",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "4. The Major Players",
+    "text": "4. The Major Players\n\n🟢 NVIDIA — The Dominant Force\nNVIDIA owns ~80%+ of the AI GPU market. Here’s why:\n\nFirst mover in GPU compute (CUDA platform, 2006)\nCUDA is the programming layer that software is written for. Almost all AI frameworks (PyTorch, TensorFlow) are deeply optimized for CUDA.\nThis software ecosystem moat is enormous — AMD hardware is competitive, but software support still lags\n\nNVIDIA GPU Families:\n\n\n\nFamily\nEra\nUse Case\n\n\n\n\nGeForce RTX (3000s, 4000s, 5000s)\nConsumer\nGaming, hobbyist AI\n\n\nV100\n2017\nFirst major AI GPU\n\n\nA100\n2020\nTrained GPT-3 era models\n\n\nH100\n2022\nChatGPT era, still widely used\n\n\nH200\n2024\nH100 + HBM3e memory upgrade\n\n\nB100 / B200\n2024–25\nBlackwell architecture, next-gen\n\n\nGB200\n2025\nCPU+GPU combo, for AI clusters\n\n\n\n\n\n🔴 AMD — The Challenger\n\nConsumer: AMD Radeon competes well with NVIDIA GeForce on price/performance\nData center: AMD Instinct MI-series (MI250, MI300X, MI325X, MI350X)\nAMD’s big advantage: higher VRAM on some chips (MI300X has 192GB)\nBig disadvantage: ROCm (AMD’s CUDA equivalent) is less mature; software support still catching up\nCompanies like Meta and Microsoft are actively investing in AMD to reduce NVIDIA dependence\n\n\n\n🔵 Intel — The Newcomer\n\nIntel Arc: Consumer gaming GPUs (competitive at budget tiers)\nGaudi 3: Data center AI GPU — competitive specs on paper, ecosystem is nascent\nNot a major player in AI yet but investing heavily\n\n\n\n🇨🇳 Huawei Ascend — The Wildcard\n\nChina’s answer to NVIDIA, accelerated by US export controls\nAscend 910B/910C — competitive with H100 on some benchmarks\nMostly used within China’s AI ecosystem"
   },
   {
-    "objectID": "arista_switch_health_report.html#recommended-next-checks",
-    "href": "arista_switch_health_report.html#recommended-next-checks",
-    "title": "Arista Switch Health Report (DCS-7060CX-32S-R)",
-    "section": "Recommended next checks",
-    "text": "Recommended next checks\nTo restore redundancy, connect PSU2 to AC and confirm it transitions to Ok. If it still shows offline:\n\nReseat PSU2 and verify it’s the correct model for the chassis.\nSwap AC cable/outlet/circuit (or swap PSUs between slot 1 and slot 2 if you have a safe procedure).\nRe-run these commands and look for state changes:\n\nshow environment power\nshow logging | include PSU|Power|pwr|power-supply\nshow system environment cooling\nshow system environment temperature"
+    "objectID": "gpu_primer.html#the-big-chips-explained",
+    "href": "gpu_primer.html#the-big-chips-explained",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "5. The Big Chips Explained",
+    "text": "5. The Big Chips Explained\n\nNVIDIA H200\n\nReleased: Early 2024\nArchitecture: Hopper (same as H100)\nThe upgrade: Switched from HBM2e to HBM3e memory — 141GB VRAM (up from 80GB) and 3.35 TB/s bandwidth\nFP8 compute: ~3,958 TFLOPS\nTDP: 700W\nThe H200 is essentially an H100 with a memory upgrade. The real architectural leap was H100 → B200 (Blackwell).\nWho uses it: Every major cloud provider (AWS, Azure, Google Cloud), AI labs\n\n\n\nNVIDIA B200 (Blackwell)\n\nReleased: 2024–2025\nArchitecture: Blackwell — NVIDIA’s next major architecture after Hopper\nVRAM: 192GB HBM3e\nBandwidth: 8 TB/s\nFP4 compute: ~18,000 TFLOPS (new FP4 precision for inference)\nTDP: ~1,000W\nKey innovation: NVLink Switch — connects up to 576 GPUs as one giant brain\nThe GB200 is a superchip: a Grace CPU + 2x B200 GPUs in one package, designed for AI servers (NVL72 racks)\nWho uses it: Microsoft, Google, Amazon, Meta — spending billions on Blackwell clusters\n\n\n\nAMD MI325X\n\nReleased: Late 2024\nArchitecture: CDNA 3 (same as MI300X, with memory upgrade)\nVRAM: 256GB HBM3 — the most of any GPU available\nBandwidth: 6 TB/s\nFP8 compute: ~2,600 TFLOPS\nTDP: 750W\nStrength: Massive VRAM means it can fit the biggest models on a single chip without multi-GPU tricks\nWho uses it: Microsoft Azure, Oracle, some Meta deployments\n\n\n\nQuick Comparison\n\n\n\nGPU\nVRAM\nBandwidth\nFP8 TFLOPS\nPrice (est.)\nGeneration\n\n\n\n\nNVIDIA H100\n80GB\n3.35 TB/s\n~3,958\n~$30,000\nHopper\n\n\nNVIDIA H200\n141GB\n3.35 TB/s\n~3,958\n~$40,000\nHopper+\n\n\nNVIDIA B200\n192GB\n8 TB/s\n~18,000\n~$70,000+\nBlackwell\n\n\nAMD MI300X\n192GB\n5.3 TB/s\n~2,610\n~$20,000\nCDNA3\n\n\nAMD MI325X\n256GB\n6.0 TB/s\n~2,610\n~$25,000\nCDNA3+"
+  },
+  {
+    "objectID": "gpu_primer.html#how-ai-models-use-gpus",
+    "href": "gpu_primer.html#how-ai-models-use-gpus",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "6. How AI Models Use GPUs",
+    "text": "6. How AI Models Use GPUs\n\nTraining vs. Inference\nTraining = Teaching the model (happens once, very expensive)\n\nRequires thousands of GPUs for months\nGPT-4 reportedly cost $100M+ to train\nNeeds massive VRAM and compute\n\nInference = Using the model to answer your questions (happens billions of times)\n\nCan use fewer/cheaper GPUs\nLatency matters more than raw throughput\nOptimized with quantization (FP8, INT4) to fit bigger models on smaller hardware\n\n\n\nWhy VRAM is Everything for AI\nWhen you run a model, the entire model must fit in VRAM:\n\nLLaMA 3 8B: ~16GB VRAM (FP16)\nLLaMA 3 70B: ~140GB VRAM (FP16), or ~35GB with aggressive quantization\nGPT-4 class (~1T parameters): needs hundreds of GPUs\n\nThis is why data center GPUs have 80–256GB VRAM while your gaming GPU has 8–24GB.\n\n\nModel Parallelism\nWhen a model is too big for one GPU, you split it:\n\nTensor Parallelism: Split individual layers across GPUs\nPipeline Parallelism: Different GPUs handle different layers\nData Parallelism: Same model on multiple GPUs, each processing different data batches\n\nThis is why fast interconnects (NVLink) matter so much — GPUs are constantly talking to each other."
+  },
+  {
+    "objectID": "gpu_primer.html#the-gpu-shortage-economics",
+    "href": "gpu_primer.html#the-gpu-shortage-economics",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "7. The GPU Shortage & Economics",
+    "text": "7. The GPU Shortage & Economics\n\nWhy GPUs Are So Expensive and Hard to Get\n\nDemand explosion: ChatGPT’s launch triggered a GPU gold rush\nSupply constraints: GPUs are made on cutting-edge nodes (TSMC’s 4nm/3nm). Capacity is limited.\nExport controls: US restricted NVIDIA GPU exports to China (China gets limited H20 chips instead of full H100s)\nLong lead times: Major cloud orders take 6–12 months to fulfil\n\n\n\nThe Power Problem\nA single rack of 8x H100s uses ~40,000 watts. A data center with thousands of GPUs consumes as much electricity as a small city. This is why:\n\nAI companies are building their own power plants\nNuclear energy is getting renewed interest (Microsoft, Google)\n“AI electricity cost” is now a major factor in model pricing"
+  },
+  {
+    "objectID": "gpu_primer.html#consumer-gpu-guide",
+    "href": "gpu_primer.html#consumer-gpu-guide",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "8. Consumer GPU Guide",
+    "text": "8. Consumer GPU Guide\n\nNVIDIA GeForce RTX 5000 Series (2025)\n\n\n\nGPU\nVRAM\nBest For\nPrice (India est.)\n\n\n\n\nRTX 5060 Ti\n16GB\n1080p gaming, hobbyist AI\n₹45,000–55,000\n\n\nRTX 5070\n12GB\n1440p gaming\n₹55,000–70,000\n\n\nRTX 5070 Ti\n16GB\n1440p/4K gaming\n₹75,000–90,000\n\n\nRTX 5080\n16GB\n4K gaming, serious AI\n₹1,10,000–1,30,000\n\n\nRTX 5090\n32GB\nEverything, overkill\n₹2,00,000+\n\n\n\n\n\nAMD Radeon RX 9000 Series\n\n\n\nGPU\nVRAM\nBest For\nPrice (India est.)\n\n\n\n\nRX 9070\n16GB\n1440p gaming, great value\n₹50,000–60,000\n\n\nRX 9070 XT\n16GB\n1440p/4K gaming\n₹60,000–75,000\n\n\n\nAMD advantage: More VRAM at lower prices — great for gaming and local LLM hobbyists\nNVIDIA advantage: DLSS (AI upscaling), better driver stability, CUDA for AI work\n\n\nIf You Want to Run AI Locally\n\nMinimum: 16GB VRAM (run 7B–13B models)\nSweet spot: 24GB VRAM (run up to 30B models with quantization)\nSerious: 2x 24GB GPUs (64B+ models)"
+  },
+  {
+    "objectID": "gpu_primer.html#key-terms-glossary",
+    "href": "gpu_primer.html#key-terms-glossary",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "9. Key Terms Glossary",
+    "text": "9. Key Terms Glossary\n\n\n\n\n\n\n\nTerm\nMeaning\n\n\n\n\nVRAM\nGPU’s own memory — bigger = better for AI\n\n\nHBM\nHigh Bandwidth Memory — stacked memory chips used in data center GPUs (HBM2e → HBM3 → HBM3e)\n\n\nGDDR7\nConsumer GPU memory (like RAM but faster)\n\n\nCUDA\nNVIDIA’s GPU programming platform — the reason NVIDIA dominates AI\n\n\nROCm\nAMD’s equivalent to CUDA\n\n\nTensor Cores\nSpecialized cores in NVIDIA GPUs for matrix math (AI)\n\n\nTFLOPS\nTrillion floating point operations per second — raw compute power\n\n\nFP32/FP16/FP8/INT4\nNumber precisions — lower = faster and uses less memory, slightly less accurate\n\n\nNVLink\nNVIDIA’s fast GPU-to-GPU interconnect\n\n\nPCIe\nStandard interface connecting GPU to motherboard (slower than NVLink)\n\n\nTDP\nTotal power draw in watts\n\n\nBlackwell\nNVIDIA’s current architecture (B100, B200, GB200)\n\n\nHopper\nNVIDIA’s previous architecture (H100, H200)\n\n\nCDNA\nAMD’s data center GPU architecture\n\n\nRDNA\nAMD’s consumer/gaming GPU architecture\n\n\nSXM\nNVIDIA’s high-performance server GPU form factor (vs PCIe)"
+  },
+  {
+    "objectID": "gpu_primer.html#the-landscape-at-a-glance",
+    "href": "gpu_primer.html#the-landscape-at-a-glance",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "10. The Landscape at a Glance",
+    "text": "10. The Landscape at a Glance\nCONSUMER (Gaming + Hobbyist AI)\n   NVIDIA GeForce RTX 4000/5000   ←→   AMD Radeon RX 7000/9000\n        16–32GB VRAM                        16GB VRAM\n        ₹40,000 – ₹2,00,000                ₹45,000 – ₹75,000\n\nDATA CENTER (AI Training + Inference)\n   NVIDIA H100/H200 (Hopper)         — workhorse of the current AI era\n   NVIDIA B100/B200/GB200 (Blackwell) — next-gen, dominant\n   AMD MI300X/MI325X (CDNA3)         — challenger, best VRAM per chip\n   Intel Gaudi 3                      — niche\n   Huawei Ascend 910                  — China-only\n\n   $20,000 – $100,000+ per GPU\n   Powers ChatGPT, Gemini, Claude, Midjourney..."
+  },
+  {
+    "objectID": "gpu_primer.html#what-to-read-next",
+    "href": "gpu_primer.html#what-to-read-next",
+    "title": "GPU Primer: From Zero to 80%",
+    "section": "11. What to Read Next",
+    "text": "11. What to Read Next\n\nTim Dettmers’ blog — practical guide to GPUs for deep learning\nSemianalysis — deep technical breakdowns of AI chips (paid but excellent)\nNVIDIA GTC keynotes — Jensen Huang explains new chips every year\n“Making Deep Learning Go Brrrr From First Principles” — viral blog post on GPU optimization"
   },
   {
     "objectID": "index.html",

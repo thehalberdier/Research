@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Research Notes">
+<meta name="dcterms.date" content="2026-03-17">
+
+<title>GPU Primer: From Zero to 80% – Research</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-afa37c5c79185640b9c231024f4fe5ea.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">Research</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="./index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./rust_primer.html"> 
+<span class="menu-text">Rust Primer</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./kubernetes_primer.html"> 
+<span class="menu-text">Kubernetes Primer</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./ipsec_primer.html"> 
+<span class="menu-text">IPSec Primer</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./hdd_tco_summary.html"> 
+<span class="menu-text">HDD TCO</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./ampereone_m_vs_amd_epyc.html"> 
+<span class="menu-text">Ampere vs AMD</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./arista_switch_health_report.html"> 
+<span class="menu-text">Arista Health</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link active" href="./gpu_primer.html" aria-current="page"> 
+<span class="menu-text">GPU Primer</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#what-even-is-a-gpu" id="toc-what-even-is-a-gpu" class="nav-link active" data-scroll-target="#what-even-is-a-gpu">1. What Even Is a GPU?</a></li>
+  <li><a href="#the-two-worlds-of-gpus" id="toc-the-two-worlds-of-gpus" class="nav-link" data-scroll-target="#the-two-worlds-of-gpus">2. The Two Worlds of GPUs</a>
+  <ul class="collapse">
+  <li><a href="#consumer-gaming-gpus" id="toc-consumer-gaming-gpus" class="nav-link" data-scroll-target="#consumer-gaming-gpus">🎮 Consumer / Gaming GPUs</a></li>
+  <li><a href="#data-center-ai-gpus" id="toc-data-center-ai-gpus" class="nav-link" data-scroll-target="#data-center-ai-gpus">🧠 Data Center / AI GPUs</a></li>
+  </ul></li>
+  <li><a href="#key-specs-what-actually-matters" id="toc-key-specs-what-actually-matters" class="nav-link" data-scroll-target="#key-specs-what-actually-matters">3. Key Specs — What Actually Matters</a>
+  <ul class="collapse">
+  <li><a href="#vram-video-ram" id="toc-vram-video-ram" class="nav-link" data-scroll-target="#vram-video-ram">🧠 VRAM (Video RAM)</a></li>
+  <li><a href="#memory-bandwidth" id="toc-memory-bandwidth" class="nav-link" data-scroll-target="#memory-bandwidth">⚡ Memory Bandwidth</a></li>
+  <li><a href="#tflops-tera-floating-point-operations-per-second" id="toc-tflops-tera-floating-point-operations-per-second" class="nav-link" data-scroll-target="#tflops-tera-floating-point-operations-per-second">🔢 TFLOPS (Tera Floating Point Operations Per Second)</a></li>
+  <li><a href="#tdp-thermal-design-power" id="toc-tdp-thermal-design-power" class="nav-link" data-scroll-target="#tdp-thermal-design-power">🔌 TDP (Thermal Design Power)</a></li>
+  <li><a href="#interconnects-nvlink-infinity-fabric" id="toc-interconnects-nvlink-infinity-fabric" class="nav-link" data-scroll-target="#interconnects-nvlink-infinity-fabric">🔗 Interconnects (NVLink, Infinity Fabric)</a></li>
+  </ul></li>
+  <li><a href="#the-major-players" id="toc-the-major-players" class="nav-link" data-scroll-target="#the-major-players">4. The Major Players</a>
+  <ul class="collapse">
+  <li><a href="#nvidia-the-dominant-force" id="toc-nvidia-the-dominant-force" class="nav-link" data-scroll-target="#nvidia-the-dominant-force">🟢 NVIDIA — The Dominant Force</a></li>
+  <li><a href="#amd-the-challenger" id="toc-amd-the-challenger" class="nav-link" data-scroll-target="#amd-the-challenger">🔴 AMD — The Challenger</a></li>
+  <li><a href="#intel-the-newcomer" id="toc-intel-the-newcomer" class="nav-link" data-scroll-target="#intel-the-newcomer">🔵 Intel — The Newcomer</a></li>
+  <li><a href="#huawei-ascend-the-wildcard" id="toc-huawei-ascend-the-wildcard" class="nav-link" data-scroll-target="#huawei-ascend-the-wildcard">🇨🇳 Huawei Ascend — The Wildcard</a></li>
+  </ul></li>
+  <li><a href="#the-big-chips-explained" id="toc-the-big-chips-explained" class="nav-link" data-scroll-target="#the-big-chips-explained">5. The Big Chips Explained</a>
+  <ul class="collapse">
+  <li><a href="#nvidia-h200" id="toc-nvidia-h200" class="nav-link" data-scroll-target="#nvidia-h200">NVIDIA H200</a></li>
+  <li><a href="#nvidia-b200-blackwell" id="toc-nvidia-b200-blackwell" class="nav-link" data-scroll-target="#nvidia-b200-blackwell">NVIDIA B200 (Blackwell)</a></li>
+  <li><a href="#amd-mi325x" id="toc-amd-mi325x" class="nav-link" data-scroll-target="#amd-mi325x">AMD MI325X</a></li>
+  <li><a href="#quick-comparison" id="toc-quick-comparison" class="nav-link" data-scroll-target="#quick-comparison">Quick Comparison</a></li>
+  </ul></li>
+  <li><a href="#how-ai-models-use-gpus" id="toc-how-ai-models-use-gpus" class="nav-link" data-scroll-target="#how-ai-models-use-gpus">6. How AI Models Use GPUs</a>
+  <ul class="collapse">
+  <li><a href="#training-vs.-inference" id="toc-training-vs.-inference" class="nav-link" data-scroll-target="#training-vs.-inference">Training vs.&nbsp;Inference</a></li>
+  <li><a href="#why-vram-is-everything-for-ai" id="toc-why-vram-is-everything-for-ai" class="nav-link" data-scroll-target="#why-vram-is-everything-for-ai">Why VRAM is Everything for AI</a></li>
+  <li><a href="#model-parallelism" id="toc-model-parallelism" class="nav-link" data-scroll-target="#model-parallelism">Model Parallelism</a></li>
+  </ul></li>
+  <li><a href="#the-gpu-shortage-economics" id="toc-the-gpu-shortage-economics" class="nav-link" data-scroll-target="#the-gpu-shortage-economics">7. The GPU Shortage &amp; Economics</a>
+  <ul class="collapse">
+  <li><a href="#why-gpus-are-so-expensive-and-hard-to-get" id="toc-why-gpus-are-so-expensive-and-hard-to-get" class="nav-link" data-scroll-target="#why-gpus-are-so-expensive-and-hard-to-get">Why GPUs Are So Expensive and Hard to Get</a></li>
+  <li><a href="#the-power-problem" id="toc-the-power-problem" class="nav-link" data-scroll-target="#the-power-problem">The Power Problem</a></li>
+  </ul></li>
+  <li><a href="#consumer-gpu-guide" id="toc-consumer-gpu-guide" class="nav-link" data-scroll-target="#consumer-gpu-guide">8. Consumer GPU Guide</a>
+  <ul class="collapse">
+  <li><a href="#nvidia-geforce-rtx-5000-series-2025" id="toc-nvidia-geforce-rtx-5000-series-2025" class="nav-link" data-scroll-target="#nvidia-geforce-rtx-5000-series-2025">NVIDIA GeForce RTX 5000 Series (2025)</a></li>
+  <li><a href="#amd-radeon-rx-9000-series" id="toc-amd-radeon-rx-9000-series" class="nav-link" data-scroll-target="#amd-radeon-rx-9000-series">AMD Radeon RX 9000 Series</a></li>
+  <li><a href="#if-you-want-to-run-ai-locally" id="toc-if-you-want-to-run-ai-locally" class="nav-link" data-scroll-target="#if-you-want-to-run-ai-locally">If You Want to Run AI Locally</a></li>
+  </ul></li>
+  <li><a href="#key-terms-glossary" id="toc-key-terms-glossary" class="nav-link" data-scroll-target="#key-terms-glossary">9. Key Terms Glossary</a></li>
+  <li><a href="#the-landscape-at-a-glance" id="toc-the-landscape-at-a-glance" class="nav-link" data-scroll-target="#the-landscape-at-a-glance">10. The Landscape at a Glance</a></li>
+  <li><a href="#what-to-read-next" id="toc-what-to-read-next" class="nav-link" data-scroll-target="#what-to-read-next">11. What to Read Next</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">GPU Primer: From Zero to 80%</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Research Notes </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">March 17, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<blockquote class="blockquote">
+<p><strong>Goal</strong>: Get you to ~80% of GPUs, fast. No prior hardware knowledge assumed. Covers: GPU fundamentals, data center vs consumer GPUs, key specs, major chips (H200, B200, MI325X), how AI uses GPUs, and a consumer buying guide.</p>
+</blockquote>
+<hr>
+<section id="what-even-is-a-gpu" class="level2">
+<h2 class="anchored" data-anchor-id="what-even-is-a-gpu">1. What Even Is a GPU?</h2>
+<p>A <strong>CPU</strong> (your laptop’s main chip) is like a brilliant generalist — it handles a few complex tasks at a time, really fast.</p>
+<p>A <strong>GPU</strong> (Graphics Processing Unit) is like an army of interns — thousands of simpler cores doing millions of small tasks <em>simultaneously</em>. Originally designed to render pixels on a screen, it turns out this “do everything in parallel” design is <em>perfect</em> for:</p>
+<ul>
+<li>Training AI models (billions of matrix multiplications)</li>
+<li>Running AI inference (serving ChatGPT responses)</li>
+<li>Scientific simulations</li>
+<li>Cryptocurrency mining</li>
+<li>3D graphics and gaming</li>
+</ul>
+<p>The GPU revolution in AI happened because matrix math — the core of neural networks — maps perfectly onto what GPUs are built to do.</p>
+<hr>
+</section>
+<section id="the-two-worlds-of-gpus" class="level2">
+<h2 class="anchored" data-anchor-id="the-two-worlds-of-gpus">2. The Two Worlds of GPUs</h2>
+<p>There are two very different GPU markets, and they’re easy to confuse:</p>
+<section id="consumer-gaming-gpus" class="level3">
+<h3 class="anchored" data-anchor-id="consumer-gaming-gpus">🎮 Consumer / Gaming GPUs</h3>
+<ul>
+<li><strong>Brands:</strong> NVIDIA GeForce (RTX 4090, RTX 5090), AMD Radeon (RX 9070)</li>
+<li><strong>Goal:</strong> Render beautiful graphics at high frame rates</li>
+<li><strong>Price:</strong> ₹30,000 – ₹2,00,000</li>
+<li><strong>VRAM:</strong> 8GB – 24GB</li>
+</ul>
+</section>
+<section id="data-center-ai-gpus" class="level3">
+<h3 class="anchored" data-anchor-id="data-center-ai-gpus">🧠 Data Center / AI GPUs</h3>
+<ul>
+<li><strong>Brands:</strong> NVIDIA H100, H200, B200 / AMD Instinct MI300X, MI325X</li>
+<li><strong>Goal:</strong> Train and run large AI models (LLMs, image models)</li>
+<li><strong>Price:</strong> $20,000 – $100,000+ per card</li>
+<li><strong>VRAM:</strong> 80GB – 192GB</li>
+<li>These are what power ChatGPT, Gemini, Claude</li>
+</ul>
+<p>Unless you’re building a supercomputer, consumer GPUs are what you’d buy. But understanding data center GPUs helps you understand what’s powering the AI tools you use every day.</p>
+<hr>
+</section>
+</section>
+<section id="key-specs-what-actually-matters" class="level2">
+<h2 class="anchored" data-anchor-id="key-specs-what-actually-matters">3. Key Specs — What Actually Matters</h2>
+<section id="vram-video-ram" class="level3">
+<h3 class="anchored" data-anchor-id="vram-video-ram">🧠 VRAM (Video RAM)</h3>
+<p>The GPU’s own memory. <strong>The most critical spec for AI work.</strong></p>
+<ul>
+<li>More VRAM = bigger models you can run or train</li>
+<li>A 7B parameter model needs ~14GB VRAM minimum</li>
+<li>A 70B model needs ~140GB — which is why you need multiple GPUs or specialized chips</li>
+</ul>
+<p>Think of VRAM like your workbench. If the model doesn’t fit on the bench, you can’t work on it.</p>
+</section>
+<section id="memory-bandwidth" class="level3">
+<h3 class="anchored" data-anchor-id="memory-bandwidth">⚡ Memory Bandwidth</h3>
+<p>How fast data can move between VRAM and the compute cores. Measured in <strong>GB/s or TB/s</strong>.</p>
+<ul>
+<li>More bandwidth = faster training and inference</li>
+<li>Often more important than raw compute power for AI workloads</li>
+<li>The H200 has ~3.35 TB/s — insane for its time</li>
+</ul>
+</section>
+<section id="tflops-tera-floating-point-operations-per-second" class="level3">
+<h3 class="anchored" data-anchor-id="tflops-tera-floating-point-operations-per-second">🔢 TFLOPS (Tera Floating Point Operations Per Second)</h3>
+<p>Raw compute power. Higher = more math per second.</p>
+<ul>
+<li>Different precisions matter: FP64 (scientific), FP32 (standard), FP16/BF16 (AI training), INT8/FP8 (AI inference)</li>
+<li>AI workloads primarily use FP16/BF16 or FP8</li>
+<li>The H100 does ~3,958 TFLOPS at FP8</li>
+</ul>
+</section>
+<section id="tdp-thermal-design-power" class="level3">
+<h3 class="anchored" data-anchor-id="tdp-thermal-design-power">🔌 TDP (Thermal Design Power)</h3>
+<p>How much electricity the GPU uses (and heat it generates). In watts.</p>
+<ul>
+<li>Consumer GPU: 150–450W</li>
+<li>Data center GPU: 300–1,000W</li>
+<li>Running 8x B200 GPUs = ~8,000W. That’s why AI costs so much to run.</li>
+</ul>
+</section>
+<section id="interconnects-nvlink-infinity-fabric" class="level3">
+<h3 class="anchored" data-anchor-id="interconnects-nvlink-infinity-fabric">🔗 Interconnects (NVLink, Infinity Fabric)</h3>
+<p>How multiple GPUs talk to each other.</p>
+<ul>
+<li>Training large models requires many GPUs working together</li>
+<li><strong>NVLink</strong> (NVIDIA): ultra-fast GPU-to-GPU connection, up to 1.8 TB/s between cards</li>
+<li><strong>Infinity Fabric</strong> (AMD): AMD’s equivalent</li>
+<li>Slow interconnects are a bottleneck — like having brilliant workers but a slow network</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="the-major-players" class="level2">
+<h2 class="anchored" data-anchor-id="the-major-players">4. The Major Players</h2>
+<section id="nvidia-the-dominant-force" class="level3">
+<h3 class="anchored" data-anchor-id="nvidia-the-dominant-force">🟢 NVIDIA — The Dominant Force</h3>
+<p>NVIDIA owns ~80%+ of the AI GPU market. Here’s why:</p>
+<ul>
+<li>First mover in GPU compute (CUDA platform, 2006)</li>
+<li><strong>CUDA</strong> is the programming layer that software is written for. Almost all AI frameworks (PyTorch, TensorFlow) are deeply optimized for CUDA.</li>
+<li>This software ecosystem moat is enormous — AMD hardware is competitive, but software support still lags</li>
+</ul>
+<p><strong>NVIDIA GPU Families:</strong></p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Family</th>
+<th>Era</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GeForce RTX (3000s, 4000s, 5000s)</td>
+<td>Consumer</td>
+<td>Gaming, hobbyist AI</td>
+</tr>
+<tr class="even">
+<td>V100</td>
+<td>2017</td>
+<td>First major AI GPU</td>
+</tr>
+<tr class="odd">
+<td>A100</td>
+<td>2020</td>
+<td>Trained GPT-3 era models</td>
+</tr>
+<tr class="even">
+<td>H100</td>
+<td>2022</td>
+<td>ChatGPT era, still widely used</td>
+</tr>
+<tr class="odd">
+<td>H200</td>
+<td>2024</td>
+<td>H100 + HBM3e memory upgrade</td>
+</tr>
+<tr class="even">
+<td>B100 / B200</td>
+<td>2024–25</td>
+<td>Blackwell architecture, next-gen</td>
+</tr>
+<tr class="odd">
+<td>GB200</td>
+<td>2025</td>
+<td>CPU+GPU combo, for AI clusters</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="amd-the-challenger" class="level3">
+<h3 class="anchored" data-anchor-id="amd-the-challenger">🔴 AMD — The Challenger</h3>
+<ul>
+<li>Consumer: AMD Radeon competes well with NVIDIA GeForce on price/performance</li>
+<li>Data center: AMD Instinct MI-series (MI250, MI300X, MI325X, MI350X)</li>
+<li>AMD’s big advantage: higher VRAM on some chips (MI300X has 192GB)</li>
+<li>Big disadvantage: ROCm (AMD’s CUDA equivalent) is less mature; software support still catching up</li>
+<li>Companies like Meta and Microsoft are actively investing in AMD to reduce NVIDIA dependence</li>
+</ul>
+</section>
+<section id="intel-the-newcomer" class="level3">
+<h3 class="anchored" data-anchor-id="intel-the-newcomer">🔵 Intel — The Newcomer</h3>
+<ul>
+<li>Intel Arc: Consumer gaming GPUs (competitive at budget tiers)</li>
+<li>Gaudi 3: Data center AI GPU — competitive specs on paper, ecosystem is nascent</li>
+<li>Not a major player in AI yet but investing heavily</li>
+</ul>
+</section>
+<section id="huawei-ascend-the-wildcard" class="level3">
+<h3 class="anchored" data-anchor-id="huawei-ascend-the-wildcard">🇨🇳 Huawei Ascend — The Wildcard</h3>
+<ul>
+<li>China’s answer to NVIDIA, accelerated by US export controls</li>
+<li>Ascend 910B/910C — competitive with H100 on some benchmarks</li>
+<li>Mostly used within China’s AI ecosystem</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="the-big-chips-explained" class="level2">
+<h2 class="anchored" data-anchor-id="the-big-chips-explained">5. The Big Chips Explained</h2>
+<section id="nvidia-h200" class="level3">
+<h3 class="anchored" data-anchor-id="nvidia-h200">NVIDIA H200</h3>
+<ul>
+<li><strong>Released:</strong> Early 2024</li>
+<li><strong>Architecture:</strong> Hopper (same as H100)</li>
+<li><strong>The upgrade:</strong> Switched from HBM2e to HBM3e memory — 141GB VRAM (up from 80GB) and 3.35 TB/s bandwidth</li>
+<li><strong>FP8 compute:</strong> ~3,958 TFLOPS</li>
+<li><strong>TDP:</strong> 700W</li>
+<li>The H200 is essentially an H100 with a memory upgrade. The real architectural leap was H100 → B200 (Blackwell).</li>
+<li><strong>Who uses it:</strong> Every major cloud provider (AWS, Azure, Google Cloud), AI labs</li>
+</ul>
+</section>
+<section id="nvidia-b200-blackwell" class="level3">
+<h3 class="anchored" data-anchor-id="nvidia-b200-blackwell">NVIDIA B200 (Blackwell)</h3>
+<ul>
+<li><strong>Released:</strong> 2024–2025</li>
+<li><strong>Architecture:</strong> Blackwell — NVIDIA’s next major architecture after Hopper</li>
+<li><strong>VRAM:</strong> 192GB HBM3e</li>
+<li><strong>Bandwidth:</strong> 8 TB/s</li>
+<li><strong>FP4 compute:</strong> ~18,000 TFLOPS (new FP4 precision for inference)</li>
+<li><strong>TDP:</strong> ~1,000W</li>
+<li>Key innovation: <strong>NVLink Switch</strong> — connects up to 576 GPUs as one giant brain</li>
+<li>The <strong>GB200</strong> is a superchip: a Grace CPU + 2x B200 GPUs in one package, designed for AI servers (NVL72 racks)</li>
+<li><strong>Who uses it:</strong> Microsoft, Google, Amazon, Meta — spending billions on Blackwell clusters</li>
+</ul>
+</section>
+<section id="amd-mi325x" class="level3">
+<h3 class="anchored" data-anchor-id="amd-mi325x">AMD MI325X</h3>
+<ul>
+<li><strong>Released:</strong> Late 2024</li>
+<li><strong>Architecture:</strong> CDNA 3 (same as MI300X, with memory upgrade)</li>
+<li><strong>VRAM:</strong> 256GB HBM3 — the most of any GPU available</li>
+<li><strong>Bandwidth:</strong> 6 TB/s</li>
+<li><strong>FP8 compute:</strong> ~2,600 TFLOPS</li>
+<li><strong>TDP:</strong> 750W</li>
+<li><strong>Strength:</strong> Massive VRAM means it can fit the biggest models on a single chip without multi-GPU tricks</li>
+<li><strong>Who uses it:</strong> Microsoft Azure, Oracle, some Meta deployments</li>
+</ul>
+</section>
+<section id="quick-comparison" class="level3">
+<h3 class="anchored" data-anchor-id="quick-comparison">Quick Comparison</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>GPU</th>
+<th>VRAM</th>
+<th>Bandwidth</th>
+<th>FP8 TFLOPS</th>
+<th>Price (est.)</th>
+<th>Generation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NVIDIA H100</td>
+<td>80GB</td>
+<td>3.35 TB/s</td>
+<td>~3,958</td>
+<td>~$30,000</td>
+<td>Hopper</td>
+</tr>
+<tr class="even">
+<td>NVIDIA H200</td>
+<td>141GB</td>
+<td>3.35 TB/s</td>
+<td>~3,958</td>
+<td>~$40,000</td>
+<td>Hopper+</td>
+</tr>
+<tr class="odd">
+<td>NVIDIA B200</td>
+<td>192GB</td>
+<td>8 TB/s</td>
+<td>~18,000</td>
+<td>~$70,000+</td>
+<td>Blackwell</td>
+</tr>
+<tr class="even">
+<td>AMD MI300X</td>
+<td>192GB</td>
+<td>5.3 TB/s</td>
+<td>~2,610</td>
+<td>~$20,000</td>
+<td>CDNA3</td>
+</tr>
+<tr class="odd">
+<td>AMD MI325X</td>
+<td>256GB</td>
+<td>6.0 TB/s</td>
+<td>~2,610</td>
+<td>~$25,000</td>
+<td>CDNA3+</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="how-ai-models-use-gpus" class="level2">
+<h2 class="anchored" data-anchor-id="how-ai-models-use-gpus">6. How AI Models Use GPUs</h2>
+<section id="training-vs.-inference" class="level3">
+<h3 class="anchored" data-anchor-id="training-vs.-inference">Training vs.&nbsp;Inference</h3>
+<p><strong>Training</strong> = Teaching the model (happens once, very expensive)</p>
+<ul>
+<li>Requires thousands of GPUs for months</li>
+<li>GPT-4 reportedly cost $100M+ to train</li>
+<li>Needs massive VRAM and compute</li>
+</ul>
+<p><strong>Inference</strong> = Using the model to answer your questions (happens billions of times)</p>
+<ul>
+<li>Can use fewer/cheaper GPUs</li>
+<li>Latency matters more than raw throughput</li>
+<li>Optimized with quantization (FP8, INT4) to fit bigger models on smaller hardware</li>
+</ul>
+</section>
+<section id="why-vram-is-everything-for-ai" class="level3">
+<h3 class="anchored" data-anchor-id="why-vram-is-everything-for-ai">Why VRAM is Everything for AI</h3>
+<p>When you run a model, the entire model must fit in VRAM:</p>
+<ul>
+<li>LLaMA 3 8B: ~16GB VRAM (FP16)</li>
+<li>LLaMA 3 70B: ~140GB VRAM (FP16), or ~35GB with aggressive quantization</li>
+<li>GPT-4 class (~1T parameters): needs hundreds of GPUs</li>
+</ul>
+<p>This is why data center GPUs have 80–256GB VRAM while your gaming GPU has 8–24GB.</p>
+</section>
+<section id="model-parallelism" class="level3">
+<h3 class="anchored" data-anchor-id="model-parallelism">Model Parallelism</h3>
+<p>When a model is too big for one GPU, you split it:</p>
+<ul>
+<li><strong>Tensor Parallelism:</strong> Split individual layers across GPUs</li>
+<li><strong>Pipeline Parallelism:</strong> Different GPUs handle different layers</li>
+<li><strong>Data Parallelism:</strong> Same model on multiple GPUs, each processing different data batches</li>
+</ul>
+<p>This is why fast interconnects (NVLink) matter so much — GPUs are constantly talking to each other.</p>
+<hr>
+</section>
+</section>
+<section id="the-gpu-shortage-economics" class="level2">
+<h2 class="anchored" data-anchor-id="the-gpu-shortage-economics">7. The GPU Shortage &amp; Economics</h2>
+<section id="why-gpus-are-so-expensive-and-hard-to-get" class="level3">
+<h3 class="anchored" data-anchor-id="why-gpus-are-so-expensive-and-hard-to-get">Why GPUs Are So Expensive and Hard to Get</h3>
+<ol type="1">
+<li><strong>Demand explosion:</strong> ChatGPT’s launch triggered a GPU gold rush</li>
+<li><strong>Supply constraints:</strong> GPUs are made on cutting-edge nodes (TSMC’s 4nm/3nm). Capacity is limited.</li>
+<li><strong>Export controls:</strong> US restricted NVIDIA GPU exports to China (China gets limited H20 chips instead of full H100s)</li>
+<li><strong>Long lead times:</strong> Major cloud orders take 6–12 months to fulfil</li>
+</ol>
+</section>
+<section id="the-power-problem" class="level3">
+<h3 class="anchored" data-anchor-id="the-power-problem">The Power Problem</h3>
+<p>A single rack of 8x H100s uses ~40,000 watts. A data center with thousands of GPUs consumes as much electricity as a small city. This is why:</p>
+<ul>
+<li>AI companies are building their own power plants</li>
+<li>Nuclear energy is getting renewed interest (Microsoft, Google)</li>
+<li>“AI electricity cost” is now a major factor in model pricing</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="consumer-gpu-guide" class="level2">
+<h2 class="anchored" data-anchor-id="consumer-gpu-guide">8. Consumer GPU Guide</h2>
+<section id="nvidia-geforce-rtx-5000-series-2025" class="level3">
+<h3 class="anchored" data-anchor-id="nvidia-geforce-rtx-5000-series-2025">NVIDIA GeForce RTX 5000 Series (2025)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>GPU</th>
+<th>VRAM</th>
+<th>Best For</th>
+<th>Price (India est.)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>RTX 5060 Ti</td>
+<td>16GB</td>
+<td>1080p gaming, hobbyist AI</td>
+<td>₹45,000–55,000</td>
+</tr>
+<tr class="even">
+<td>RTX 5070</td>
+<td>12GB</td>
+<td>1440p gaming</td>
+<td>₹55,000–70,000</td>
+</tr>
+<tr class="odd">
+<td>RTX 5070 Ti</td>
+<td>16GB</td>
+<td>1440p/4K gaming</td>
+<td>₹75,000–90,000</td>
+</tr>
+<tr class="even">
+<td>RTX 5080</td>
+<td>16GB</td>
+<td>4K gaming, serious AI</td>
+<td>₹1,10,000–1,30,000</td>
+</tr>
+<tr class="odd">
+<td>RTX 5090</td>
+<td>32GB</td>
+<td>Everything, overkill</td>
+<td>₹2,00,000+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="amd-radeon-rx-9000-series" class="level3">
+<h3 class="anchored" data-anchor-id="amd-radeon-rx-9000-series">AMD Radeon RX 9000 Series</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>GPU</th>
+<th>VRAM</th>
+<th>Best For</th>
+<th>Price (India est.)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>RX 9070</td>
+<td>16GB</td>
+<td>1440p gaming, great value</td>
+<td>₹50,000–60,000</td>
+</tr>
+<tr class="even">
+<td>RX 9070 XT</td>
+<td>16GB</td>
+<td>1440p/4K gaming</td>
+<td>₹60,000–75,000</td>
+</tr>
+</tbody>
+</table>
+<p><strong>AMD advantage:</strong> More VRAM at lower prices — great for gaming and local LLM hobbyists<br>
+<strong>NVIDIA advantage:</strong> DLSS (AI upscaling), better driver stability, CUDA for AI work</p>
+</section>
+<section id="if-you-want-to-run-ai-locally" class="level3">
+<h3 class="anchored" data-anchor-id="if-you-want-to-run-ai-locally">If You Want to Run AI Locally</h3>
+<ul>
+<li><strong>Minimum:</strong> 16GB VRAM (run 7B–13B models)</li>
+<li><strong>Sweet spot:</strong> 24GB VRAM (run up to 30B models with quantization)</li>
+<li><strong>Serious:</strong> 2x 24GB GPUs (64B+ models)</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="key-terms-glossary" class="level2">
+<h2 class="anchored" data-anchor-id="key-terms-glossary">9. Key Terms Glossary</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>VRAM</strong></td>
+<td>GPU’s own memory — bigger = better for AI</td>
+</tr>
+<tr class="even">
+<td><strong>HBM</strong></td>
+<td>High Bandwidth Memory — stacked memory chips used in data center GPUs (HBM2e → HBM3 → HBM3e)</td>
+</tr>
+<tr class="odd">
+<td><strong>GDDR7</strong></td>
+<td>Consumer GPU memory (like RAM but faster)</td>
+</tr>
+<tr class="even">
+<td><strong>CUDA</strong></td>
+<td>NVIDIA’s GPU programming platform — the reason NVIDIA dominates AI</td>
+</tr>
+<tr class="odd">
+<td><strong>ROCm</strong></td>
+<td>AMD’s equivalent to CUDA</td>
+</tr>
+<tr class="even">
+<td><strong>Tensor Cores</strong></td>
+<td>Specialized cores in NVIDIA GPUs for matrix math (AI)</td>
+</tr>
+<tr class="odd">
+<td><strong>TFLOPS</strong></td>
+<td>Trillion floating point operations per second — raw compute power</td>
+</tr>
+<tr class="even">
+<td><strong>FP32/FP16/FP8/INT4</strong></td>
+<td>Number precisions — lower = faster and uses less memory, slightly less accurate</td>
+</tr>
+<tr class="odd">
+<td><strong>NVLink</strong></td>
+<td>NVIDIA’s fast GPU-to-GPU interconnect</td>
+</tr>
+<tr class="even">
+<td><strong>PCIe</strong></td>
+<td>Standard interface connecting GPU to motherboard (slower than NVLink)</td>
+</tr>
+<tr class="odd">
+<td><strong>TDP</strong></td>
+<td>Total power draw in watts</td>
+</tr>
+<tr class="even">
+<td><strong>Blackwell</strong></td>
+<td>NVIDIA’s current architecture (B100, B200, GB200)</td>
+</tr>
+<tr class="odd">
+<td><strong>Hopper</strong></td>
+<td>NVIDIA’s previous architecture (H100, H200)</td>
+</tr>
+<tr class="even">
+<td><strong>CDNA</strong></td>
+<td>AMD’s data center GPU architecture</td>
+</tr>
+<tr class="odd">
+<td><strong>RDNA</strong></td>
+<td>AMD’s consumer/gaming GPU architecture</td>
+</tr>
+<tr class="even">
+<td><strong>SXM</strong></td>
+<td>NVIDIA’s high-performance server GPU form factor (vs PCIe)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="the-landscape-at-a-glance" class="level2">
+<h2 class="anchored" data-anchor-id="the-landscape-at-a-glance">10. The Landscape at a Glance</h2>
+<pre><code>CONSUMER (Gaming + Hobbyist AI)
+   NVIDIA GeForce RTX 4000/5000   ←→   AMD Radeon RX 7000/9000
+        16–32GB VRAM                        16GB VRAM
+        ₹40,000 – ₹2,00,000                ₹45,000 – ₹75,000
+
+DATA CENTER (AI Training + Inference)
+   NVIDIA H100/H200 (Hopper)         — workhorse of the current AI era
+   NVIDIA B100/B200/GB200 (Blackwell) — next-gen, dominant
+   AMD MI300X/MI325X (CDNA3)         — challenger, best VRAM per chip
+   Intel Gaudi 3                      — niche
+   Huawei Ascend 910                  — China-only
+
+   $20,000 – $100,000+ per GPU
+   Powers ChatGPT, Gemini, Claude, Midjourney...</code></pre>
+<hr>
+</section>
+<section id="what-to-read-next" class="level2">
+<h2 class="anchored" data-anchor-id="what-to-read-next">11. What to Read Next</h2>
+<ul>
+<li><strong><a href="https://timdettmers.com/2023/01/30/which-gpu-for-deep-learning/">Tim Dettmers’ blog</a></strong> — practical guide to GPUs for deep learning</li>
+<li><strong><a href="https://semianalysis.com">Semianalysis</a></strong> — deep technical breakdowns of AI chips (paid but excellent)</li>
+<li><strong>NVIDIA GTC keynotes</strong> — Jensen Huang explains new chips every year</li>
+<li><strong>“Making Deep Learning Go Brrrr From First Principles”</strong> — viral blog post on GPU optimization</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/thehalberdier\.github\.io\/Research\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
